@@ -2,11 +2,14 @@
 
 ## ⚠️ ÖNEMLİ: Şu Anda Durum
 
-Projeniz Vercel'de **deploy olmuş** ama **çalışmıyor** çünkü:
-- ❌ Supabase environment variables eksik
-- ❌ Veritabanı tabloları oluşturulmamış
+Projeniz hem local'de hem Vercel'de **DEMO MODE**'da çalışıyor:
+- ✅ Site açılıyor ve görünüyor
+- ⚠️ Ama **mock data** (sahte veri) kullanıyor
+- ❌ Gerçek veritabanı yok
+- ❌ Değişiklikler kaydedilmiyor
+- ❌ Sayfa yenilenince veriler sıfırlanıyor
 
-**Placeholder değerler** kullanıldığı için build başarılı oldu ama site açılmıyor.
+**Gerçek bir uygulama için Supabase kurmanız gerekiyor.**
 
 ---
 
@@ -35,18 +38,29 @@ Projeniz Vercel'de **deploy olmuş** ama **çalışmıyor** çünkü:
 4. **Yapıştırın** ve **Run** butonuna tıklayın
 5. **Kontrol:** Table Editor'de 7 tablo görmelisiniz ✅
 
-### 4️⃣ Vercel'de Environment Variables Ekle (3 dk)
+### 4️⃣ Local'de .env Dosyasını Güncelleyin (2 dk)
+
+1. **Proje klasöründe** `.env` dosyasını açın (zaten var)
+2. **Placeholder değerleri silin** ve gerçek değerleri yazın:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...gerçek-uzun-key
+```
+
+3. **Kaydedin** (Ctrl+S veya Cmd+S)
+4. **Local'de test edin:** `npm run dev` → http://localhost:3000
+5. Kayıt olup giriş yapabiliyorsanız ✅ başarılı!
+
+### 4️⃣.B Vercel'e Environment Variables Ekleyin (3 dk)
+
+**ÖNEMLİ:** `.env` dosyası GitHub'a gitmez (güvenlik). Vercel'e manuel eklemeniz gerekiyor.
 
 #### KOLAY YOL (Önerilen):
 
-1. **Bilgisayarınızda** proje klasöründe `.env.local` dosyası oluşturun
-2. İçine şunu yazın:
-```
-NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...uzun-key
-```
-3. **Vercel'de:** Settings → Environment Variables → **Import .env**
-4. Dosyayı seçin veya içeriği yapıştırın → Import
+1. **Vercel:** Settings → Environment Variables → **Import .env**
+2. `.env` dosyanızın içeriğini kopyalayıp yapıştırın
+3. **Import** → Bitti!
 
 #### MANUEL YOL:
 

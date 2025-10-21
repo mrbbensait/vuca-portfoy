@@ -1,7 +1,7 @@
 // Portföy hesaplama fonksiyonları
 // Tüm formüller basit ve şeffaf tutulmuştur
 
-import { Holding, PriceHistory, Transaction, AssetPerformance, PortfolioDistribution, PortfolioScore, AssetType } from './types/database.types'
+import { Holding, PriceHistory, AssetPerformance, PortfolioDistribution, PortfolioScore, AssetType } from './types/database.types'
 
 /**
  * Güncel fiyatı al (mock - gerçekte API'den gelecek)
