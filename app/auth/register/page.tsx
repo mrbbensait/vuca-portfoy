@@ -21,12 +21,15 @@ export default function RegisterPage() {
     setError(null)
     setMessage(null)
 
-    // 1. Kullanıcı oluştur
+    // Kullanıcı oluştur - Profil ve portföy otomatik oluşturulacak (trigger ile)
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: {
+          display_name: displayName || email.split('@')[0],
+        },
       },
     })
 
@@ -37,19 +40,6 @@ export default function RegisterPage() {
     }
 
     if (authData.user) {
-      // 2. Kullanıcı profili oluştur
-      const { error: profileError } = await supabase
-        .from('users_public')
-        .insert({
-          id: authData.user.id,
-          display_name: displayName || null,
-          base_currency: 'TRY',
-        })
-
-      if (profileError) {
-        console.error('Profile creation error:', profileError)
-      }
-
       setMessage('Kayıt başarılı! E-posta adresinizi doğrulayın.')
       setTimeout(() => {
         router.push('/auth/login')
