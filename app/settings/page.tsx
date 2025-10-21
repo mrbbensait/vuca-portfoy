@@ -1,12 +1,24 @@
 import Navigation from '@/components/Navigation'
 import { Settings as SettingsIcon, User, DollarSign } from 'lucide-react'
 import ProfileSettings from '@/components/ProfileSettings'
-import { MOCK_USER_ID, MOCK_USER_PROFILE } from '@/lib/mock-data'
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 
 export default async function SettingsPage() {
-  const userId = MOCK_USER_ID
-  const userProfile = MOCK_USER_PROFILE
-  const userEmail = 'demo@portfoliorontgen.com'
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/auth/login')
+  }
+
+  const { data: userProfile } = await supabase
+    .from('users_public')
+    .select('*')
+    .eq('id', user.id)
+    .single()
+
+  const userEmail = user.email || 'email@example.com'
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -29,7 +41,7 @@ export default async function SettingsPage() {
               <User className="w-5 h-5 mr-2 text-blue-600" />
               Profil Bilgileri
             </h2>
-            <ProfileSettings userId={userId} userProfile={userProfile} userEmail={userEmail} />
+            <ProfileSettings userId={user.id} userProfile={userProfile} userEmail={userEmail} />
           </div>
 
           {/* Para Birimi Ayarları */}
@@ -67,7 +79,7 @@ export default async function SettingsPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Hesap ID:</span>
-                <span className="font-mono text-xs text-gray-900">{userId}</span>
+                <span className="font-mono text-xs text-gray-900">{user.id}</span>
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { getMockHoldings, getMockPortfolio } from '@/lib/mock-data'
+import { createClient } from '@/lib/supabase/server'
 import AddHoldingButton from './AddHoldingButton'
 import HoldingItem from './HoldingItem'
 
@@ -7,14 +7,27 @@ interface HoldingsListProps {
 }
 
 export default async function HoldingsList({ userId }: HoldingsListProps) {
-  const { data: portfolio } = await getMockPortfolio()
-  const { data: holdings } = await getMockHoldings()
+  const supabase = await createClient()
+  
+  const { data: portfolio } = await supabase
+    .from('portfolios')
+    .select('*')
+    .eq('user_id', userId)
+    .single()
+  
+  const { data: holdings } = await supabase
+    .from('holdings')
+    .select('*')
+    .eq('user_id', userId)
 
   return (
     <div className="bg-white rounded-lg shadow">
       <div className="p-6 border-b border-gray-200">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-900">Varlıklarım</h2>
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Varlıklarım</h2>
+            <p className="text-xs text-gray-500 mt-1">30dk'da bir güncellenir</p>
+          </div>
           <AddHoldingButton userId={userId} portfolioId={portfolio?.id} />
         </div>
       </div>

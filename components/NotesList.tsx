@@ -1,4 +1,4 @@
-import { getMockPortfolio, getMockNotes } from '@/lib/mock-data'
+import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { StickyNote } from 'lucide-react'
@@ -21,8 +21,19 @@ const SCOPE_COLORS: Record<string, string> = {
 }
 
 export default async function NotesList({ userId }: NotesListProps) {
-  const { data: portfolio } = await getMockPortfolio()
-  const { data: notes } = await getMockNotes()
+  const supabase = await createClient()
+  
+  const { data: portfolio } = await supabase
+    .from('portfolios')
+    .select('*')
+    .eq('user_id', userId)
+    .single()
+  
+  const { data: notes } = await supabase
+    .from('notes')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
 
   return (
     <div className="bg-white rounded-lg shadow">

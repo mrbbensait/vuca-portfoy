@@ -1,5 +1,6 @@
 import Navigation from '@/components/Navigation'
-import { getMockHoldings, getMockPriceHistory } from '@/lib/mock-data'
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import {
   calculateAssetPerformance,
   calculateVolatility,
@@ -15,8 +16,21 @@ import { Activity, PieChart, TrendingUp, Target, Shield } from 'lucide-react'
 import CorrelationHeatmap from '@/components/CorrelationHeatmap'
 
 export default async function AnalysisPage() {
-  const { data: holdings } = await getMockHoldings()
-  const { data: priceHistory } = await getMockPriceHistory()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/auth/login')
+  }
+
+  const { data: holdings } = await supabase
+    .from('holdings')
+    .select('*')
+    .eq('user_id', user.id)
+
+  const { data: priceHistory } = await supabase
+    .from('price_history')
+    .select('*')
 
   if (!holdings || holdings.length === 0) {
     return (

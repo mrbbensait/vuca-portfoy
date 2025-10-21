@@ -2,11 +2,22 @@ import Navigation from '@/components/Navigation'
 import { Bell } from 'lucide-react'
 import AlertsList from '@/components/AlertsList'
 import AddAlertButton from '@/components/AddAlertButton'
-import { MOCK_USER_ID, getMockPortfolio } from '@/lib/mock-data'
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 
 export default async function AlertsPage() {
-  const userId = MOCK_USER_ID
-  const { data: portfolio } = await getMockPortfolio()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/auth/login')
+  }
+
+  const { data: portfolio } = await supabase
+    .from('portfolios')
+    .select('*')
+    .eq('user_id', user.id)
+    .single()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -22,10 +33,10 @@ export default async function AlertsPage() {
               Hedef fiyat ve portföy değişim uyarılarınızı yönetin
             </p>
           </div>
-          <AddAlertButton userId={userId} portfolioId={portfolio?.id} />
+          <AddAlertButton userId={user.id} portfolioId={portfolio?.id} />
         </div>
 
-        <AlertsList userId={userId} />
+        <AlertsList userId={user.id} />
       </main>
     </div>
   )

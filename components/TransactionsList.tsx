@@ -1,4 +1,4 @@
-import { getMockTransactions } from '@/lib/mock-data'
+import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { TrendingUp, TrendingDown } from 'lucide-react'
@@ -16,7 +16,14 @@ const ASSET_TYPE_LABELS: Record<string, string> = {
 }
 
 export default async function TransactionsList({ userId }: TransactionsListProps) {
-  const { data: transactions } = await getMockTransactions()
+  const supabase = await createClient()
+  
+  const { data: transactions } = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('date', { ascending: false })
+    .limit(20)
 
   return (
     <div className="bg-white rounded-lg shadow">

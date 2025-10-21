@@ -9,15 +9,32 @@ import {
 } from '@/lib/calculations'
 import { TrendingUp, TrendingDown, PieChart, Award } from 'lucide-react'
 import DistributionChart from './DistributionChart'
-import { getMockHoldings, getMockPriceHistory } from '@/lib/mock-data'
+import { createClient } from '@/lib/supabase/server'
 
 interface DashboardProps {
   userId: string
 }
 
-export default async function Dashboard({}: DashboardProps) {
-  const { data: holdings } = await getMockHoldings()
-  const { data: priceHistory } = await getMockPriceHistory()
+export default async function Dashboard({ userId }: DashboardProps) {
+  const supabase = await createClient()
+  
+  const { data: holdings } = await supabase
+    .from('holdings')
+    .select('*')
+    .eq('user_id', userId)
+  
+  const { data: priceHistory } = await supabase
+    .from('price_history')
+    .select('*')
+
+  // Veri kontrolü
+  if (!holdings || holdings.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">Henüz varlık eklenmemiş.</p>
+      </div>
+    )
+  }
 
   // Hesaplamalar
   const performances = holdings.map(h => 

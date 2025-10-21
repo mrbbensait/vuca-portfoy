@@ -2,10 +2,16 @@ import Navigation from '@/components/Navigation'
 import HoldingsList from '@/components/HoldingsList'
 import TransactionsList from '@/components/TransactionsList'
 import NotesList from '@/components/NotesList'
-import { MOCK_USER_ID } from '@/lib/mock-data'
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 
 export default async function PortfolioPage() {
-  const userId = MOCK_USER_ID
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/auth/login')
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -20,13 +26,13 @@ export default async function PortfolioPage() {
 
         <div className="space-y-8">
           {/* Varlıklar */}
-          <HoldingsList userId={userId} />
+          <HoldingsList userId={user.id} />
 
           {/* İşlem Geçmişi */}
-          <TransactionsList userId={userId} />
+          <TransactionsList userId={user.id} />
 
           {/* Notlar */}
-          <NotesList userId={userId} />
+          <NotesList userId={user.id} />
         </div>
       </main>
     </div>

@@ -1,4 +1,4 @@
-import { getMockAlerts } from '@/lib/mock-data'
+import { createClient } from '@/lib/supabase/server'
 import { BellOff, Target, TrendingUp } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
@@ -8,8 +8,14 @@ interface AlertsListProps {
   userId: string
 }
 
-export default async function AlertsList({}: AlertsListProps) {
-  const { data: alerts } = await getMockAlerts()
+export default async function AlertsList({ userId }: AlertsListProps) {
+  const supabase = await createClient()
+  
+  const { data: alerts } = await supabase
+    .from('alerts')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
 
   if (!alerts || alerts.length === 0) {
     return (

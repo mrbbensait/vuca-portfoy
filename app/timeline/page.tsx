@@ -1,11 +1,25 @@
 import Navigation from '@/components/Navigation'
 import PortfolioValueChart from '@/components/PortfolioValueChart'
 import { Clock } from 'lucide-react'
-import { getMockHoldings, getMockPriceHistory } from '@/lib/mock-data'
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 
 export default async function TimelinePage() {
-  const { data: holdings } = await getMockHoldings()
-  const { data: priceHistory } = await getMockPriceHistory()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/auth/login')
+  }
+
+  const { data: holdings } = await supabase
+    .from('holdings')
+    .select('*')
+    .eq('user_id', user.id)
+
+  const { data: priceHistory } = await supabase
+    .from('price_history')
+    .select('*')
 
   return (
     <div className="min-h-screen bg-gray-50">

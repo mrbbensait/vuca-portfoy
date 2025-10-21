@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Plus, X, TrendingUp } from 'lucide-react'
 import { AssetType } from '@/lib/types/database.types'
 
 interface AddHoldingButtonProps {
@@ -9,9 +9,12 @@ interface AddHoldingButtonProps {
   portfolioId?: string
 }
 
-export default function AddHoldingButton({}: AddHoldingButtonProps) {
+export default function AddHoldingButton({ userId, portfolioId }: AddHoldingButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [fetchingPrice, setFetchingPrice] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [priceInfo, setPriceInfo] = useState<{ price: number; name: string } | null>(null)
 
   const [formData, setFormData] = useState({
     symbol: '',
@@ -21,12 +24,82 @@ export default function AddHoldingButton({}: AddHoldingButtonProps) {
     note: '',
   })
 
+  // Sembol değiştiğinde fiyat çek
+  useEffect(() => {
+    const fetchPrice = async () => {
+      if (!formData.symbol || formData.symbol.length < 2) {
+        setPriceInfo(null)
+        return
+      }
+
+      setFetchingPrice(true)
+      setError(null)
+
+      try {
+        // Cache'i bypass et - her zaman yeni fiyat çek
+        const response = await fetch(
+          `/api/price/quote?symbol=${encodeURIComponent(formData.symbol)}&asset_type=${formData.asset_type}&t=${Date.now()}`,
+          { cache: 'no-store' }
+        )
+
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.data) {
+            setPriceInfo({
+              price: result.data.price,
+              name: result.data.name,
+            })
+            // Otomatik fiyat doldur
+            setFormData(prev => ({ ...prev, avg_price: result.data.price.toString() }))
+          }
+        } else {
+          setPriceInfo(null)
+        }
+      } catch (err) {
+        console.error('Fiyat çekme hatası:', err)
+        setPriceInfo(null)
+      } finally {
+        setFetchingPrice(false)
+      }
+    }
+
+    // Debounce: 800ms bekle
+    const timer = setTimeout(() => {
+      fetchPrice()
+    }, 800)
+
+    return () => clearTimeout(timer)
+  }, [formData.symbol, formData.asset_type])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    
+    if (!portfolioId) {
+      setError('Portföy ID bulunamadı')
+      return
+    }
 
-    setTimeout(() => {
-      alert('✅ Varlık eklendi!')
+    setLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/holdings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          portfolio_id: portfolioId,
+          user_id: userId,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Varlık eklenemedi')
+      }
+
+      // Başarılı - formu sıfırla ve kapat
       setFormData({
         symbol: '',
         asset_type: 'TR_STOCK',
@@ -34,9 +107,17 @@ export default function AddHoldingButton({}: AddHoldingButtonProps) {
         avg_price: '',
         note: '',
       })
+      setPriceInfo(null)
       setIsOpen(false)
+      
+      // Sayfayı yenile
+      window.location.reload()
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Bir hata oluştu'
+      setError(message)
+    } finally {
       setLoading(false)
-    }, 500)
+    }
   }
 
   if (!isOpen) {
@@ -62,6 +143,48 @@ export default function AddHoldingButton({}: AddHoldingButtonProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Varlık Türü - BUTONLAR */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Varlık Türü
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, asset_type: 'TR_STOCK', symbol: '', avg_price: '' })}
+                className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                  formData.asset_type === 'TR_STOCK'
+                    ? 'bg-blue-600 text-white shadow-md transform scale-105'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                🇹🇷 TR Hisse
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, asset_type: 'US_STOCK', symbol: '', avg_price: '' })}
+                className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                  formData.asset_type === 'US_STOCK'
+                    ? 'bg-purple-600 text-white shadow-md transform scale-105'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                🇺🇸 ABD Hisse
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, asset_type: 'CRYPTO', symbol: '', avg_price: '' })}
+                className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                  formData.asset_type === 'CRYPTO'
+                    ? 'bg-orange-600 text-white shadow-md transform scale-105'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                ₿ Kripto
+              </button>
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Sembol
@@ -72,27 +195,28 @@ export default function AddHoldingButton({}: AddHoldingButtonProps) {
               onChange={(e) => setFormData({ ...formData, symbol: e.target.value.toUpperCase() })}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="ASELS.IS, AAPL, BTCUSDT"
+              placeholder="ASELS, TSLA, XRPUSDT"
             />
             <p className="text-xs text-gray-500 mt-1">
-              TR hisse için .IS, ABD hisse direkt sembol, kripto için USDT ekleyin
+              {formData.asset_type === 'TR_STOCK' && 'TR hisse için sadece kodu girin (örn: ASELS, THYAO)'}
+              {formData.asset_type === 'US_STOCK' && 'ABD hisse sembolu (örn: TSLA, AAPL, NVDA)'}
+              {formData.asset_type === 'CRYPTO' && 'Kripto pair (örn: BTCUSDT, XRPUSDT, ETHUSDT)'}
+              {formData.asset_type === 'CASH' && 'Para birimi kodu (örn: TRY, USD, EUR)'}
             </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Varlık Türü
-            </label>
-            <select
-              value={formData.asset_type}
-              onChange={(e) => setFormData({ ...formData, asset_type: e.target.value as AssetType })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="TR_STOCK">TR Hisse</option>
-              <option value="US_STOCK">ABD Hisse</option>
-              <option value="CRYPTO">Kripto</option>
-              <option value="CASH">Nakit</option>
-            </select>
+            
+            {/* Fiyat bilgisi göster */}
+            {fetchingPrice && (
+              <div className="mt-2 flex items-center text-sm text-blue-600">
+                <TrendingUp className="w-4 h-4 mr-1 animate-pulse" />
+                Fiyat bilgisi çekiliyor...
+              </div>
+            )}
+            {priceInfo && (
+              <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm">
+                <p className="font-medium text-green-900">{priceInfo.name}</p>
+                <p className="text-green-700">Güncel Fiyat: ${priceInfo.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+              </div>
+            )}
           </div>
 
           <div>
@@ -112,7 +236,7 @@ export default function AddHoldingButton({}: AddHoldingButtonProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ortalama Fiyat (TRY)
+              Alış Fiyatı (USD)
             </label>
             <input
               type="number"
@@ -121,8 +245,11 @@ export default function AddHoldingButton({}: AddHoldingButtonProps) {
               onChange={(e) => setFormData({ ...formData, avg_price: e.target.value })}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="85.50"
+              placeholder="95.50"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Otomatik doldurulan fiyat güncel piyasa fiyatıdır (USD). Değiştirebilirsiniz.
+            </p>
           </div>
 
           <div>
@@ -138,6 +265,13 @@ export default function AddHoldingButton({}: AddHoldingButtonProps) {
             />
           </div>
 
+          {/* Hata mesajı */}
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
+
           <div className="flex gap-3">
             <button
               type="button"
@@ -148,8 +282,8 @@ export default function AddHoldingButton({}: AddHoldingButtonProps) {
             </button>
             <button
               type="submit"
-              disabled={loading}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              disabled={loading || fetchingPrice}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Ekleniyor...' : 'Ekle'}
             </button>
