@@ -43,7 +43,11 @@ export default function DistributionChart({ distribution }: DistributionChartPro
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ name, percentage }) => `${name}: ${percentage.toFixed(1)}%`}
+              label={(props: { name?: string; payload?: { percentage: number } }) => {
+                const name = props.name || ''
+                const percentage = props.payload?.percentage || 0
+                return `${name}: ${percentage.toFixed(1)}%`
+              }}
               outerRadius={90}
               fill="#8884d8"
               dataKey="value"

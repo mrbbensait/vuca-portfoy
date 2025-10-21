@@ -9,7 +9,7 @@ interface AddHoldingButtonProps {
   portfolioId?: string
 }
 
-export default function AddHoldingButton({ userId, portfolioId }: AddHoldingButtonProps) {
+export default function AddHoldingButton({}: AddHoldingButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 

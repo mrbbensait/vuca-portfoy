@@ -3,10 +3,10 @@
 import { Download } from 'lucide-react'
 
 interface PDFDownloadButtonProps {
-  reportData: any
+  reportData?: Record<string, unknown>
 }
 
-export default function PDFDownloadButton({ reportData }: PDFDownloadButtonProps) {
+export default function PDFDownloadButton({}: PDFDownloadButtonProps) {
   const handlePrint = () => {
     window.print()
   }

@@ -37,8 +37,9 @@ export default function QuickStartButton({ userId, portfolioId, compact = false 
       setTimeout(() => {
         window.location.reload()
       }, 1500)
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'An error occurred'
+      setError(message)
     } finally {
       setLoading(false)
     }

@@ -15,7 +15,7 @@ interface DashboardProps {
   userId: string
 }
 
-export default async function Dashboard({ userId }: DashboardProps) {
+export default async function Dashboard({}: DashboardProps) {
   // DEMO MODE: Mock veriler kullanılıyor
   const { data: holdings } = await getMockHoldings()
   const { data: priceHistory } = await getMockPriceHistory()

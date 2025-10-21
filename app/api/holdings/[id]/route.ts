@@ -17,8 +17,9 @@ export async function DELETE(
     if (error) throw error
 
     return NextResponse.json({ success: true })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Holdings DELETE error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    const message = error instanceof Error ? error.message : 'An error occurred'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

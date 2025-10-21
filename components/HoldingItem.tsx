@@ -1,8 +1,7 @@
 'use client'
 
 import { Holding } from '@/lib/types/database.types'
-import { Edit2, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { Trash2 } from 'lucide-react'
 
 const ASSET_TYPE_LABELS: Record<string, string> = {
   TR_STOCK: 'TR Hisse',
@@ -17,8 +16,7 @@ interface HoldingItemProps {
   portfolioId: string
 }
 
-export default function HoldingItem({ holding, userId, portfolioId }: HoldingItemProps) {
-  const [isDeleting, setIsDeleting] = useState(false)
+export default function HoldingItem({ holding }: HoldingItemProps) {
 
   const handleDelete = async () => {
     if (!confirm(`${holding.symbol} varlığını silmek istediğinizden emin misiniz?`)) {
@@ -65,8 +63,7 @@ export default function HoldingItem({ holding, userId, portfolioId }: HoldingIte
         <div className="flex gap-2 ml-4">
           <button
             onClick={handleDelete}
-            disabled={isDeleting}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
             title="Sil"
           >
             <Trash2 className="w-4 h-4" />

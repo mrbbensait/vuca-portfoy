@@ -8,7 +8,7 @@ interface AddTransactionButtonProps {
   userId: string
 }
 
-export default function AddTransactionButton({ userId }: AddTransactionButtonProps) {
+export default function AddTransactionButton({}: AddTransactionButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 

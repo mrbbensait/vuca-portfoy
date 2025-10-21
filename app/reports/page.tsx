@@ -9,7 +9,7 @@ import {
   calculateDiversificationScore,
   getCurrentPrice 
 } from '@/lib/calculations'
-import { FileText, Download } from 'lucide-react'
+import { FileText } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import PDFDownloadButton from '@/components/PDFDownloadButton'

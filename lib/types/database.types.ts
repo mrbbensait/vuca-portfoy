@@ -73,7 +73,7 @@ export interface Alert {
   portfolio_id: string
   user_id: string
   type: AlertType
-  payload: Record<string, any> // örn: { "symbol":"ASELS.IS","target":95 }
+  payload: Record<string, unknown> // örn: { "symbol":"ASELS.IS","target":95 }
   is_active: boolean
   created_at: string
   updated_at: string

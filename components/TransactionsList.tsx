@@ -1,7 +1,7 @@
 import { getMockTransactions } from '@/lib/mock-data'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
-import { TrendingUp, TrendingDown, Plus } from 'lucide-react'
+import { TrendingUp, TrendingDown } from 'lucide-react'
 import AddTransactionButton from './AddTransactionButton'
 
 interface TransactionsListProps {

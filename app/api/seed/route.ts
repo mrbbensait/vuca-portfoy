@@ -188,10 +188,11 @@ export async function POST(request: Request) {
       portfolio_id: portfolio.id 
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Seed error:', error)
+    const message = error instanceof Error ? error.message : 'Seed işlemi başarısız'
     return NextResponse.json({ 
-      error: error.message || 'Seed işlemi başarısız' 
+      error: message 
     }, { status: 500 })
   }
 }

@@ -1,7 +1,7 @@
 // Portföy hesaplama fonksiyonları
 // Tüm formüller basit ve şeffaf tutulmuştur
 
-import { Holding, PriceHistory, Transaction, AssetPerformance, PortfolioDistribution, PortfolioScore } from './types/database.types'
+import { Holding, PriceHistory, Transaction, AssetPerformance, PortfolioDistribution, PortfolioScore, AssetType } from './types/database.types'
 
 /**
  * Güncel fiyatı al (mock - gerçekte API'den gelecek)
@@ -64,7 +64,7 @@ export function calculateDistribution(performances: AssetPerformance[]): Portfol
   }, {} as Record<string, { value: number; count: number }>)
 
   return Object.entries(grouped).map(([asset_type, data]) => ({
-    asset_type: asset_type as any,
+    asset_type: asset_type as AssetType,
     value: data.value,
     percentage: totalValue > 0 ? (data.value / totalValue) * 100 : 0,
     count: data.count,

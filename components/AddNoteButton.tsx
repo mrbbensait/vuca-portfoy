@@ -9,7 +9,7 @@ interface AddNoteButtonProps {
   portfolioId?: string
 }
 
-export default function AddNoteButton({ userId, portfolioId }: AddNoteButtonProps) {
+export default function AddNoteButton({}: AddNoteButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 

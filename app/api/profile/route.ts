@@ -41,8 +41,9 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Profile POST error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    const message = error instanceof Error ? error.message : 'An error occurred'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

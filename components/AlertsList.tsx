@@ -8,7 +8,7 @@ interface AlertsListProps {
   userId: string
 }
 
-export default async function AlertsList({ userId }: AlertsListProps) {
+export default async function AlertsList({}: AlertsListProps) {
   // DEMO MODE: Mock veriler kullanılıyor
   const { data: alerts } = await getMockAlerts()
 
@@ -58,11 +58,11 @@ export default async function AlertsList({ userId }: AlertsListProps) {
                     <div className="text-sm text-gray-600 space-y-1">
                       {isTargetPrice ? (
                         <>
-                          <p><strong>Sembol:</strong> {alert.payload.symbol}</p>
-                          <p><strong>Hedef Fiyat:</strong> ₺{alert.payload.target}</p>
+                          <p><strong>Sembol:</strong> {(alert.payload as { symbol: string }).symbol}</p>
+                          <p><strong>Hedef Fiyat:</strong> ₺{(alert.payload as { target: number }).target}</p>
                         </>
                       ) : (
-                        <p><strong>Eşik Değeri:</strong> %{alert.payload.threshold}</p>
+                        <p><strong>Eşik Değeri:</strong> %{(alert.payload as { threshold: number }).threshold}</p>
                       )}
                       <p className="text-xs text-gray-500 mt-2">
                         {format(new Date(alert.created_at), 'dd MMMM yyyy HH:mm', { locale: tr })}

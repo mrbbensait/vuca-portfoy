@@ -6,10 +6,10 @@ import { UsersPublic } from '@/lib/types/database.types'
 interface ProfileSettingsProps {
   userId: string
   userProfile: UsersPublic | null
-  userEmail: string | undefined
+  userEmail?: string
 }
 
-export default function ProfileSettings({ userId, userProfile, userEmail }: ProfileSettingsProps) {
+export default function ProfileSettings({ userId, userProfile }: ProfileSettingsProps) {
   const [displayName, setDisplayName] = useState(userProfile?.display_name || '')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -34,8 +34,9 @@ export default function ProfileSettings({ userId, userProfile, userEmail }: Prof
       }
 
       setMessage({ type: 'success', text: 'Profil başarıyla güncellendi' })
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.message })
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'An error occurred'
+      setMessage({ type: 'error', text: message })
     } finally {
       setLoading(false)
     }

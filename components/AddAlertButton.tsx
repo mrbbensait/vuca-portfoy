@@ -9,7 +9,7 @@ interface AddAlertButtonProps {
   portfolioId?: string
 }
 
-export default function AddAlertButton({ userId, portfolioId }: AddAlertButtonProps) {
+export default function AddAlertButton({}: AddAlertButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
