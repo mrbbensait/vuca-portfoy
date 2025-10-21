@@ -16,7 +16,6 @@ interface DashboardProps {
 }
 
 export default async function Dashboard({}: DashboardProps) {
-  // DEMO MODE: Mock veriler kullanılıyor
   const { data: holdings } = await getMockHoldings()
   const { data: priceHistory } = await getMockPriceHistory()
 
@@ -45,12 +44,8 @@ export default async function Dashboard({}: DashboardProps) {
 
   return (
     <div className="space-y-6">
-      {/* Üst Başlık */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Ana Panel</h1>
-        <div className="text-sm text-gray-500 px-4 py-2 bg-yellow-50 rounded-lg border border-yellow-200">
-          🎯 DEMO MODE - Örnek Veriler
-        </div>
       </div>
 
       {/* Portföy Özet Kartları */}

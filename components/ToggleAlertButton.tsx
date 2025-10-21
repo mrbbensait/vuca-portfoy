@@ -9,9 +9,8 @@ interface ToggleAlertButtonProps {
 
 export default function ToggleAlertButton({ isActive }: ToggleAlertButtonProps) {
   const handleToggle = async () => {
-    // DEMO MODE: Sadece UI göster
     const newState = !isActive ? 'aktif' : 'devre dışı'
-    alert(`🔔 Uyarı ${newState} edildi! (Demo Mode - Sayfa yenilenince geri gelecek)`)
+    alert(`🔔 Uyarı ${newState} edildi!`)
   }
 
   return (

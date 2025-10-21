@@ -1,4 +1,3 @@
-// Mock veriler - Supabase olmadan çalışmak için
 import { Holding, Transaction, Note, Alert, Portfolio, PriceHistory } from './types/database.types'
 
 export const MOCK_USER_ID = 'demo-user-12345'
@@ -20,7 +19,7 @@ export const MOCK_HOLDINGS: Holding[] = [
     asset_type: 'TR_STOCK',
     quantity: 100,
     avg_price: 85.50,
-    note: 'Savunma sektöründe güçlü pozisyon',
+    note: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -211,7 +210,7 @@ export const MOCK_NOTES: Note[] = [
     user_id: MOCK_USER_ID,
     scope: 'POSITION',
     symbol: 'ASELS.IS',
-    content: 'Savunma sektöründe güçlü pozisyon. Devlet siparişleri artıyor.',
+    content: 'Pozisyon notu',
     created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -221,7 +220,7 @@ export const MOCK_NOTES: Note[] = [
     user_id: MOCK_USER_ID,
     scope: 'WEEKLY',
     symbol: null,
-    content: 'Bu hafta teknoloji hisseleri güçlü performans gösterdi.',
+    content: 'Haftalık gözlem',
     created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -231,7 +230,7 @@ export const MOCK_NOTES: Note[] = [
     user_id: MOCK_USER_ID,
     scope: 'GENERAL',
     symbol: null,
-    content: 'Portföyde çeşitlendirme oranını artırmayı düşünüyorum.',
+    content: 'Genel not',
     created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -267,7 +266,6 @@ export const MOCK_USER_PROFILE = {
   created_at: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
 }
 
-// Mock data getirme fonksiyonları
 export async function getMockHoldings() {
   return { data: MOCK_HOLDINGS, error: null }
 }

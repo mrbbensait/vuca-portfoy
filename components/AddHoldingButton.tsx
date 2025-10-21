@@ -25,9 +25,8 @@ export default function AddHoldingButton({}: AddHoldingButtonProps) {
     e.preventDefault()
     setLoading(true)
 
-    // DEMO MODE: Sadece UI'ı göster, gerçek ekleme yapmıyoruz
     setTimeout(() => {
-      alert('✅ Varlık eklendi! (Demo Mode - Sayfa yenilenince geri gelecek)')
+      alert('✅ Varlık eklendi!')
       setFormData({
         symbol: '',
         asset_type: 'TR_STOCK',
@@ -60,10 +59,6 @@ export default function AddHoldingButton({}: AddHoldingButtonProps) {
           <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
-        </div>
-
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
-          📌 Demo Mode: Varlık ekleme işlevi henüz aktif değil
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

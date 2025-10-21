@@ -7,7 +7,6 @@ interface HoldingsListProps {
 }
 
 export default async function HoldingsList({ userId }: HoldingsListProps) {
-  // DEMO MODE: Mock veriler kullanılıyor
   const { data: portfolio } = await getMockPortfolio()
   const { data: holdings } = await getMockHoldings()
 

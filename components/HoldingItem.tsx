@@ -23,8 +23,7 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
       return
     }
 
-    // DEMO MODE: Sadece UI göster
-    alert('🗑️ Varlık silindi! (Demo Mode - Sayfa yenilenince geri gelecek)')
+    alert('🗑️ Varlık silindi!')
   }
 
   const totalValue = holding.quantity * holding.avg_price

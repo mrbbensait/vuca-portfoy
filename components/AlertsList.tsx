@@ -9,7 +9,6 @@ interface AlertsListProps {
 }
 
 export default async function AlertsList({}: AlertsListProps) {
-  // DEMO MODE: Mock veriler kullanılıyor
   const { data: alerts } = await getMockAlerts()
 
   if (!alerts || alerts.length === 0) {

@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
 export default async function Home() {
-  // PRODUCTION MODE: Gerçek kullanıcı authentication
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 

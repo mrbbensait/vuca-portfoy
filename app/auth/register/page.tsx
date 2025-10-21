@@ -32,11 +32,14 @@ export default function RegisterPage() {
     setMessage(null)
 
     // Kullanıcı oluştur - Profil ve portföy otomatik oluşturulacak (trigger ile)
+    // Production URL'i kullan (Vercel/Production'da NEXT_PUBLIC_SITE_URL varsa)
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+    
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${siteUrl}/auth/callback`,
         data: {
           display_name: displayName || email.split('@')[0],
         },

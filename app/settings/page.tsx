@@ -4,7 +4,6 @@ import ProfileSettings from '@/components/ProfileSettings'
 import { MOCK_USER_ID, MOCK_USER_PROFILE } from '@/lib/mock-data'
 
 export default async function SettingsPage() {
-  // DEMO MODE: Mock veriler kullanılıyor
   const userId = MOCK_USER_ID
   const userProfile = MOCK_USER_PROFILE
   const userEmail = 'demo@portfoliorontgen.com'

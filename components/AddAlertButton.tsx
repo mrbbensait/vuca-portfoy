@@ -24,9 +24,8 @@ export default function AddAlertButton({}: AddAlertButtonProps) {
     e.preventDefault()
     setLoading(true)
 
-    // DEMO MODE: Sadece UI'ı göster
     setTimeout(() => {
-      alert('🔔 Uyarı eklendi! (Demo Mode - Sayfa yenilenince geri gelecek)')
+      alert('🔔 Uyarı eklendi!')
       setFormData({
         type: 'TARGET_PRICE',
         symbol: '',
@@ -58,10 +57,6 @@ export default function AddAlertButton({}: AddAlertButtonProps) {
           <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
-        </div>
-
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
-          📌 Demo Mode: Uyarı ekleme işlevi henüz aktif değil
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

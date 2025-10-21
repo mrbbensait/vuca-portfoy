@@ -5,7 +5,6 @@ import AddAlertButton from '@/components/AddAlertButton'
 import { MOCK_USER_ID, getMockPortfolio } from '@/lib/mock-data'
 
 export default async function AlertsPage() {
-  // DEMO MODE: Mock veriler kullanılıyor
   const userId = MOCK_USER_ID
   const { data: portfolio } = await getMockPortfolio()
 

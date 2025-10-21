@@ -15,7 +15,6 @@ import { tr } from 'date-fns/locale'
 import PDFDownloadButton from '@/components/PDFDownloadButton'
 
 export default async function ReportsPage() {
-  // DEMO MODE: Mock veriler kullanılıyor
   const { data: portfolio } = await getMockPortfolio()
   const { data: holdings } = await getMockHoldings()
   const { data: priceHistory } = await getMockPriceHistory()

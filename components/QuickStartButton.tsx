@@ -80,10 +80,6 @@ export default function QuickStartButton({ userId, portfolioId, compact = false 
           Örnek veriler başarıyla yüklendi! Sayfa yenileniyor...
         </div>
       )}
-
-      <div className="text-xs text-gray-500 text-center">
-        Bu işlem örnek portföy, varlıklar, işlemler ve fiyat geçmişi ekleyecektir.
-      </div>
     </div>
   )
 }

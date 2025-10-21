@@ -4,7 +4,6 @@ import { Clock } from 'lucide-react'
 import { getMockHoldings, getMockPriceHistory } from '@/lib/mock-data'
 
 export default async function TimelinePage() {
-  // DEMO MODE: Mock veriler kullanılıyor
   const { data: holdings } = await getMockHoldings()
   const { data: priceHistory } = await getMockPriceHistory()
 

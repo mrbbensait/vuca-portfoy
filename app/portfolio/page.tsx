@@ -5,7 +5,6 @@ import NotesList from '@/components/NotesList'
 import { MOCK_USER_ID } from '@/lib/mock-data'
 
 export default async function PortfolioPage() {
-  // DEMO MODE: Sabit kullanıcı ID'si
   const userId = MOCK_USER_ID
 
   return (

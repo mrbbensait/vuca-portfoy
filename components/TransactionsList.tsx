@@ -16,7 +16,6 @@ const ASSET_TYPE_LABELS: Record<string, string> = {
 }
 
 export default async function TransactionsList({ userId }: TransactionsListProps) {
-  // DEMO MODE: Mock veriler kullanılıyor
   const { data: transactions } = await getMockTransactions()
 
   return (

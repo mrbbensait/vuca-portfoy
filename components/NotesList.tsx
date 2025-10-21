@@ -21,7 +21,6 @@ const SCOPE_COLORS: Record<string, string> = {
 }
 
 export default async function NotesList({ userId }: NotesListProps) {
-  // DEMO MODE: Mock veriler kullanılıyor
   const { data: portfolio } = await getMockPortfolio()
   const { data: notes } = await getMockNotes()
 

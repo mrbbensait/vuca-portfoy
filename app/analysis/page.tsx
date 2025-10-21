@@ -15,7 +15,6 @@ import { Activity, PieChart, TrendingUp, Target, Shield } from 'lucide-react'
 import CorrelationHeatmap from '@/components/CorrelationHeatmap'
 
 export default async function AnalysisPage() {
-  // DEMO MODE: Mock veriler kullanılıyor
   const { data: holdings } = await getMockHoldings()
   const { data: priceHistory } = await getMockPriceHistory()
 
