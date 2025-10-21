@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { 
   Home, 
   Briefcase, 
@@ -25,10 +26,14 @@ const navigation = [
 
 export default function Navigation() {
   const pathname = usePathname()
+  const router = useRouter()
+  const supabase = createClient()
 
   const handleSignOut = async () => {
-    // DEMO MODE: Çıkış devre dışı
-    alert('Demo modda çıkış yapılamaz')
+    // PRODUCTION MODE: Gerçek çıkış
+    await supabase.auth.signOut()
+    router.push('/auth/login')
+    router.refresh()
   }
 
   return (

@@ -2,12 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // DEMO MODE: Middleware tamamen devre dışı
-  // Tüm sayfalar açık - Supabase olmadan test edebilirsiniz
-  
-  return NextResponse.next()
-  
-  /* Supabase kurulumu yapıldıktan sonra aşağıdaki kodu aktif edin:
+  // PRODUCTION MODE: Supabase authentication aktif
   
   let supabaseResponse = NextResponse.next({
     request,
@@ -53,7 +48,6 @@ export async function middleware(request: NextRequest) {
   }
 
   return supabaseResponse
-  */
 }
 
 export const config = {
