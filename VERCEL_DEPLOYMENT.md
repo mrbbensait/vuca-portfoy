@@ -79,7 +79,35 @@ Bu proje Vercel'de deploy edilmeye hazır. Ancak çalışması için Supabase en
 - **"already exists" hatası:** Tablolar zaten oluşturulmuş, sorun yok
 - **Başka bir hata:** SQL kodunu tekrar kopyalayıp yapıştırın ve tekrar deneyin
 
-## Adım 3: Vercel'de Environment Variables Ekleyin (DETAYLI ANLATIM)
+## Adım 3: Vercel'de Environment Variables Ekleyin
+
+### ⚡ KOLAY YOL: .env Dosyası ile Import (ÖNERİLEN)
+
+Bu yöntem çok daha hızlı ve kolay!
+
+#### 3.A.1. Local'de .env Dosyası Oluşturun
+1. Proje klasörünüzde `.env.local` adında yeni bir dosya oluşturun
+2. İçine şunları yazın (Supabase'den aldığınız değerlerle):
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.your-long-key-here
+```
+
+3. Dosyayı kaydedin (Ctrl+S veya Cmd+S)
+
+#### 3.A.2. Vercel'de Import Edin
+1. [Vercel Dashboard](https://vercel.com/dashboard) → Projeniz → **Settings** → **Environment Variables**
+2. Sağ üstte **"Import .env"** butonuna tıklayın
+3. `.env.local` dosyanızı seçin veya içeriği kopyalayıp yapıştırın
+4. **"Import"** butonuna tıklayın
+5. Tüm değişkenler otomatik eklenecek! ✅
+
+---
+
+### 📝 UZUN YOL: Manuel Ekleme (Alternatif)
+
+Eğer .env dosyası oluşturmak istemezseniz:
 
 ### 3.1. Vercel'e Gidin ve Projenizi Bulun
 1. Tarayıcınızda [https://vercel.com/dashboard](https://vercel.com/dashboard) adresine gidin
