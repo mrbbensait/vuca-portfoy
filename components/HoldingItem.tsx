@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Holding } from '@/lib/types/database.types'
-import { Trash2, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react'
+import { Trash2, AlertTriangle, TrendingUp, TrendingDown, Pencil } from 'lucide-react'
 
 const ASSET_TYPE_LABELS: Record<string, string> = {
   TR_STOCK: 'TR Hisse',
@@ -19,9 +19,15 @@ interface HoldingItemProps {
 
 export default function HoldingItem({ holding }: HoldingItemProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [updating, setUpdating] = useState(false)
   const [currentPrice, setCurrentPrice] = useState<number | null>(null)
   const [loadingPrice, setLoadingPrice] = useState(true)
+  const [editForm, setEditForm] = useState({
+    quantity: holding.quantity.toString(),
+    avg_price: holding.avg_price.toString(),
+  })
 
   // Güncel fiyat çek
   const fetchCurrentPrice = async () => {
@@ -93,6 +99,34 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
     } finally {
       setDeleting(false)
       setShowDeleteModal(false)
+    }
+  }
+
+  const handleUpdate = async () => {
+    setUpdating(true)
+
+    try {
+      const response = await fetch(`/api/holdings/${holding.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quantity: editForm.quantity,
+          avg_price: editForm.avg_price,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Güncelleme işlemi başarısız')
+      }
+
+      // Sayfayı yenile
+      window.location.reload()
+    } catch (error) {
+      console.error('Güncelleme hatası:', error)
+      alert('❌ Varlık güncellenemedi. Lütfen tekrar deneyin.')
+    } finally {
+      setUpdating(false)
+      setShowEditModal(false)
     }
   }
 
@@ -194,6 +228,13 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
 
           <div className="flex gap-2 ml-4">
             <button
+              onClick={() => setShowEditModal(true)}
+              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Düzenle"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => setShowDeleteModal(true)}
               className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
               title="Sil"
@@ -203,6 +244,79 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
           </div>
         </div>
       </div>
+
+      {/* Düzenleme Modalı */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Varlığı Düzenle</h3>
+              <button 
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-4">
+                <h4 className="text-base font-semibold text-gray-900">{holding.symbol}</h4>
+                <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                  {ASSET_TYPE_LABELS[holding.asset_type]}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Miktar
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  value={editForm.quantity}
+                  onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="100"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Alış Fiyatı (USD)
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  value={editForm.avg_price}
+                  onChange={(e) => setEditForm({ ...editForm, avg_price: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="95.50"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowEditModal(false)}
+                disabled={updating}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                İptal
+              </button>
+              <button
+                onClick={handleUpdate}
+                disabled={updating}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {updating ? 'Güncelleniyor...' : 'Onayla'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Silme Onay Modalı */}
       {showDeleteModal && (
