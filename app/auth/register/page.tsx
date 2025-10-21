@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -14,6 +14,16 @@ export default function RegisterPage() {
   const [message, setMessage] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  // Environment variable kontrolü
+  useEffect(() => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    
+    if (!supabaseUrl || supabaseUrl === 'https://placeholder.supabase.co') {
+      setError('Supabase yapılandırması eksik. Lütfen environment variable\'ları kontrol edin.')
+    }
+  }, [])
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
