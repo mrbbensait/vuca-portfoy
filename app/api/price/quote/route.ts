@@ -72,12 +72,15 @@ export async function GET(request: Request) {
       }
 
       if (price) {
+        // Kripto için 4 hane, diğerleri için 2 hane hassasiyet
+        const decimals = assetType === 'CRYPTO' ? 4 : 2
+        
         return NextResponse.json({
           success: true,
           data: {
             symbol,
             name,
-            price: parseFloat(price.toFixed(2)),
+            price: parseFloat(price.toFixed(decimals)),
             currency,
             timestamp: new Date().toISOString(),
           },

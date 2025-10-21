@@ -260,7 +260,12 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
             {priceInfo && (
               <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm">
                 <p className="font-medium text-green-900">{priceInfo.name}</p>
-                <p className="text-green-700">Güncel Fiyat: ${priceInfo.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+                <p className="text-green-700">
+                  Güncel Fiyat: ${priceInfo.price.toLocaleString('en-US', { 
+                    minimumFractionDigits: formData.asset_type === 'CRYPTO' ? 4 : 2,
+                    maximumFractionDigits: formData.asset_type === 'CRYPTO' ? 4 : 2 
+                  })}
+                </p>
               </div>
             )}
           </div>
