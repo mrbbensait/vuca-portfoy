@@ -14,6 +14,7 @@ import { FileText } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import PDFDownloadButton from '@/components/PDFDownloadButton'
+import { formatPrice } from '@/lib/formatPrice'
 
 export default async function ReportsPage() {
   const supabase = await createClient()
@@ -247,7 +248,7 @@ export default async function ReportsPage() {
                       </span>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-gray-900">{tx.quantity} × ₺{tx.price.toFixed(2)}</p>
+                      <p className="text-sm text-gray-900">{tx.quantity} × ${formatPrice(tx.price)}</p>
                       <p className="text-xs text-gray-500">
                         {format(new Date(tx.date), 'dd MMM yyyy', { locale: tr })}
                       </p>

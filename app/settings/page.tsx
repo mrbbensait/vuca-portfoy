@@ -23,13 +23,13 @@ export default async function SettingsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <SettingsIcon className="w-8 h-8 mr-3 text-blue-600" />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+            <SettingsIcon className="w-6 h-6 mr-2 text-blue-600" />
             Ayarlar
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-sm text-gray-500 mt-0.5">
             Profil ve tercihlerinizi yönetin
           </p>
         </div>

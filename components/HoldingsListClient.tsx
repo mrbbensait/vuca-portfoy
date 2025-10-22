@@ -26,15 +26,32 @@ export default function HoldingsListClient({ holdings, userId, portfolioId }: Ho
 
   return (
     <PriceProvider holdings={holdings}>
-      <div className="divide-y divide-gray-200">
-        {holdings.map(holding => (
-          <HoldingItem 
-            key={holding.id} 
-            holding={holding}
-            userId={userId}
-            portfolioId={portfolioId}
-          />
-        ))}
+      <div>
+        {/* Desktop Header */}
+        <div className="hidden lg:grid lg:grid-cols-10 gap-3 px-4 py-2 bg-gray-100 border-b-2 border-gray-300 font-semibold text-[11px] text-gray-700 uppercase tracking-wide">
+          <div>Sembol</div>
+          <div className="text-right">Miktar</div>
+          <div className="text-right">Maliyet</div>
+          <div className="text-right">Güncel Fiyat</div>
+          <div className="text-right">Toplam Alış</div>
+          <div className="text-right">Güncel Toplam</div>
+          <div className="text-right">% K/Z</div>
+          <div className="text-right">Kar/Zarar</div>
+          <div className="text-right">Eklenme</div>
+          <div className="text-right">İşlem</div>
+        </div>
+        
+        {/* Holdings List */}
+        <div>
+          {holdings.map(holding => (
+            <HoldingItem 
+              key={holding.id} 
+              holding={holding}
+              userId={userId}
+              portfolioId={portfolioId}
+            />
+          ))}
+        </div>
       </div>
     </PriceProvider>
   )

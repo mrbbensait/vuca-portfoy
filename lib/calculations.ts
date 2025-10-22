@@ -1,7 +1,7 @@
 // Portföy hesaplama fonksiyonları
 // Tüm formüller basit ve şeffaf tutulmuştur
 
-import { Holding, PriceHistory, AssetPerformance, PortfolioDistribution, PortfolioScore, AssetType } from './types/database.types'
+import { Holding, PriceHistory, AssetPerformance, PortfolioDistribution, PortfolioScore, AssetType, Transaction } from './types/database.types'
 
 /**
  * Güncel fiyatı al (mock - gerçekte API'den gelecek)
@@ -301,4 +301,96 @@ export function calculateRiskLevel(volatility: number, cashRatio: number): strin
   if (volatility < 2 || cashRatio > 50) return 'Düşük'
   if (volatility < 5 && cashRatio > 20) return 'Orta'
   return 'Yüksek'
+}
+
+/**
+ * İşlem kar/zarar bilgisi
+ */
+export interface TransactionProfitLoss {
+  transaction_id: string
+  cost_basis: number | null // Satışta, alış maliyeti
+  profit_loss: number | null // Realize olan kar/zarar
+  profit_loss_percent: number | null // Kar/zarar yüzdesi
+  avg_cost_price: number | null // İşlem anındaki ortalama maliyet
+}
+
+/**
+ * İşlemler için kar/zarar hesapla (FIFO metodu)
+ * Bu fonksiyon tüm işlemleri kronolojik sırada işler ve her satış için realize olan kar/zararı hesaplar
+ * 
+ * @param transactions - Tüm işlemler (kronolojik sırada)
+ * @returns Her transaction için kar/zarar bilgisi
+ */
+export function calculateTransactionProfitLoss(transactions: Transaction[]): Map<string, TransactionProfitLoss> {
+  const profitLossMap = new Map<string, TransactionProfitLoss>()
+  
+  // Her sembol için FIFO kuyruğu (alış işlemleri)
+  const fifoQueues = new Map<string, Array<{ quantity: number; price: number }>>()
+  
+  // İşlemleri tarih sırasına göre işle
+  const sortedTransactions = [...transactions].sort((a, b) => 
+    new Date(a.date).getTime() - new Date(b.date).getTime()
+  )
+  
+  sortedTransactions.forEach(tx => {
+    const queue = fifoQueues.get(tx.symbol) || []
+    
+    if (tx.side === 'BUY') {
+      // Alış işlemi - kuyruğa ekle
+      queue.push({
+        quantity: tx.quantity,
+        price: tx.price
+      })
+      fifoQueues.set(tx.symbol, queue)
+      
+      profitLossMap.set(tx.id, {
+        transaction_id: tx.id,
+        cost_basis: null,
+        profit_loss: null,
+        profit_loss_percent: null,
+        avg_cost_price: null
+      })
+    } else {
+      // Satış işlemi - FIFO ile maliyet hesapla
+      let remainingQuantity = tx.quantity
+      let totalCost = 0
+      let totalQuantityUsed = 0
+      
+      while (remainingQuantity > 0 && queue.length > 0) {
+        const oldest = queue[0]
+        
+        if (oldest.quantity <= remainingQuantity) {
+          // Tüm lot satıldı
+          totalCost += oldest.quantity * oldest.price
+          totalQuantityUsed += oldest.quantity
+          remainingQuantity -= oldest.quantity
+          queue.shift()
+        } else {
+          // Kısmi satış
+          totalCost += remainingQuantity * oldest.price
+          totalQuantityUsed += remainingQuantity
+          oldest.quantity -= remainingQuantity
+          remainingQuantity = 0
+        }
+      }
+      
+      fifoQueues.set(tx.symbol, queue)
+      
+      // Kar/zarar hesapla
+      const saleProceeds = tx.quantity * tx.price
+      const profitLoss = saleProceeds - totalCost
+      const avgCostPrice = totalQuantityUsed > 0 ? totalCost / totalQuantityUsed : 0
+      const profitLossPercent = totalCost > 0 ? (profitLoss / totalCost) * 100 : 0
+      
+      profitLossMap.set(tx.id, {
+        transaction_id: tx.id,
+        cost_basis: totalCost,
+        profit_loss: profitLoss,
+        profit_loss_percent: profitLossPercent,
+        avg_cost_price: avgCostPrice
+      })
+    }
+  })
+  
+  return profitLossMap
 }

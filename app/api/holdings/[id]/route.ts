@@ -1,6 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
+/**
+ * PATCH: Holding düzenleme (Sadece hata düzeltme için)
+ * ⚠️ Bu endpoint işlem geçmişine yansımaz!
+ */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -16,12 +20,12 @@ export async function PATCH(
 
     const supabase = await createClient()
 
+    // Güncelle
     const { data, error } = await supabase
       .from('holdings')
       .update({
         quantity: parseFloat(quantity),
         avg_price: parseFloat(avg_price),
-        updated_at: new Date().toISOString(),
       })
       .eq('id', id)
       .select()
@@ -37,6 +41,10 @@ export async function PATCH(
   }
 }
 
+/**
+ * DELETE: Holding silme
+ * ⚠️ Bu işlem geri alınamaz!
+ */
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

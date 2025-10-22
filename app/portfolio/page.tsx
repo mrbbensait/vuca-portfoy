@@ -16,15 +16,14 @@ export default async function PortfolioPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Portföyüm</h1>
-          <p className="text-gray-600 mt-2">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="mb-3">
+          <p className="text-sm text-gray-600">
             Varlıklarınızı yönetin, işlem geçmişinizi görüntüleyin ve notlarınızı ekleyin.
           </p>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Varlıklar */}
           <HoldingsList userId={user.id} />
 

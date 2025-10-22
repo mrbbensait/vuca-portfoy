@@ -149,13 +149,9 @@ export async function GET(request: Request) {
             const meta = result.meta
             price = meta.regularMarketPrice || meta.previousClose
             
-            // TR hisse için USD olarak al
-            // Yahoo Finance TR hisseleri TRY'den veriyor, ama biz USD istiyoruz
-            // Eğer TRY ise yaklaşık kur ile USD'ye çevir
+            // TR hisse için TRY olarak bırak
             if (meta.currency === 'TRY') {
-              const usdTryRate = 34.5
-              price = price / usdTryRate // TRY'den USD'ye çevir
-              currency = 'USD'
+              currency = 'TRY'
             } else {
               currency = 'USD'
             }
@@ -166,10 +162,6 @@ export async function GET(request: Request) {
       }
 
       if (price) {
-        // Kripto için 4 hane, diğerleri için 2 hane hassasiyet
-        const decimals = assetType === 'CRYPTO' ? 4 : 2
-        const roundedPrice = parseFloat(price.toFixed(decimals))
-        
         // 5. CACHE'E KAYDET (15 dakika TTL)
         const expiresAt = new Date()
         expiresAt.setMinutes(expiresAt.getMinutes() + 15)
@@ -183,7 +175,7 @@ export async function GET(request: Request) {
             .upsert({
               symbol,
               asset_type: assetType,
-              price: roundedPrice,
+              price: price, // Tam hassasiyetle kaydet
               currency,
               name,
               source,
@@ -201,7 +193,7 @@ export async function GET(request: Request) {
           data: {
             symbol,
             name,
-            price: roundedPrice,
+            price: price, // Tam hassasiyetle döndür
             currency,
             timestamp: new Date().toISOString(),
             cached: false,

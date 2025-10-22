@@ -127,7 +127,7 @@ export async function POST(request: Request) {
     const fetchPromises = missingHoldings.map(async (holding) => {
       try {
         let price = null
-        const currency = 'USD'
+        let currency = 'USD'
         let name = holding.symbol
 
         // Kripto için
@@ -178,10 +178,9 @@ export async function POST(request: Request) {
                 const meta = result.meta
                 price = meta.regularMarketPrice || meta.previousClose
                 
-                // TR hisse TRY'den USD'ye çevir
+                // TR hisse TRY olarak bırak
                 if (meta.currency === 'TRY') {
-                  const usdTryRate = 34.5
-                  price = price / usdTryRate
+                  currency = 'TRY'
                 }
                 name = meta.symbol || holding.symbol
               }
@@ -191,9 +190,6 @@ export async function POST(request: Request) {
 
         // Fiyat bulunduysa cache'e kaydet ve map'e ekle
         if (price) {
-          const decimals = holding.asset_type === 'CRYPTO' ? 4 : 2
-          const roundedPrice = parseFloat(price.toFixed(decimals))
-          
           const expiresAt = new Date()
           expiresAt.setMinutes(expiresAt.getMinutes() + 15)
           
@@ -204,7 +200,7 @@ export async function POST(request: Request) {
               .upsert({
                 symbol: holding.symbol,
                 asset_type: holding.asset_type,
-                price: roundedPrice,
+                price: price, // Tam hassasiyetle kaydet
                 currency,
                 name,
                 source: holding.asset_type === 'CRYPTO' ? 'binance/yahoo' : 'yahoo',
@@ -217,7 +213,7 @@ export async function POST(request: Request) {
             if (cacheError) {
               console.error(`❌ Cache save FAILED for ${holding.symbol}:`, cacheError)
             } else {
-              console.log(`✅ Cache saved: ${holding.symbol} = $${roundedPrice}`)
+              console.log(`✅ Cache saved: ${holding.symbol} = $${price}`)
             }
           } catch (cacheErr) {
             console.error('❌ Cache save exception:', cacheErr)
@@ -226,7 +222,7 @@ export async function POST(request: Request) {
           priceMap[holding.symbol] = {
             symbol: holding.symbol,
             name,
-            price: roundedPrice,
+            price: price, // Tam hassasiyetle döndür
             currency,
             timestamp: new Date().toISOString(),
             cached: false,

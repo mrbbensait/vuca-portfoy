@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, X, TrendingUp } from 'lucide-react'
 import { AssetType, TransactionSide } from '@/lib/types/database.types'
 import { createClient } from '@/lib/supabase/client'
+import { formatPrice } from '@/lib/formatPrice'
 
 interface AddTransactionButtonProps {
   userId: string
@@ -57,6 +58,7 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
       }
 
       setFetchingPrice(true)
+      setError(null)
 
       try {
         // ⚡ Cache'den yararlan (5dk cache)
@@ -143,10 +145,44 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
     }
   }
 
+  const handleOpen = () => {
+    // Modal açılırken formu sıfırla
+    setFormData({
+      symbol: '',
+      asset_type: 'TR_STOCK',
+      side: 'BUY',
+      quantity: '',
+      price: '',
+      fee: '0',
+      date: new Date().toISOString().split('T')[0],
+      note: '',
+    })
+    setPriceInfo(null)
+    setError(null)
+    setIsOpen(true)
+  }
+
+  const handleClose = () => {
+    // Modal kapanırken formu sıfırla
+    setFormData({
+      symbol: '',
+      asset_type: 'TR_STOCK',
+      side: 'BUY',
+      quantity: '',
+      price: '',
+      fee: '0',
+      date: new Date().toISOString().split('T')[0],
+      note: '',
+    })
+    setPriceInfo(null)
+    setError(null)
+    setIsOpen(false)
+  }
+
   if (!isOpen) {
     return (
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpen}
         className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
       >
         <Plus className="w-4 h-4 mr-2" />
@@ -160,7 +196,7 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-900">Yeni İşlem Ekle</h3>
-          <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-600">
+          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -250,6 +286,14 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="ASELS, TSLA, XRPUSDT"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              {formData.asset_type === 'TR_STOCK' && 'TR hisse için sadece kodu girin (örn: ASELS, THYAO)'}
+              {formData.asset_type === 'US_STOCK' && 'ABD hisse sembolu (örn: TSLA, AAPL, NVDA)'}
+              {formData.asset_type === 'CRYPTO' && 'Kripto pair (örn: BTCUSDT, XRPUSDT, ETHUSDT)'}
+              {formData.asset_type === 'CASH' && 'Para birimi kodu (örn: TRY, USD, EUR)'}
+            </p>
+            
+            {/* Fiyat bilgisi göster */}
             {fetchingPrice && (
               <div className="mt-2 flex items-center text-sm text-blue-600">
                 <TrendingUp className="w-4 h-4 mr-1 animate-pulse" />
@@ -260,10 +304,7 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
               <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm">
                 <p className="font-medium text-green-900">{priceInfo.name}</p>
                 <p className="text-green-700">
-                  Güncel Fiyat: ${priceInfo.price.toLocaleString('en-US', { 
-                    minimumFractionDigits: formData.asset_type === 'CRYPTO' ? 4 : 2,
-                    maximumFractionDigits: formData.asset_type === 'CRYPTO' ? 4 : 2 
-                  })}
+                  Güncel Fiyat: {formData.asset_type === 'TR_STOCK' ? '₺' : '$'}{formatPrice(priceInfo.price)}
                 </p>
               </div>
             )}
@@ -287,7 +328,7 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Fiyat (USD)
+                Fiyat ({formData.asset_type === 'TR_STOCK' ? 'TL' : 'USD'})
               </label>
               <input
                 type="number"
@@ -298,13 +339,16 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="95.50"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Otomatik doldurulan fiyat güncel piyasa fiyatıdır. Değiştirebilirsiniz.
+              </p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Komisyon (USD)
+                Komisyon ({formData.asset_type === 'TR_STOCK' ? 'TL' : 'USD'})
               </label>
               <input
                 type="number"
@@ -347,7 +391,7 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Toplam Tutar:</span>
               <span className="font-semibold text-gray-900">
-                ${formData.quantity && formData.price 
+                {formData.asset_type === 'TR_STOCK' ? '₺' : '$'}{formData.quantity && formData.price 
                   ? (parseFloat(formData.quantity) * parseFloat(formData.price) + parseFloat(formData.fee || '0')).toLocaleString('en-US', { maximumFractionDigits: 2 })
                   : '0.00'
                 }
@@ -364,7 +408,7 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
           <div className="flex gap-3 pt-2">
             <button
               type="button"
-              onClick={() => setIsOpen(false)}
+              onClick={handleClose}
               className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
               İptal
