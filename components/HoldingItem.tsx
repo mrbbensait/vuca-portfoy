@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Holding } from '@/lib/types/database.types'
 import { Trash2, AlertTriangle, TrendingUp, TrendingDown, Pencil } from 'lucide-react'
 
@@ -30,7 +30,7 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
   })
 
   // Güncel fiyat çek
-  const fetchCurrentPrice = async () => {
+  const fetchCurrentPrice = useCallback(async () => {
     try {
       // Cache'i bypass et - her zaman yeni fiyat çek
       const response = await fetch(
@@ -49,7 +49,7 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
     } finally {
       setLoadingPrice(false)
     }
-  }
+  }, [holding.symbol, holding.asset_type])
   
   // Fiyat formatı - Kripto için 4 hane, diğerleri için 2 hane
   const formatPrice = (price: number) => {
@@ -68,7 +68,7 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
   // İlk yükleme
   useEffect(() => {
     fetchCurrentPrice()
-  }, [])
+  }, [fetchCurrentPrice])
 
   // 30 dakikada bir yenile
   useEffect(() => {
@@ -77,7 +77,7 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
     }, 30 * 60 * 1000) // 30 dakika
 
     return () => clearInterval(interval)
-  }, [holding.symbol, holding.asset_type])
+  }, [fetchCurrentPrice])
 
   const handleDelete = async () => {
     setDeleting(true)
