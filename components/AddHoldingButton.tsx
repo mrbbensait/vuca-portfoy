@@ -36,10 +36,9 @@ export default function AddHoldingButton({ userId, portfolioId }: AddHoldingButt
       setError(null)
 
       try {
-        // Cache'i bypass et - her zaman yeni fiyat çek
+        // ⚡ Cache'den yararlan (5dk cache)
         const response = await fetch(
-          `/api/price/quote?symbol=${encodeURIComponent(formData.symbol)}&asset_type=${formData.asset_type}&t=${Date.now()}`,
-          { cache: 'no-store' }
+          `/api/price/quote?symbol=${encodeURIComponent(formData.symbol)}&asset_type=${formData.asset_type}`
         )
 
         if (response.ok) {

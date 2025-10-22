@@ -1,16 +1,38 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 /**
- * Gerçek zamanlı fiyat bilgisi çeker
- * TR Hisse: Yahoo Finance
- * US Hisse: Yahoo Finance
- * Kripto: Binance Public API
+ * ⚡ Optimize Edilmiş Fiyat API
+ * 
+ * ÖZELLİKLER:
+ * - ✅ Kimlik doğrulama (authenticated users only)
+ * - ✅ Rate limiting (200 req/saat/kullanıcı)
+ * - ✅ Akıllı önbellekleme (15dk cache)
+ * - ✅ Otomatik yenileme
+ * - ✅ Hata yönetimi
+ * 
+ * CACHE STRATEJISI:
+ * - İlk istek: Dış API'den çek, cache'e kaydet (15dk TTL)
+ * - Sonraki istekler: Cache'den sun (15dk boyunca)
+ * - Cache expire: Otomatik yenile
  */
 export async function GET(request: Request) {
   try {
+    // 1. KİMLİK DOĞRULAMA (GÜVENLİK)
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Yetkisiz erişim. Lütfen giriş yapın.' },
+        { status: 401 }
+      )
+    }
+
+    // 2. PARAMETRE KONTROLÜ
     const { searchParams } = new URL(request.url)
     const symbol = searchParams.get('symbol')
     const assetType = searchParams.get('asset_type')
@@ -20,6 +42,54 @@ export async function GET(request: Request) {
         { error: 'Symbol ve asset_type gerekli' },
         { status: 400 }
       )
+    }
+
+    // 3. RATE LIMIT KONTROLÜ (SPAM ÖNLEME) - Optional (migration yoksa skip)
+    try {
+      const { data: rateLimitOk, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+        p_user_id: user.id,
+        p_endpoint: '/api/price/quote',
+        p_max_requests: 200, // Saatte 200 istek (artırıldı)
+        p_window_minutes: 60
+      })
+
+      if (!rateLimitError && !rateLimitOk) {
+        return NextResponse.json(
+          { error: 'Çok fazla istek. Lütfen bir süre bekleyin.' },
+          { status: 429 }
+        )
+      }
+    } catch (rateLimitErr) {
+      // Migration yoksa rate limit skip et
+      console.warn('Rate limit check skipped:', rateLimitErr)
+    }
+
+    // 4. CACHE KONTROLÜ (PERFORMANS) - Optional
+    try {
+      const { data: cachedPrice, error: cacheError } = await supabase
+        .from('price_cache')
+        .select('*')
+        .eq('symbol', symbol)
+        .eq('asset_type', assetType)
+        .gt('expires_at', new Date().toISOString())
+        .single()
+
+      // Cache'de varsa ve geçerliyse, direkt dön
+      if (!cacheError && cachedPrice) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            symbol: cachedPrice.symbol,
+            name: cachedPrice.name,
+            price: parseFloat(cachedPrice.price),
+            currency: cachedPrice.currency,
+            timestamp: cachedPrice.updated_at,
+            cached: true,
+          },
+        })
+      }
+    } catch (cacheErr) {
+      console.warn('Cache check skipped:', cacheErr)
     }
 
     let price = null
@@ -98,15 +168,43 @@ export async function GET(request: Request) {
       if (price) {
         // Kripto için 4 hane, diğerleri için 2 hane hassasiyet
         const decimals = assetType === 'CRYPTO' ? 4 : 2
+        const roundedPrice = parseFloat(price.toFixed(decimals))
+        
+        // 5. CACHE'E KAYDET (15 dakika TTL)
+        const expiresAt = new Date()
+        expiresAt.setMinutes(expiresAt.getMinutes() + 15)
+        
+        const source = assetType === 'CRYPTO' ? 'binance/yahoo' : 'yahoo'
+        
+        // Upsert: Varsa güncelle, yoksa ekle (migration yoksa skip)
+        try {
+          await supabase
+            .from('price_cache')
+            .upsert({
+              symbol,
+              asset_type: assetType,
+              price: roundedPrice,
+              currency,
+              name,
+              source,
+              updated_at: new Date().toISOString(),
+              expires_at: expiresAt.toISOString(),
+            }, {
+              onConflict: 'symbol,asset_type'
+            })
+        } catch (upsertErr) {
+          console.warn('Cache save skipped:', upsertErr)
+        }
         
         return NextResponse.json({
           success: true,
           data: {
             symbol,
             name,
-            price: parseFloat(price.toFixed(decimals)),
+            price: roundedPrice,
             currency,
             timestamp: new Date().toISOString(),
+            cached: false,
           },
         })
       }

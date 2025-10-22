@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { Holding } from '@/lib/types/database.types'
 import { Trash2, AlertTriangle, TrendingUp, TrendingDown, Pencil } from 'lucide-react'
+import { useHoldingPrice } from './PriceProvider'
 
 const ASSET_TYPE_LABELS: Record<string, string> = {
   TR_STOCK: 'TR Hisse',
@@ -22,34 +23,14 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
   const [showEditModal, setShowEditModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [updating, setUpdating] = useState(false)
-  const [currentPrice, setCurrentPrice] = useState<number | null>(null)
-  const [loadingPrice, setLoadingPrice] = useState(true)
   const [editForm, setEditForm] = useState({
     quantity: holding.quantity.toString(),
     avg_price: holding.avg_price.toString(),
   })
 
-  // Güncel fiyat çek
-  const fetchCurrentPrice = useCallback(async () => {
-    try {
-      // Cache'i bypass et - her zaman yeni fiyat çek
-      const response = await fetch(
-        `/api/price/quote?symbol=${encodeURIComponent(holding.symbol)}&asset_type=${holding.asset_type}&t=${Date.now()}`,
-        { cache: 'no-store' }
-      )
-
-      if (response.ok) {
-        const result = await response.json()
-        if (result.success && result.data) {
-          setCurrentPrice(result.data.price)
-        }
-      }
-    } catch (error) {
-      console.error('Fiyat çekme hatası:', error)
-    } finally {
-      setLoadingPrice(false)
-    }
-  }, [holding.symbol, holding.asset_type])
+  // ⚡ Merkezi fiyat sistemi - tüm varlıklar tek seferde çekilir
+  const { price: priceData, loading: loadingPrice } = useHoldingPrice(holding.symbol)
+  const currentPrice = priceData?.price || null
   
   // Fiyat formatı - Kripto için 4 hane, diğerleri için 2 hane
   const formatPrice = (price: number) => {
@@ -64,20 +45,6 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
   const formatLargeNumber = (num: number) => {
     return num.toLocaleString('en-US', { maximumFractionDigits: 0 })
   }
-
-  // İlk yükleme
-  useEffect(() => {
-    fetchCurrentPrice()
-  }, [fetchCurrentPrice])
-
-  // 30 dakikada bir yenile
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchCurrentPrice()
-    }, 30 * 60 * 1000) // 30 dakika
-
-    return () => clearInterval(interval)
-  }, [fetchCurrentPrice])
 
   const handleDelete = async () => {
     setDeleting(true)
