@@ -21,7 +21,7 @@ interface DashboardProps {
   userId: string
 }
 
-export default function Dashboard({ userId }: DashboardProps) {
+export default function Dashboard({ userId: _userId }: DashboardProps) {
   const { activePortfolio, loading: portfolioLoading } = usePortfolio()
   const [holdings, setHoldings] = useState<Holding[]>([])
   const [priceHistory, setPriceHistory] = useState<PriceHistory[]>([])

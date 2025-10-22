@@ -19,7 +19,7 @@ interface UsdTryRate {
   cached: boolean
 }
 
-export default function PortfolioAnalysis({ userId }: PortfolioAnalysisProps) {
+export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysisProps) {
   const { activePortfolio } = usePortfolio()
   const [holdings, setHoldings] = useState<Holding[]>([])
   const [loading, setLoading] = useState(true)
@@ -447,7 +447,10 @@ export default function PortfolioAnalysis({ userId }: PortfolioAnalysisProps) {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={(entry: any) => `${entry.name}: ${(entry.percent * 100).toFixed(1)}%`}
+                label={(entry: unknown) => {
+                  const e = entry as { name: string; percent: number }
+                  return `${e.name}: ${(e.percent * 100).toFixed(1)}%`
+                }}
                 outerRadius={120}
                 fill="#8884d8"
                 dataKey="value"

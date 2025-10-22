@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { Plus, X, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { usePortfolio } from '@/lib/contexts/PortfolioContext'
 import { AssetType, TransactionSide } from '@/lib/types/database.types'
-import { createClient } from '@/lib/supabase/client'
 import { formatPrice } from '@/lib/formatPrice'
 import { normalizeSymbol, validateSymbol, getSymbolHint } from '@/lib/normalizeSymbol'
 
@@ -427,13 +426,11 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
                 ) : fetchingPrice ? (
                   <p className="text-xs text-blue-600 mt-1.5 flex items-center animate-pulse">
                     <TrendingUp className="w-3 h-3 mr-1" />
-                    {formData.asset_type === 'CASH'
-                      ? 'Güncel kur/fiyat alınıyor...'
-                      : normalizedSymbol && normalizedSymbol !== formData.symbol
+                    {normalizedSymbol && normalizedSymbol !== formData.symbol
                       ? `${formData.symbol} → ${normalizedSymbol} • Güncel fiyat alınıyor...`
                       : 'Güncel fiyat alınıyor...'}
                   </p>
-                ) : normalizedSymbol && normalizedSymbol !== formData.symbol && formData.asset_type !== 'CASH' ? (
+                ) : normalizedSymbol && normalizedSymbol !== formData.symbol ? (
                   <p className="text-xs text-emerald-600 mt-1.5 flex items-center">
                     <CheckCircle2 className="w-3 h-3 mr-1" />
                     {formData.symbol} → {normalizedSymbol} • Güncel fiyat alındı ✓
@@ -441,11 +438,11 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
                 ) : priceInfo ? (
                   <p className="text-xs text-emerald-600 mt-1.5 font-medium flex items-center">
                     <CheckCircle2 className="w-3 h-3 mr-1" />
-                    {priceInfo.name} • {(formData.asset_type === 'TR_STOCK' || formData.asset_type === 'CASH') ? '₺' : '$'}{formatPrice(priceInfo.price)} • Güncel {formData.asset_type === 'CASH' ? 'kur/fiyat' : 'fiyat'} alındı ✓
+                    {priceInfo.name} • {formData.asset_type === 'TR_STOCK' ? '₺' : '$'}{formatPrice(priceInfo.price)} • Güncel fiyat alındı ✓
                   </p>
                 ) : (
                   <p className="text-xs text-gray-400 mt-1.5">
-                    {formData.asset_type === 'CASH' ? 'Para birimi veya varlık seçin' : getSymbolHint(formData.asset_type)}
+                    {getSymbolHint(formData.asset_type)}
                   </p>
                 )}
               </>

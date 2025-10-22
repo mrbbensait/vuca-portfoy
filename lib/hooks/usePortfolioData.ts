@@ -25,7 +25,7 @@ interface UsePortfolioDataOptions {
   limit?: number
 }
 
-export function usePortfolioData<T = any>(
+export function usePortfolioData<T = Record<string, unknown>>(
   table: TableName,
   options: UsePortfolioDataOptions = {}
 ) {
