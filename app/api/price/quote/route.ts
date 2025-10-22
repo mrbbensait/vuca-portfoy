@@ -5,9 +5,6 @@ import { NextResponse } from 'next/server'
  * TR Hisse: Yahoo Finance
  * US Hisse: Yahoo Finance
  * Kripto: Binance Public API
- * 
- * NOT: Bu endpoint public'tir - authentication gerektirmez (middleware'de tanımlı)
- * Sadece harici API'lerden genel piyasa verisi çeker
  */
 export async function GET(request: Request) {
   try {
@@ -29,26 +26,15 @@ export async function GET(request: Request) {
     try {
       if (assetType === 'CRYPTO') {
         // Binance Public API kullan - USD olarak
-        const binanceUrl = `https://api.binance.com/api/v3/ticker/price?symbol=${symbol.toUpperCase()}`
-        console.log('[CRYPTO] Binance API isteği:', binanceUrl)
-        
-        const response = await fetch(binanceUrl, {
-          next: { revalidate: 60 }, // 1 dakika cache
-          headers: {
-            'Accept': 'application/json',
-          }
-        })
-
-        console.log('[CRYPTO] Binance API yanıt status:', response.status)
+        const response = await fetch(
+          `https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`,
+          { next: { revalidate: 60 } } // 1 dakika cache
+        )
 
         if (response.ok) {
           const data = await response.json()
-          console.log('[CRYPTO] Binance API veri:', data)
           price = parseFloat(data.price)
           currency = 'USD' // USDT paritesi olduğu için USD
-        } else {
-          const errorText = await response.text()
-          console.error('[CRYPTO] Binance API hatası:', response.status, errorText)
         }
       } else if (assetType === 'TR_STOCK' || assetType === 'US_STOCK') {
         // Yahoo Finance Query API kullan

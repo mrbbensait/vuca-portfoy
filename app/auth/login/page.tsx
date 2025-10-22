@@ -17,6 +17,7 @@ export default function LoginPage() {
   // Environment variable kontrolü
   useEffect(() => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     
     if (!supabaseUrl || supabaseUrl === 'https://placeholder.supabase.co') {
       setError('Supabase yapılandırması eksik. Lütfen environment variable\'ları kontrol edin.')

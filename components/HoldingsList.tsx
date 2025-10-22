@@ -26,7 +26,7 @@ export default async function HoldingsList({ userId }: HoldingsListProps) {
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">Varlıklarım</h2>
-            <p className="text-xs text-gray-500 mt-1">30dk&apos;da bir güncellenir</p>
+            <p className="text-xs text-gray-500 mt-1">30dk'da bir güncellenir</p>
           </div>
           <AddHoldingButton userId={userId} portfolioId={portfolio?.id} />
         </div>
