@@ -29,10 +29,12 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
     note: '',
   })
 
-  // Portfolio ID'yi çek
+  // Portfolio ID'yi çek veya oluştur
   useEffect(() => {
-    const fetchPortfolio = async () => {
+    const fetchOrCreatePortfolio = async () => {
       const supabase = createClient()
+      
+      // Önce mevcut portföyü kontrol et
       const { data } = await supabase
         .from('portfolios')
         .select('id')
@@ -41,11 +43,25 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
       
       if (data) {
         setPortfolioId(data.id)
+      } else {
+        // Portföy yoksa oluştur
+        const { data: newPortfolio, error } = await supabase
+          .from('portfolios')
+          .insert({ user_id: userId, name: 'Varsayılan Portföy' })
+          .select('id')
+          .single()
+        
+        if (newPortfolio && !error) {
+          setPortfolioId(newPortfolio.id)
+        } else {
+          console.error('Portföy oluşturulamadı:', error)
+          setError('Portföy oluşturulamadı. Lütfen sayfayı yenileyin.')
+        }
       }
     }
 
     if (userId) {
-      fetchPortfolio()
+      fetchOrCreatePortfolio()
     }
   }, [userId])
 
