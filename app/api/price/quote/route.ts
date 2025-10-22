@@ -5,6 +5,9 @@ import { NextResponse } from 'next/server'
  * TR Hisse: Yahoo Finance
  * US Hisse: Yahoo Finance
  * Kripto: Binance Public API
+ * 
+ * NOT: Bu endpoint public'tir - authentication gerektirmez (middleware'de tanımlı)
+ * Sadece harici API'lerden genel piyasa verisi çeker
  */
 export async function GET(request: Request) {
   try {

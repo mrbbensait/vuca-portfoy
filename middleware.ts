@@ -39,8 +39,11 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // API route'ları auth kontrolünden muaf tut
-  if (!user && !request.nextUrl.pathname.startsWith('/auth') && !request.nextUrl.pathname.startsWith('/api')) {
+  // Public API endpoints - authentication gerektirmez (sadece genel piyasa verileri)
+  const publicApiPaths = ['/api/price', '/api/health']
+  const isPublicApi = publicApiPaths.some(path => request.nextUrl.pathname.startsWith(path))
+  
+  if (!user && !request.nextUrl.pathname.startsWith('/auth') && !isPublicApi) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     return NextResponse.redirect(url)
