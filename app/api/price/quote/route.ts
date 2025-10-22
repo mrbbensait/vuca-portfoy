@@ -26,29 +26,26 @@ export async function GET(request: Request) {
     try {
       if (assetType === 'CRYPTO') {
         // Binance Public API kullan - USD olarak
-        const response = await fetch(
-          `https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`,
-          { 
-            cache: 'no-store', // Her zaman fresh data
-            headers: {
-              'Accept': 'application/json',
-            }
+        const binanceUrl = `https://api.binance.com/api/v3/ticker/price?symbol=${symbol.toUpperCase()}`
+        console.log('[CRYPTO] Binance API isteği:', binanceUrl)
+        
+        const response = await fetch(binanceUrl, {
+          next: { revalidate: 60 }, // 1 dakika cache
+          headers: {
+            'Accept': 'application/json',
           }
-        )
+        })
+
+        console.log('[CRYPTO] Binance API yanıt status:', response.status)
 
         if (response.ok) {
           const data = await response.json()
-          console.log('Binance API Response:', data) // Debug için
-          
-          if (data.price) {
-            price = parseFloat(data.price)
-            currency = 'USD' // USDT paritesi olduğu için USD
-          } else {
-            console.error('Binance API fiyat döndürmedi:', data)
-          }
+          console.log('[CRYPTO] Binance API veri:', data)
+          price = parseFloat(data.price)
+          currency = 'USD' // USDT paritesi olduğu için USD
         } else {
-          const errorData = await response.text()
-          console.error('Binance API error:', response.status, errorData)
+          const errorText = await response.text()
+          console.error('[CRYPTO] Binance API hatası:', response.status, errorText)
         }
       } else if (assetType === 'TR_STOCK' || assetType === 'US_STOCK') {
         // Yahoo Finance Query API kullan
@@ -58,12 +55,7 @@ export async function GET(request: Request) {
 
         const response = await fetch(
           `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}`,
-          { 
-            cache: 'no-store',
-            headers: {
-              'Accept': 'application/json',
-            }
-          }
+          { next: { revalidate: 60 } }
         )
 
         if (response.ok) {
