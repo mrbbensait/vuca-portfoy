@@ -51,9 +51,18 @@ export default function AddHoldingButton({ userId, portfolioId }: AddHoldingButt
             })
             // Otomatik fiyat doldur
             setFormData(prev => ({ ...prev, avg_price: result.data.price.toString() }))
+            setError(null) // Başarılıysa hatayı temizle
           }
         } else {
-          setPriceInfo(null)
+          // API'den hata mesajı al
+          try {
+            const errorData = await response.json()
+            console.error('Fiyat API hatası:', errorData)
+            // Kullanıcıya gösterme, sadece console'a yaz
+            setPriceInfo(null)
+          } catch {
+            setPriceInfo(null)
+          }
         }
       } catch (err) {
         console.error('Fiyat çekme hatası:', err)

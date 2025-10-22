@@ -28,13 +28,26 @@ export async function GET(request: Request) {
         // Binance Public API kullan - USD olarak
         const response = await fetch(
           `https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`,
-          { next: { revalidate: 60 } } // 1 dakika cache
+          { 
+            cache: 'no-store',
+            headers: {
+              'Accept': 'application/json',
+            }
+          }
         )
 
-        if (response.ok) {
-          const data = await response.json()
+        if (!response.ok) {
+          console.error(`Binance API error: ${response.status} ${response.statusText}`)
+          throw new Error(`Binance API returned ${response.status}`)
+        }
+
+        const data = await response.json()
+        
+        if (data.price) {
           price = parseFloat(data.price)
           currency = 'USD' // USDT paritesi olduğu için USD
+        } else {
+          throw new Error('Invalid response from Binance API')
         }
       } else if (assetType === 'TR_STOCK' || assetType === 'US_STOCK') {
         // Yahoo Finance Query API kullan
@@ -44,31 +57,45 @@ export async function GET(request: Request) {
 
         const response = await fetch(
           `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}`,
-          { next: { revalidate: 60 } }
+          { 
+            cache: 'no-store',
+            headers: {
+              'Accept': 'application/json',
+            }
+          }
         )
 
-        if (response.ok) {
-          const data = await response.json()
-          const result = data.chart?.result?.[0]
-          
-          if (result) {
-            const meta = result.meta
-            price = meta.regularMarketPrice || meta.previousClose
-            
-            // TR hisse için USD olarak al
-            // Yahoo Finance TR hisseleri TRY'den veriyor, ama biz USD istiyoruz
-            // Eğer TRY ise yaklaşık kur ile USD'ye çevir
-            if (meta.currency === 'TRY') {
-              const usdTryRate = 34.5
-              price = price / usdTryRate // TRY'den USD'ye çevir
-              currency = 'USD'
-            } else {
-              currency = 'USD'
-            }
-            
-            name = meta.symbol || symbol
-          }
+        if (!response.ok) {
+          console.error(`Yahoo Finance API error: ${response.status} ${response.statusText}`)
+          throw new Error(`Yahoo Finance API returned ${response.status}`)
         }
+
+        const data = await response.json()
+        const result = data.chart?.result?.[0]
+        
+        if (!result || !result.meta) {
+          throw new Error('Invalid response from Yahoo Finance API')
+        }
+
+        const meta = result.meta
+        price = meta.regularMarketPrice || meta.previousClose
+        
+        if (!price) {
+          throw new Error('No price data available from Yahoo Finance')
+        }
+        
+        // TR hisse için USD olarak al
+        // Yahoo Finance TR hisseleri TRY'den veriyor, ama biz USD istiyoruz
+        // Eğer TRY ise yaklaşık kur ile USD'ye çevir
+        if (meta.currency === 'TRY') {
+          const usdTryRate = 34.5
+          price = price / usdTryRate // TRY'den USD'ye çevir
+          currency = 'USD'
+        } else {
+          currency = 'USD'
+        }
+        
+        name = meta.symbol || symbol
       }
 
       if (price) {
@@ -96,10 +123,20 @@ export async function GET(request: Request) {
         { status: 404 }
       )
     } catch (fetchError) {
-      console.error('Fiyat çekme hatası:', fetchError)
+      const errorMessage = fetchError instanceof Error ? fetchError.message : 'Unknown error'
+      console.error('Fiyat çekme hatası:', {
+        error: errorMessage,
+        symbol,
+        assetType,
+        timestamp: new Date().toISOString()
+      })
+      
       return NextResponse.json(
         {
-          error: 'Fiyat bilgisi alınamadı. Lütfen daha sonra tekrar deneyin.',
+          error: `Fiyat bilgisi alınamadı: ${errorMessage}`,
+          details: assetType === 'CRYPTO' 
+            ? 'Binance API bağlantı sorunu. Sembol doğru mu kontrol edin (örn: BTCUSDT, ETHUSDT)'
+            : 'Yahoo Finance API bağlantı sorunu. Sembol doğru mu kontrol edin.'
         },
         { status: 503 }
       )
