@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Holding } from '@/lib/types/database.types'
-import { Trash2, AlertTriangle, TrendingUp, TrendingDown, Pencil } from 'lucide-react'
+import { Trash2, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react'
 import { useHoldingPrice } from './PriceProvider'
 import { formatPrice, formatLargeNumber } from '@/lib/formatPrice'
 
@@ -11,6 +11,14 @@ const ASSET_TYPE_LABELS: Record<string, string> = {
   US_STOCK: 'ABD',
   CRYPTO: 'Kripto',
   CASH: 'Nakit',
+}
+
+const CASH_SYMBOL_NAMES: Record<string, string> = {
+  TRY: 'Türk Lirası',
+  USD: 'Amerikan Doları',
+  EUR: 'Euro',
+  GOLD: 'Gram Altın',
+  SILVER: 'Gram Gümüş',
 }
 
 const ASSET_TYPE_COLORS: Record<string, string> = {
@@ -35,13 +43,7 @@ interface HoldingItemProps {
 
 export default function HoldingItem({ holding }: HoldingItemProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [updating, setUpdating] = useState(false)
-  const [editForm, setEditForm] = useState({
-    quantity: holding.quantity.toString(),
-    avg_price: holding.avg_price.toString(),
-  })
 
   // ⚡ Merkezi fiyat sistemi - tüm varlıklar tek seferde çekilir
   const { price: priceData, loading: loadingPrice } = useHoldingPrice(holding.symbol)
@@ -72,34 +74,6 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
     }
   }
 
-  const handleUpdate = async () => {
-    setUpdating(true)
-
-    try {
-      const response = await fetch(`/api/holdings/${holding.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          quantity: editForm.quantity,
-          avg_price: editForm.avg_price,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Güncelleme işlemi başarısız')
-      }
-
-      // Sayfayı yenile
-      window.location.reload()
-    } catch (error) {
-      console.error('Güncelleme hatası:', error)
-      alert('❌ Varlık güncellenemedi. Lütfen tekrar deneyin.')
-    } finally {
-      setUpdating(false)
-      setShowEditModal(false)
-    }
-  }
-
   // Hesaplamalar
   const costBasis = holding.quantity * holding.avg_price // Toplam Alış
   const currentTotal = currentPrice ? holding.quantity * currentPrice : null // Güncel Toplam
@@ -126,7 +100,11 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
         {/* Symbol & Type */}
         <div className="col-span-1">
           <div className="flex flex-col gap-1">
-            <h3 className="text-sm font-bold text-gray-900">{holding.symbol}</h3>
+            <h3 className="text-sm font-bold text-gray-900">
+              {holding.asset_type === 'CASH' && CASH_SYMBOL_NAMES[holding.symbol]
+                ? CASH_SYMBOL_NAMES[holding.symbol]
+                : holding.symbol}
+            </h3>
             <span className={`px-1.5 py-0.5 text-[10px] font-semibold rounded w-fit ${badgeColorClass}`}>
               {ASSET_TYPE_LABELS[holding.asset_type]}
             </span>
@@ -205,13 +183,6 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
         {/* Actions */}
         <div className="flex gap-1 justify-end">
           <button
-            onClick={() => setShowEditModal(true)}
-            className="p-1.5 text-blue-600 hover:bg-blue-200 rounded transition-colors"
-            title="Düzenle"
-          >
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
-          <button
             onClick={() => setShowDeleteModal(true)}
             className="p-1.5 text-red-600 hover:bg-red-200 rounded transition-colors"
             title="Sil"
@@ -226,18 +197,16 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
         <div className="px-4 py-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-gray-900">{holding.symbol}</h3>
+              <h3 className="text-base font-bold text-gray-900">
+                {holding.asset_type === 'CASH' && CASH_SYMBOL_NAMES[holding.symbol]
+                  ? CASH_SYMBOL_NAMES[holding.symbol]
+                  : holding.symbol}
+              </h3>
               <span className={`px-2 py-0.5 text-xs font-semibold rounded ${badgeColorClass}`}>
                 {ASSET_TYPE_LABELS[holding.asset_type]}
               </span>
             </div>
             <div className="flex gap-1.5">
-              <button
-                onClick={() => setShowEditModal(true)}
-                className="p-1.5 text-blue-600 hover:bg-blue-200 rounded transition-colors"
-              >
-                <Pencil className="w-4 h-4" />
-              </button>
               <button
                 onClick={() => setShowDeleteModal(true)}
                 className="p-1.5 text-red-600 hover:bg-red-200 rounded transition-colors"
@@ -321,18 +290,16 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
         <div className="px-3 py-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex flex-col gap-1">
-              <h3 className="text-base font-bold text-gray-900">{holding.symbol}</h3>
+              <h3 className="text-base font-bold text-gray-900">
+                {holding.asset_type === 'CASH' && CASH_SYMBOL_NAMES[holding.symbol]
+                  ? CASH_SYMBOL_NAMES[holding.symbol]
+                  : holding.symbol}
+              </h3>
               <span className={`px-2 py-0.5 text-xs font-semibold rounded w-fit ${badgeColorClass}`}>
                 {ASSET_TYPE_LABELS[holding.asset_type]}
               </span>
             </div>
             <div className="flex gap-1">
-              <button
-                onClick={() => setShowEditModal(true)}
-                className="p-1.5 text-blue-600 hover:bg-blue-200 rounded transition-colors"
-              >
-                <Pencil className="w-4 h-4" />
-              </button>
               <button
                 onClick={() => setShowDeleteModal(true)}
                 className="p-1.5 text-red-600 hover:bg-red-200 rounded transition-colors"
@@ -403,99 +370,6 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
         </div>
       </div>
 
-      {/* Düzenleme Modalı */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Varlığı Düzenle</h3>
-              <button 
-                onClick={() => setShowEditModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-4">
-                <h4 className="text-base font-semibold text-gray-900">{holding.symbol}</h4>
-                <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">
-                  {ASSET_TYPE_LABELS[holding.asset_type]}
-                </span>
-              </div>
-            </div>
-
-            {/* ⚠️ UYARI KUTUSU */}
-            <div className="mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg">
-              <div className="flex gap-3">
-                <div className="flex-shrink-0">
-                  <AlertTriangle className="w-6 h-6 text-amber-600" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-sm font-bold text-amber-900 mb-2">
-                    ⚠️ Önemli Uyarı
-                  </h4>
-                  <p className="text-sm text-amber-800 leading-relaxed mb-2">
-                    Bu düzenlemeler <strong>işlem geçmişine yansımayacaktır</strong>.
-                  </p>
-                  <p className="text-xs text-amber-700 leading-relaxed">
-                    Buradan yalnızca gerçek bir hata düzeltmesi yapın. Aksi takdirde bu değişiklik işlem geçmişinizde yer almayacağı için hiçbir analizde veya raporunuzda kullanılmayacaktır.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Miktar
-                </label>
-                <input
-                  type="number"
-                  step="any"
-                  value={editForm.quantity}
-                  onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Alış Fiyatı ({currency === 'TRY' ? 'TL' : 'USD'})
-                </label>
-                <input
-                  type="number"
-                  step="any"
-                  value={editForm.avg_price}
-                  onChange={(e) => setEditForm({ ...editForm, avg_price: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="95.50"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setShowEditModal(false)}
-                disabled={updating}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                İptal
-              </button>
-              <button
-                onClick={handleUpdate}
-                disabled={updating}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                {updating ? 'Güncelleniyor...' : 'Onayla'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Silme Onay Modalı */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -517,9 +391,14 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
                 <p className="text-sm text-red-800 font-medium">
                   ⚠️ Bu işlem geri alınamaz!
                 </p>
-                <p className="text-xs text-red-700 mt-1">
-                  Bu varlıkla ilgili tüm veriler kalıcı olarak silinecektir.
+                <p className="text-xs text-red-700 mt-2 leading-relaxed">
+                  Bu varlık silindiğinde:
                 </p>
+                <ul className="text-xs text-red-700 mt-1 space-y-0.5 list-disc list-inside">
+                  <li>Varlık kaydı silinecek</li>
+                  <li><strong>Bu varlığa ait tüm işlem geçmişi silinecek</strong></li>
+                  <li>İlgili notlar ve alertler silinecek</li>
+                </ul>
               </div>
               
               <div className="flex gap-3 mt-6 w-full">

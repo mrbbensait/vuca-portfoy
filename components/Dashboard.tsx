@@ -1,3 +1,7 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { usePortfolio } from '@/lib/contexts/PortfolioContext'
 import { 
   calculateAssetPerformance, 
   calculateDistribution, 
@@ -9,24 +13,62 @@ import {
 } from '@/lib/calculations'
 import { TrendingUp, TrendingDown, PieChart, Award } from 'lucide-react'
 import DistributionChart from './DistributionChart'
-import { createClient } from '@/lib/supabase/server'
+import PortfolioStatistics from './PortfolioStatistics'
+import { createClient } from '@/lib/supabase/client'
+import type { Holding, PriceHistory } from '@/lib/types/database.types'
 
 interface DashboardProps {
   userId: string
 }
 
-export default async function Dashboard({ userId }: DashboardProps) {
-  const supabase = await createClient()
-  
-  const { data: holdings } = await supabase
-    .from('holdings')
-    .select('*')
-    .eq('user_id', userId)
-  
-  const { data: priceHistory } = await supabase
-    .from('price_history')
-    .select('*')
+export default function Dashboard({ userId }: DashboardProps) {
+  const { activePortfolio, loading: portfolioLoading } = usePortfolio()
+  const [holdings, setHoldings] = useState<Holding[]>([])
+  const [priceHistory, setPriceHistory] = useState<PriceHistory[]>([])
+  const [loading, setLoading] = useState(true)
 
+  const supabase = createClient()
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!activePortfolio) return
+
+      setLoading(true)
+      
+      // Portfolio'ya ait holdings'leri çek
+      const { data: holdingsData } = await supabase
+        .from('holdings')
+        .select('*')
+        .eq('portfolio_id', activePortfolio.id)
+
+      // Price history'yi çek  
+      const { data: priceData } = await supabase
+        .from('price_history')
+        .select('*')
+
+      setHoldings(holdingsData || [])
+      setPriceHistory(priceData || [])
+      setLoading(false)
+    }
+
+    fetchData()
+  }, [activePortfolio])
+
+  if (portfolioLoading || loading) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">Yükleniyor...</p>
+      </div>
+    )
+  }
+
+  if (!activePortfolio) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">Portfolio seçilmedi</p>
+      </div>
+    )
+  }
   // Veri kontrolü
   if (!holdings || holdings.length === 0) {
     return (
@@ -38,7 +80,7 @@ export default async function Dashboard({ userId }: DashboardProps) {
 
   // Hesaplamalar
   const performances = holdings.map(h => 
-    calculateAssetPerformance(h, getCurrentPrice(h.symbol, priceHistory || []))
+    calculateAssetPerformance(h, getCurrentPrice(h.symbol, priceHistory))
   )
 
   const totalValue = performances.reduce((sum, p) => sum + p.current_value, 0)
@@ -46,9 +88,9 @@ export default async function Dashboard({ userId }: DashboardProps) {
   const totalProfitLoss = totalValue - totalCost
   const totalProfitLossPercent = totalCost > 0 ? (totalProfitLoss / totalCost) * 100 : 0
 
-  const returns = calculateReturns(priceHistory || [], holdings)
+  const returns = calculateReturns(priceHistory, holdings)
   const distribution = calculateDistribution(performances)
-  const volatility = calculateVolatility(priceHistory || [], holdings)
+  const volatility = calculateVolatility(priceHistory, holdings)
   const diversificationScore = calculateDiversificationScore(performances)
   const portfolioScore = calculatePortfolioScore(returns.monthly, volatility, diversificationScore)
 
@@ -64,6 +106,9 @@ export default async function Dashboard({ userId }: DashboardProps) {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Ana Panel</h1>
       </div>
+
+      {/* Portfolio İstatistikleri - Örnek Kullanım */}
+      <PortfolioStatistics />
 
       {/* Portföy Özet Kartları */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

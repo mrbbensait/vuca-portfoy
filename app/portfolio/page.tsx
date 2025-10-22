@@ -2,6 +2,7 @@ import Navigation from '@/components/Navigation'
 import HoldingsList from '@/components/HoldingsList'
 import TransactionsList from '@/components/TransactionsList'
 import NotesList from '@/components/NotesList'
+import { PortfolioProvider } from '@/lib/contexts/PortfolioContext'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
@@ -14,26 +15,28 @@ export default async function PortfolioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="mb-3">
-          <p className="text-sm text-gray-600">
-            Varlıklarınızı yönetin, işlem geçmişinizi görüntüleyin ve notlarınızı ekleyin.
-          </p>
-        </div>
+    <PortfolioProvider userId={user.id}>
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="mb-3">
+            <p className="text-sm text-gray-600">
+              Varlıklarınızı yönetin, işlem geçmişinizi görüntüleyin ve notlarınızı ekleyin.
+            </p>
+          </div>
 
-        <div className="space-y-6">
-          {/* Varlıklar */}
-          <HoldingsList userId={user.id} />
+          <div className="space-y-6">
+            {/* Varlıklar */}
+            <HoldingsList userId={user.id} />
 
-          {/* İşlem Geçmişi */}
-          <TransactionsList userId={user.id} />
+            {/* İşlem Geçmişi */}
+            <TransactionsList userId={user.id} />
 
-          {/* Notlar */}
-          <NotesList userId={user.id} />
-        </div>
-      </main>
-    </div>
+            {/* Notlar */}
+            <NotesList userId={user.id} />
+          </div>
+        </main>
+      </div>
+    </PortfolioProvider>
   )
 }

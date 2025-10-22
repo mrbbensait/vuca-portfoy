@@ -1,6 +1,7 @@
 import Navigation from '@/components/Navigation'
 import { Settings as SettingsIcon, User, DollarSign } from 'lucide-react'
 import ProfileSettings from '@/components/ProfileSettings'
+import { PortfolioProvider } from '@/lib/contexts/PortfolioContext'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
@@ -21,9 +22,10 @@ export default async function SettingsPage() {
   const userEmail = user.email || 'email@example.com'
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <PortfolioProvider userId={user.id}>
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="mb-4">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center">
             <SettingsIcon className="w-6 h-6 mr-2 text-blue-600" />
@@ -102,5 +104,6 @@ export default async function SettingsPage() {
         </div>
       </main>
     </div>
+    </PortfolioProvider>
   )
 }

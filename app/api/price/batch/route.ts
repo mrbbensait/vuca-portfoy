@@ -130,8 +130,110 @@ export async function POST(request: Request) {
         let currency = 'USD'
         let name = holding.symbol
 
+        // Nakit ve Değerli Madenler için
+        if (holding.asset_type === 'CASH') {
+          currency = 'TRY' // CASH için TRY bazında göster
+          
+          if (holding.symbol === 'TRY') {
+            // TRY referans değeri
+            price = 1
+            name = 'Türk Lirası'
+          } else if (holding.symbol === 'USD') {
+            // USD/TRY kuru
+            try {
+              const response = await fetch(
+                'https://query1.finance.yahoo.com/v8/finance/chart/USDTRY=X'
+              )
+              if (response.ok) {
+                const data = await response.json()
+                const result = data.chart?.result?.[0]
+                if (result) {
+                  price = result.meta.regularMarketPrice || result.meta.previousClose
+                  name = 'Amerikan Doları'
+                }
+              }
+            } catch {}
+          } else if (holding.symbol === 'EUR') {
+            // EUR/TRY kuru
+            try {
+              const response = await fetch(
+                'https://query1.finance.yahoo.com/v8/finance/chart/EURTRY=X'
+              )
+              if (response.ok) {
+                const data = await response.json()
+                const result = data.chart?.result?.[0]
+                if (result) {
+                  price = result.meta.regularMarketPrice || result.meta.previousClose
+                  name = 'Euro'
+                }
+              }
+            } catch {}
+          } else if (holding.symbol === 'GOLD') {
+            // Gram Altın - Ons altından gram'a çevirerek hesapla
+            try {
+              // 1. Ons Altın fiyatını al (USD)
+              const goldResponse = await fetch(
+                'https://query1.finance.yahoo.com/v8/finance/chart/GC=F'
+              )
+              if (goldResponse.ok) {
+                const goldData = await goldResponse.json()
+                const goldResult = goldData.chart?.result?.[0]
+                if (goldResult) {
+                  const goldOzUSD = goldResult.meta.regularMarketPrice || goldResult.meta.previousClose
+                  
+                  // 2. USD/TRY kurunu al
+                  const usdTryResponse = await fetch(
+                    'https://query1.finance.yahoo.com/v8/finance/chart/USDTRY=X'
+                  )
+                  if (usdTryResponse.ok) {
+                    const usdTryData = await usdTryResponse.json()
+                    const usdTryResult = usdTryData.chart?.result?.[0]
+                    if (usdTryResult) {
+                      const usdtry = usdTryResult.meta.regularMarketPrice || usdTryResult.meta.previousClose
+                      // 1 oz = 31.1035 gram
+                      const goldGramTRY = (goldOzUSD * usdtry) / 31.1035
+                      price = goldGramTRY
+                      name = 'Gram Altın'
+                    }
+                  }
+                }
+              }
+            } catch {}
+          } else if (holding.symbol === 'SILVER') {
+            // Gram Gümüş - Ons gümüşten gram'a çevirerek hesapla
+            try {
+              // 1. Ons Gümüş fiyatını al (USD)
+              const silverResponse = await fetch(
+                'https://query1.finance.yahoo.com/v8/finance/chart/SI=F'
+              )
+              if (silverResponse.ok) {
+                const silverData = await silverResponse.json()
+                const silverResult = silverData.chart?.result?.[0]
+                if (silverResult) {
+                  const silverOzUSD = silverResult.meta.regularMarketPrice || silverResult.meta.previousClose
+                  
+                  // 2. USD/TRY kurunu al
+                  const usdTryResponse = await fetch(
+                    'https://query1.finance.yahoo.com/v8/finance/chart/USDTRY=X'
+                  )
+                  if (usdTryResponse.ok) {
+                    const usdTryData = await usdTryResponse.json()
+                    const usdTryResult = usdTryData.chart?.result?.[0]
+                    if (usdTryResult) {
+                      const usdtry = usdTryResult.meta.regularMarketPrice || usdTryResult.meta.previousClose
+                      // 1 oz = 31.1035 gram
+                      const silverGramTRY = (silverOzUSD * usdtry) / 31.1035
+                      price = silverGramTRY
+                      name = 'Gram Gümüş'
+                    }
+                  }
+                }
+              }
+            } catch {}
+          }
+        }
         // Kripto için
-        if (holding.asset_type === 'CRYPTO') {
+        else if (holding.asset_type === 'CRYPTO') {
           try {
             const response = await fetch(
               `https://api.binance.com/api/v3/ticker/price?symbol=${encodeURIComponent(holding.symbol)}`
@@ -195,6 +297,14 @@ export async function POST(request: Request) {
           
           // Cache'e kaydet
           try {
+            // Source'u asset type'a göre belirle
+            let source = 'yahoo'
+            if (holding.asset_type === 'CRYPTO') {
+              source = 'binance/yahoo'
+            } else if (holding.asset_type === 'CASH') {
+              source = holding.symbol === 'TRY' ? 'static' : 'yahoo'
+            }
+            
             const { error: cacheError } = await supabase
               .from('price_cache')
               .upsert({
@@ -203,7 +313,7 @@ export async function POST(request: Request) {
                 price: price, // Tam hassasiyetle kaydet
                 currency,
                 name,
-                source: holding.asset_type === 'CRYPTO' ? 'binance/yahoo' : 'yahoo',
+                source,
                 updated_at: new Date().toISOString(),
                 expires_at: expiresAt.toISOString(),
               }, {

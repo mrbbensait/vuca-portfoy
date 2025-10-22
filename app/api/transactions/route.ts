@@ -12,7 +12,31 @@ export async function POST(request: Request) {
 
     const supabase = await createClient()
 
-    // Transaction ekle
+    // ✅ 1. ÖNCE VALİDASYON: Satış işlemi için holding kontrolü
+    if (side === 'SELL') {
+      const { data: existingHolding } = await supabase
+        .from('holdings')
+        .select('*')
+        .eq('portfolio_id', portfolio_id)
+        .eq('symbol', symbol)
+        .single()
+
+      if (!existingHolding) {
+        return NextResponse.json(
+          { error: `${symbol} sembolü portföyünüzde bulunmuyor. Önce satın almanız gerekiyor.` },
+          { status: 400 }
+        )
+      }
+      
+      if (existingHolding.quantity < parseFloat(quantity)) {
+        return NextResponse.json(
+          { error: `Yetersiz miktar! ${symbol} için portföyünüzde ${existingHolding.quantity} adet var, ${quantity} adet satmaya çalışıyorsunuz.` },
+          { status: 400 }
+        )
+      }
+    }
+
+    // ✅ 2. Validasyondan sonra Transaction ekle
     const { data: transaction, error: txError } = await supabase
       .from('transactions')
       .insert({
@@ -32,7 +56,7 @@ export async function POST(request: Request) {
 
     if (txError) throw txError
 
-    // Holding'i güncelle veya oluştur
+    // ✅ 3. Holding'i güncelle veya oluştur
     const { data: existingHolding } = await supabase
       .from('holdings')
       .select('*')

@@ -1,27 +1,41 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, X, TrendingUp } from 'lucide-react'
+import { Plus, X, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { usePortfolio } from '@/lib/contexts/PortfolioContext'
 import { AssetType, TransactionSide } from '@/lib/types/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { formatPrice } from '@/lib/formatPrice'
+import { normalizeSymbol, validateSymbol, getSymbolHint } from '@/lib/normalizeSymbol'
 
 interface AddTransactionButtonProps {
   userId: string
 }
 
 export default function AddTransactionButton({ userId }: AddTransactionButtonProps) {
+  const { activePortfolio } = usePortfolio()
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [fetchingPrice, setFetchingPrice] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [portfolioId, setPortfolioId] = useState<string | null>(null)
+  const [symbolError, setSymbolError] = useState<string | null>(null)
   const [priceInfo, setPriceInfo] = useState<{ price: number; name: string } | null>(null)
+  const [normalizedSymbol, setNormalizedSymbol] = useState<string>('')
+  const [priceJustUpdated, setPriceJustUpdated] = useState(false)
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    symbol: string
+    asset_type: AssetType
+    side: TransactionSide
+    quantity: string
+    price: string
+    fee: string
+    date: string
+    note: string
+  }>({
     symbol: '',
-    asset_type: 'TR_STOCK' as AssetType,
-    side: 'BUY' as TransactionSide,
+    asset_type: 'TR_STOCK',
+    side: 'BUY',
     quantity: '',
     price: '',
     fee: '0',
@@ -29,39 +43,57 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
     note: '',
   })
 
-  // Portfolio ID'yi çek
-  useEffect(() => {
-    const fetchPortfolio = async () => {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from('portfolios')
-        .select('id')
-        .eq('user_id', userId)
-        .single()
-      
-      if (data) {
-        setPortfolioId(data.id)
-      }
-    }
-
-    if (userId) {
-      fetchPortfolio()
-    }
-  }, [userId])
-
-  // Sembol değiştiğinde fiyat çek
+  // Sembol değiştiğinde validasyon ve fiyat çek
   useEffect(() => {
     const fetchPrice = async () => {
-      if (!formData.symbol || formData.symbol.length < 2) {
-        setPriceInfo(null)
+      // TRY için fiyat çekme yapma (referans değer)
+      if (formData.asset_type === 'CASH' && formData.symbol === 'TRY') {
+        setPriceInfo({ price: 1, name: 'Türk Lirası' })
+        setFormData(prev => ({ ...prev, price: '1' }))
+        setSymbolError(null)
+        setNormalizedSymbol('')
         return
       }
 
+      if (!formData.symbol || formData.symbol.length < 2) {
+        setPriceInfo(null)
+        setSymbolError(null)
+        setNormalizedSymbol('')
+        return
+      }
+
+      // CASH için validasyon ve normalizasyon atla
+      if (formData.asset_type !== 'CASH') {
+        // ✅ 1. Validasyon kontrolü
+        const validation = validateSymbol(formData.symbol, formData.asset_type)
+        if (!validation.valid) {
+          setSymbolError(validation.error || 'Geçersiz sembol')
+          setPriceInfo(null)
+          setNormalizedSymbol('')
+          return
+        }
+
+        setSymbolError(null)
+
+        // ✅ 2. Sembolü normalize et
+        let normalized
+        try {
+          const normalizedData = normalizeSymbol(formData.symbol, formData.asset_type)
+          normalized = normalizedData.normalized
+          setNormalizedSymbol(normalized)
+        } catch (err) {
+          setSymbolError(err instanceof Error ? err.message : 'Geçersiz sembol')
+          setPriceInfo(null)
+          return
+        }
+      }
+
+      // ✅ 3. Fiyat çek
       setFetchingPrice(true)
       setError(null)
 
       try {
-        // ⚡ Cache'den yararlan (5dk cache)
+        // ⚡ Cache'den yararlan (15dk cache)
         const response = await fetch(
           `/api/price/quote?symbol=${encodeURIComponent(formData.symbol)}&asset_type=${formData.asset_type}`
         )
@@ -74,13 +106,20 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
               name: result.data.name,
             })
             setFormData(prev => ({ ...prev, price: result.data.price.toString() }))
+            
+            // Fiyat güncellendiğinde yeşil animasyon göster
+            setPriceJustUpdated(true)
+            setTimeout(() => setPriceJustUpdated(false), 2500) // 2.5 saniye sonra normal hale dön
           }
         } else {
           setPriceInfo(null)
+          const errorData = await response.json()
+          setSymbolError(errorData.error || 'Fiyat bulunamadı')
         }
       } catch (err) {
         console.error('Fiyat çekme hatası:', err)
         setPriceInfo(null)
+        setSymbolError('Fiyat çekilemedi')
       } finally {
         setFetchingPrice(false)
       }
@@ -96,8 +135,8 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!portfolioId) {
-      setError('Portföy bulunamadı')
+    if (!activePortfolio) {
+      setError('Portföy seçilmedi')
       return
     }
 
@@ -105,12 +144,16 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
     setError(null)
 
     try {
+      // ✅ Normalize edilmiş sembolü kullan
+      const symbolToSubmit = normalizedSymbol || formData.symbol
+      
       const response = await fetch('/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          portfolio_id: portfolioId,
+          symbol: symbolToSubmit, // Normalize edilmiş sembolü gönder
+          portfolio_id: activePortfolio.id,
           user_id: userId,
         }),
       })
@@ -192,128 +235,228 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Yeni İşlem Ekle</h3>
-          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
+        {/* Modern Header with Gradient - Kompakt */}
+        <div className="relative bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3.5">
+          <h3 className="text-lg font-bold text-white">Yeni İşlem Ekle</h3>
+          <p className="text-blue-100 text-xs mt-0.5">Portföyünüze yeni bir işlem ekleyin</p>
+          <button 
+            onClick={handleClose} 
+            className="absolute top-3 right-6 text-white/80 hover:text-white transition-colors"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Varlık Türü - BUTONLAR */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Varlık Türü
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, asset_type: 'TR_STOCK', symbol: '', price: '' })}
-                className={`px-4 py-3 rounded-lg font-medium transition-all ${
-                  formData.asset_type === 'TR_STOCK'
-                    ? 'bg-blue-600 text-white shadow-md transform scale-105'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                🇹🇷 TR Hisse
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, asset_type: 'US_STOCK', symbol: '', price: '' })}
-                className={`px-4 py-3 rounded-lg font-medium transition-all ${
-                  formData.asset_type === 'US_STOCK'
-                    ? 'bg-purple-600 text-white shadow-md transform scale-105'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                🇺🇸 ABD Hisse
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, asset_type: 'CRYPTO', symbol: '', price: '' })}
-                className={`px-4 py-3 rounded-lg font-medium transition-all ${
-                  formData.asset_type === 'CRYPTO'
-                    ? 'bg-orange-600 text-white shadow-md transform scale-105'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                ₿ Kripto
-              </button>
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-70px)]">
+          {/* Varlık Türü & İşlem Tipi - Yan Yana */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                Varlık Türü
+              </label>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, asset_type: 'TR_STOCK', symbol: '', price: '' })}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    formData.asset_type === 'TR_STOCK'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg ring-2 ring-blue-300'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                  }`}
+                >
+                  🇹🇷 TR Hisse
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, asset_type: 'US_STOCK', symbol: '', price: '' })}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    formData.asset_type === 'US_STOCK'
+                      ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg ring-2 ring-indigo-300'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                  }`}
+                >
+                  🇺🇸 ABD Hisse
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, asset_type: 'CRYPTO', symbol: '', price: '' })}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    formData.asset_type === 'CRYPTO'
+                      ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-lg ring-2 ring-amber-300'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                  }`}
+                >
+                  ₿ Kripto
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, asset_type: 'CASH', symbol: 'TRY', price: '1' })}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    formData.asset_type === 'CASH'
+                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg ring-2 ring-emerald-300'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                  }`}
+                >
+                  💰 Nakit/Değerli M.
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                İşlem Tipi
+              </label>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, side: 'BUY' })}
+                  className={`w-full px-4 py-2 rounded-lg font-medium transition-all ${
+                    formData.side === 'BUY'
+                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg ring-2 ring-emerald-300'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                  }`}
+                >
+                  ✓ ALIŞ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, side: 'SELL' })}
+                  className={`w-full px-4 py-2 rounded-lg font-medium transition-all ${
+                    formData.side === 'SELL'
+                      ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg ring-2 ring-red-300'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                  }`}
+                >
+                  ✕ SATIŞ
+                </button>
+              </div>
             </div>
           </div>
 
+          {/* Sembol Input/Select - CASH için özel */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              İşlem Tipi
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+              {formData.asset_type === 'CASH' ? 'Para Birimi / Varlık' : 'Sembol'}
             </label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, side: 'BUY' })}
-                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                  formData.side === 'BUY'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                ALIŞ
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, side: 'SELL' })}
-                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                  formData.side === 'SELL'
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                SATIŞ
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Sembol
-            </label>
-            <input
-              type="text"
-              value={formData.symbol}
-              onChange={(e) => setFormData({ ...formData, symbol: e.target.value.toUpperCase() })}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="ASELS, TSLA, XRPUSDT"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              {formData.asset_type === 'TR_STOCK' && 'TR hisse için sadece kodu girin (örn: ASELS, THYAO)'}
-              {formData.asset_type === 'US_STOCK' && 'ABD hisse sembolu (örn: TSLA, AAPL, NVDA)'}
-              {formData.asset_type === 'CRYPTO' && 'Kripto pair (örn: BTCUSDT, XRPUSDT, ETHUSDT)'}
-              {formData.asset_type === 'CASH' && 'Para birimi kodu (örn: TRY, USD, EUR)'}
-            </p>
             
-            {/* Fiyat bilgisi göster */}
-            {fetchingPrice && (
-              <div className="mt-2 flex items-center text-sm text-blue-600">
-                <TrendingUp className="w-4 h-4 mr-1 animate-pulse" />
-                Fiyat bilgisi çekiliyor...
-              </div>
-            )}
-            {priceInfo && (
-              <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm">
-                <p className="font-medium text-green-900">{priceInfo.name}</p>
-                <p className="text-green-700">
-                  Güncel Fiyat: {formData.asset_type === 'TR_STOCK' ? '₺' : '$'}{formatPrice(priceInfo.price)}
-                </p>
-              </div>
+            {formData.asset_type === 'CASH' ? (
+              // CASH için özel dropdown
+              <>
+                <div className="relative">
+                  <select
+                    value={formData.symbol}
+                    onChange={(e) => {
+                      const newSymbol = e.target.value
+                      setFormData({ ...formData, symbol: newSymbol })
+                    }}
+                    required
+                    className="w-full px-4 py-2.5 border-2 border-gray-200 bg-gray-50 rounded-xl font-medium focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+                  >
+                    <option value="TRY">🇹🇷 Türk Lirası (TRY)</option>
+                    <option value="USD">🇺🇸 Amerikan Doları (USD)</option>
+                    <option value="EUR">🇪🇺 Euro (EUR)</option>
+                    <option value="GOLD">🥇 Gram Altın</option>
+                    <option value="SILVER">🥈 Gram Gümüş</option>
+                  </select>
+                  {fetchingPrice && (
+                    <div className="absolute right-3 top-3">
+                      <TrendingUp className="w-5 h-5 text-blue-500 animate-pulse" />
+                    </div>
+                  )}
+                </div>
+                
+                {/* CASH için durum mesajları */}
+                {fetchingPrice ? (
+                  <p className="text-xs text-blue-600 mt-1.5 flex items-center animate-pulse">
+                    <TrendingUp className="w-3 h-3 mr-1" />
+                    Güncel kur/fiyat alınıyor...
+                  </p>
+                ) : priceInfo ? (
+                  <p className="text-xs text-emerald-600 mt-1.5 font-medium flex items-center">
+                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                    {priceInfo.name} • ₺{formatPrice(priceInfo.price)} • Güncel kur/fiyat alındı ✓
+                  </p>
+                ) : formData.symbol !== 'TRY' ? (
+                  <p className="text-xs text-gray-400 mt-1.5">
+                    Para birimi veya varlık seçin
+                  </p>
+                ) : null}
+              </>
+            ) : (
+              // Diğer varlık türleri için normal input
+              <>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.symbol}
+                    onChange={(e) => setFormData({ ...formData, symbol: e.target.value.toUpperCase() })}
+                    required
+                    className={`w-full px-4 py-2.5 border-2 rounded-xl font-medium transition-all ${
+                      symbolError 
+                        ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-2 focus:ring-red-200' 
+                        : priceInfo
+                        ? 'border-green-300 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                        : 'border-gray-200 bg-gray-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+                    }`}
+                    placeholder={
+                      formData.asset_type === 'CRYPTO' ? 'ör: BTC, ETH' :
+                      formData.asset_type === 'TR_STOCK' ? 'ör: ASELS, THYAO' :
+                      'ör: AAPL, TSLA'
+                    }
+                  />
+                  {fetchingPrice && (
+                    <div className="absolute right-3 top-3">
+                      <TrendingUp className="w-5 h-5 text-blue-500 animate-pulse" />
+                    </div>
+                  )}
+                  {normalizedSymbol && normalizedSymbol !== formData.symbol && !fetchingPrice && (
+                    <div className="absolute right-3 top-3">
+                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    </div>
+                  )}
+                </div>
+                
+                {/* Inline Status Messages */}
+                {symbolError ? (
+                  <p className="text-xs text-red-600 mt-1.5 flex items-center">
+                    <AlertCircle className="w-3 h-3 mr-1" />
+                    {symbolError}
+                  </p>
+                ) : fetchingPrice ? (
+                  <p className="text-xs text-blue-600 mt-1.5 flex items-center animate-pulse">
+                    <TrendingUp className="w-3 h-3 mr-1" />
+                    {formData.asset_type === 'CASH'
+                      ? 'Güncel kur/fiyat alınıyor...'
+                      : normalizedSymbol && normalizedSymbol !== formData.symbol
+                      ? `${formData.symbol} → ${normalizedSymbol} • Güncel fiyat alınıyor...`
+                      : 'Güncel fiyat alınıyor...'}
+                  </p>
+                ) : normalizedSymbol && normalizedSymbol !== formData.symbol && formData.asset_type !== 'CASH' ? (
+                  <p className="text-xs text-emerald-600 mt-1.5 flex items-center">
+                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                    {formData.symbol} → {normalizedSymbol} • Güncel fiyat alındı ✓
+                  </p>
+                ) : priceInfo ? (
+                  <p className="text-xs text-emerald-600 mt-1.5 font-medium flex items-center">
+                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                    {priceInfo.name} • {(formData.asset_type === 'TR_STOCK' || formData.asset_type === 'CASH') ? '₺' : '$'}{formatPrice(priceInfo.price)} • Güncel {formData.asset_type === 'CASH' ? 'kur/fiyat' : 'fiyat'} alındı ✓
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-400 mt-1.5">
+                    {formData.asset_type === 'CASH' ? 'Para birimi veya varlık seçin' : getSymbolHint(formData.asset_type)}
+                  </p>
+                )}
+              </>
             )}
           </div>
 
+          {/* Miktar ve Fiyat - Yan Yana */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Miktar
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                {formData.asset_type === 'CASH' ? 'Miktar / Adet' : 'Miktar'}
               </label>
               <input
                 type="number"
@@ -321,14 +464,14 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
                 value={formData.quantity}
                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="100"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 bg-gray-50 rounded-xl font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                placeholder={formData.asset_type === 'CASH' ? '1000' : '100'}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Fiyat ({formData.asset_type === 'TR_STOCK' ? 'TL' : 'USD'})
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                {formData.asset_type === 'CASH' ? 'Birim Değer (₺)' : formData.asset_type === 'TR_STOCK' ? 'Fiyat (₺)' : 'Fiyat ($)'}
               </label>
               <input
                 type="number"
@@ -336,32 +479,42 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="95.50"
+                className={`w-full px-4 py-2.5 border-2 rounded-xl font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-1000 ${
+                  priceJustUpdated 
+                    ? 'border-emerald-300 bg-emerald-50 ring-2 ring-emerald-200' 
+                    : 'border-gray-200 bg-gray-50'
+                }`}
+                placeholder={formData.asset_type === 'CASH' ? '34.50' : '95.50'}
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Otomatik doldurulan fiyat güncel piyasa fiyatıdır. Değiştirebilirsiniz.
-              </p>
+              {formData.asset_type === 'CASH' && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {formData.symbol === 'TRY' ? '₺1 = ₺1 (Referans)' : 
+                   formData.symbol === 'GOLD' ? 'Gram altın fiyatı (₺)' :
+                   formData.symbol === 'SILVER' ? 'Gram gümüş fiyatı (₺)' :
+                   `1 ${formData.symbol} = ? ₺`}
+                </p>
+              )}
             </div>
           </div>
 
+          {/* Komisyon ve Tarih - Yan Yana */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Komisyon ({formData.asset_type === 'TR_STOCK' ? 'TL' : 'USD'})
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                Komisyon {(formData.asset_type === 'TR_STOCK' || formData.asset_type === 'CASH') ? '(₺)' : '($)'}
               </label>
               <input
                 type="number"
                 step="any"
                 value={formData.fee}
                 onChange={(e) => setFormData({ ...formData, fee: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 bg-gray-50 rounded-xl font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                 placeholder="0"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                 Tarih
               </label>
               <input
@@ -369,56 +522,63 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 bg-gray-50 rounded-xl font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
               />
             </div>
           </div>
 
+          {/* Not Alanı - İsteğe Bağlı */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Not (opsiyonel)
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+              Not <span className="text-gray-400 normal-case">(opsiyonel)</span>
             </label>
             <textarea
               value={formData.note}
               onChange={(e) => setFormData({ ...formData, note: e.target.value })}
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2.5 border-2 border-gray-200 bg-gray-50 rounded-xl font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all resize-none"
               placeholder="Bu işlem hakkında notlarınız..."
             />
           </div>
 
-          <div className="p-3 bg-gray-50 rounded-lg">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Toplam Tutar:</span>
-              <span className="font-semibold text-gray-900">
-                {formData.asset_type === 'TR_STOCK' ? '₺' : '$'}{formData.quantity && formData.price 
-                  ? (parseFloat(formData.quantity) * parseFloat(formData.price) + parseFloat(formData.fee || '0')).toLocaleString('en-US', { maximumFractionDigits: 2 })
+          {/* Toplam Tutar - Vurgulu */}
+          <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border-2 border-slate-200">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-semibold text-slate-600">
+                {formData.asset_type === 'CASH' ? 'Toplam Değer (TRY)' : 'Toplam Tutar'}
+              </span>
+              <span className="text-2xl font-bold text-slate-900">
+                {(formData.asset_type === 'TR_STOCK' || formData.asset_type === 'CASH') ? '₺' : '$'}
+                {formData.quantity && formData.price 
+                  ? (parseFloat(formData.quantity) * parseFloat(formData.price) + parseFloat(formData.fee || '0')).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                   : '0.00'
                 }
               </span>
             </div>
           </div>
 
+          {/* Hata Mesajı */}
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-700">{error}</p>
+            <div className="p-3 bg-red-50 border-2 border-red-200 rounded-xl">
+              <p className="text-sm text-red-700 font-medium">{error}</p>
             </div>
           )}
 
+          {/* Action Buttons - Modern */}
           <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all"
             >
               İptal
             </button>
             <button
               type="submit"
-              disabled={loading || fetchingPrice}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              disabled={loading || fetchingPrice || !!symbolError}
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-500 shadow-lg shadow-blue-500/30 transition-all"
             >
-              {loading ? 'Ekleniyor...' : 'Ekle'}
+              {loading ? 'Ekleniyor...' : '✓ İşlemi Ekle'}
             </button>
           </div>
         </form>

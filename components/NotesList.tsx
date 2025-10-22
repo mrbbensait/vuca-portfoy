@@ -1,8 +1,13 @@
-import { createClient } from '@/lib/supabase/server'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { usePortfolio } from '@/lib/contexts/PortfolioContext'
+import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { StickyNote } from 'lucide-react'
 import AddNoteButton from './AddNoteButton'
+import type { Note } from '@/lib/types/database.types'
 
 interface NotesListProps {
   userId: string
@@ -20,20 +25,38 @@ const SCOPE_COLORS: Record<string, string> = {
   GENERAL: 'bg-green-100 text-green-700',
 }
 
-export default async function NotesList({ userId }: NotesListProps) {
-  const supabase = await createClient()
+export default function NotesList({ userId }: NotesListProps) {
+  const { activePortfolio } = usePortfolio()
+  const [notes, setNotes] = useState<Note[]>([])
+  const [loading, setLoading] = useState(true)
   
-  const { data: portfolio } = await supabase
-    .from('portfolios')
-    .select('*')
-    .eq('user_id', userId)
-    .single()
-  
-  const { data: notes } = await supabase
-    .from('notes')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
+  const supabase = createClient()
+
+  useEffect(() => {
+    const fetchNotes = async () => {
+      if (!activePortfolio) return
+
+      setLoading(true)
+      const { data } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('portfolio_id', activePortfolio.id)
+        .order('created_at', { ascending: false })
+
+      setNotes(data || [])
+      setLoading(false)
+    }
+
+    fetchNotes()
+  }, [activePortfolio?.id])
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="text-center text-gray-500">Yükleniyor...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-white rounded-lg shadow">
@@ -43,7 +66,7 @@ export default async function NotesList({ userId }: NotesListProps) {
             <h2 className="text-xl font-semibold text-gray-900">Notlarım</h2>
             <p className="text-sm text-gray-600 mt-1">Pozisyon, haftalık ve genel notlarınız</p>
           </div>
-          <AddNoteButton userId={userId} portfolioId={portfolio?.id} />
+          <AddNoteButton userId={userId} portfolioId={activePortfolio?.id} />
         </div>
       </div>
 

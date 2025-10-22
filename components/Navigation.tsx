@@ -3,13 +3,11 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import PortfolioSelector from './PortfolioSelector'
 import { 
   Home, 
   Briefcase, 
-  LineChart, 
-  Clock, 
-  FileText, 
-  Bell, 
+  BarChart3,
   Settings, 
   LogOut 
 } from 'lucide-react'
@@ -17,10 +15,7 @@ import {
 const navigation = [
   { name: 'Ana Panel', href: '/', icon: Home },
   { name: 'Portföyüm', href: '/portfolio', icon: Briefcase },
-  { name: 'Analiz', href: '/analysis', icon: LineChart },
-  { name: 'Zaman Çizelgesi', href: '/timeline', icon: Clock },
-  { name: 'Raporlar', href: '/reports', icon: FileText },
-  { name: 'Uyarılar', href: '/alerts', icon: Bell },
+  { name: 'Analiz', href: '/analysis', icon: BarChart3 },
   { name: 'Ayarlar', href: '/settings', icon: Settings },
 ]
 
@@ -67,7 +62,10 @@ export default function Navigation() {
               })}
             </div>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4">
+            {/* Portfolio Seçici */}
+            <PortfolioSelector />
+            
             <button
               onClick={handleSignOut}
               className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
