@@ -19,7 +19,7 @@ import { usePrices, Holding, PriceData, UsePricesReturn } from '@/lib/hooks/useP
  *    const { prices, loading } = usePriceContext()
  */
 
-interface PriceContextType extends UsePricesReturn {}
+type PriceContextType = UsePricesReturn
 
 const PriceContext = createContext<PriceContextType | undefined>(undefined)
 

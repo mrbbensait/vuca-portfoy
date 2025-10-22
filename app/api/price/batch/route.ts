@@ -68,7 +68,14 @@ export async function POST(request: Request) {
     }
 
     // 4. CACHE'DEN FİYATLARI ÇEK (Toplu sorgu) - Optional
-    let cachedPrices: any[] = []
+    let cachedPrices: Array<{
+      symbol: string
+      asset_type: string
+      price: string
+      currency: string
+      name: string
+      updated_at: string
+    }> = []
     try {
       const symbols = holdings.map(h => h.symbol)
       const { data, error } = await supabase
@@ -85,7 +92,14 @@ export async function POST(request: Request) {
     }
 
     // Cache'deki fiyatları map'e çevir
-    const priceMap: Record<string, any> = {}
+    const priceMap: Record<string, {
+      symbol: string
+      name: string
+      price: number
+      currency: string
+      timestamp: string
+      cached: boolean
+    }> = {}
     const cachedKeys = new Set<string>()
 
     if (cachedPrices) {
@@ -113,7 +127,7 @@ export async function POST(request: Request) {
     const fetchPromises = missingHoldings.map(async (holding) => {
       try {
         let price = null
-        let currency = 'USD'
+        const currency = 'USD'
         let name = holding.symbol
 
         // Kripto için
@@ -185,7 +199,7 @@ export async function POST(request: Request) {
           
           // Cache'e kaydet
           try {
-            const { data: cacheData, error: cacheError } = await supabase
+            const { error: cacheError } = await supabase
               .from('price_cache')
               .upsert({
                 symbol: holding.symbol,
