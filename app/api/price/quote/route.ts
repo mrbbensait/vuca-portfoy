@@ -28,13 +28,27 @@ export async function GET(request: Request) {
         // Binance Public API kullan - USD olarak
         const response = await fetch(
           `https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`,
-          { next: { revalidate: 60 } } // 1 dakika cache
+          { 
+            cache: 'no-store', // Her zaman fresh data
+            headers: {
+              'Accept': 'application/json',
+            }
+          }
         )
 
         if (response.ok) {
           const data = await response.json()
-          price = parseFloat(data.price)
-          currency = 'USD' // USDT paritesi olduğu için USD
+          console.log('Binance API Response:', data) // Debug için
+          
+          if (data.price) {
+            price = parseFloat(data.price)
+            currency = 'USD' // USDT paritesi olduğu için USD
+          } else {
+            console.error('Binance API fiyat döndürmedi:', data)
+          }
+        } else {
+          const errorData = await response.text()
+          console.error('Binance API error:', response.status, errorData)
         }
       } else if (assetType === 'TR_STOCK' || assetType === 'US_STOCK') {
         // Yahoo Finance Query API kullan
@@ -44,7 +58,12 @@ export async function GET(request: Request) {
 
         const response = await fetch(
           `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}`,
-          { next: { revalidate: 60 } }
+          { 
+            cache: 'no-store',
+            headers: {
+              'Accept': 'application/json',
+            }
+          }
         )
 
         if (response.ok) {
