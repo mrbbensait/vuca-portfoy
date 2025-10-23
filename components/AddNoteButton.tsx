@@ -65,7 +65,7 @@ export default function AddNoteButton({}: AddNoteButtonProps) {
             <select
               value={formData.scope}
               onChange={(e) => setFormData({ ...formData, scope: e.target.value as NoteScope })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
             >
               <option value="GENERAL">Genel</option>
               <option value="WEEKLY">Haftalık</option>
@@ -82,7 +82,7 @@ export default function AddNoteButton({}: AddNoteButtonProps) {
                 type="text"
                 value={formData.symbol}
                 onChange={(e) => setFormData({ ...formData, symbol: e.target.value.toUpperCase() })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
                 placeholder="ASELS.IS"
               />
             </div>
@@ -97,7 +97,7 @@ export default function AddNoteButton({}: AddNoteButtonProps) {
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
               required
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
               placeholder="Notunuzu buraya yazın..."
             />
           </div>

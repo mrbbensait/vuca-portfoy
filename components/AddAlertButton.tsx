@@ -67,7 +67,7 @@ export default function AddAlertButton({}: AddAlertButtonProps) {
             <select
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value as AlertType })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
             >
               <option value="TARGET_PRICE">Hedef Fiyat</option>
               <option value="PORTFOLIO_CHANGE">Portföy Değişimi</option>
@@ -85,7 +85,7 @@ export default function AddAlertButton({}: AddAlertButtonProps) {
                   value={formData.symbol}
                   onChange={(e) => setFormData({ ...formData, symbol: e.target.value.toUpperCase() })}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   placeholder="ASELS.IS"
                 />
               </div>
@@ -100,7 +100,7 @@ export default function AddAlertButton({}: AddAlertButtonProps) {
                   value={formData.targetPrice}
                   onChange={(e) => setFormData({ ...formData, targetPrice: e.target.value })}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   placeholder="95.00"
                 />
               </div>
@@ -116,7 +116,7 @@ export default function AddAlertButton({}: AddAlertButtonProps) {
                 value={formData.threshold}
                 onChange={(e) => setFormData({ ...formData, threshold: e.target.value })}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 placeholder="5"
               />
               <p className="text-xs text-gray-500 mt-1">

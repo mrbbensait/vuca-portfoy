@@ -351,7 +351,7 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
                       setFormData({ ...formData, symbol: newSymbol })
                     }}
                     required
-                    className="w-full px-4 py-2.5 border-2 border-gray-200 bg-gray-50 rounded-xl font-medium focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+                    className="w-full px-4 py-2.5 border-2 border-gray-200 bg-gray-50 rounded-xl font-medium focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all text-gray-900"
                   >
                     <option value="TRY">🇹🇷 Türk Lirası (TRY)</option>
                     <option value="USD">🇺🇸 Amerikan Doları (USD)</option>
@@ -392,7 +392,7 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
                     value={formData.symbol}
                     onChange={(e) => setFormData({ ...formData, symbol: e.target.value.toUpperCase() })}
                     required
-                    className={`w-full px-4 py-2.5 border-2 rounded-xl font-medium transition-all ${
+                    className={`w-full px-4 py-2.5 border-2 rounded-xl font-medium transition-all text-gray-900 ${
                       symbolError 
                         ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-2 focus:ring-red-200' 
                         : priceInfo
@@ -461,7 +461,7 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
                 value={formData.quantity}
                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                 required
-                className="w-full px-4 py-2.5 border-2 border-gray-200 bg-gray-50 rounded-xl font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 bg-gray-50 rounded-xl font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900"
                 placeholder={formData.asset_type === 'CASH' ? '1000' : '100'}
               />
             </div>
@@ -476,7 +476,7 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                 required
-                className={`w-full px-4 py-2.5 border-2 rounded-xl font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-1000 ${
+                className={`w-full px-4 py-2.5 border-2 rounded-xl font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-1000 text-gray-900 ${
                   priceJustUpdated 
                     ? 'border-emerald-300 bg-emerald-50 ring-2 ring-emerald-200' 
                     : 'border-gray-200 bg-gray-50'
@@ -505,7 +505,7 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
                 step="any"
                 value={formData.fee}
                 onChange={(e) => setFormData({ ...formData, fee: e.target.value })}
-                className="w-full px-4 py-2.5 border-2 border-gray-200 bg-gray-50 rounded-xl font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 bg-gray-50 rounded-xl font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900"
                 placeholder="0"
               />
             </div>
@@ -519,7 +519,7 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 required
-                className="w-full px-4 py-2.5 border-2 border-gray-200 bg-gray-50 rounded-xl font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 bg-gray-50 rounded-xl font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900"
               />
             </div>
           </div>
@@ -533,7 +533,7 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
               value={formData.note}
               onChange={(e) => setFormData({ ...formData, note: e.target.value })}
               rows={2}
-              className="w-full px-4 py-2.5 border-2 border-gray-200 bg-gray-50 rounded-xl font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all resize-none"
+              className="w-full px-4 py-2.5 border-2 border-gray-200 bg-gray-50 rounded-xl font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all resize-none text-gray-900"
               placeholder="Bu işlem hakkında notlarınız..."
             />
           </div>

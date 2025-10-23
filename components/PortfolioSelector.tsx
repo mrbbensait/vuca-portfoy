@@ -119,7 +119,7 @@ export default function PortfolioSelector() {
                           type="text"
                           value={newName}
                           onChange={(e) => setNewName(e.target.value)}
-                          className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                           autoFocus
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') handleUpdate(portfolio.id)
@@ -210,7 +210,7 @@ export default function PortfolioSelector() {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="Portfolio adı"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleCreate()
