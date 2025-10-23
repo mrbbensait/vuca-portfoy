@@ -50,8 +50,21 @@ export function formatPrice(price: number): string {
 /**
  * Büyük sayılar için formatlayıcı (toplam değerler, kar/zarar)
  * Tam sayı olarak gösterir
+ * TRY için Türkiye formatı (1.234.567), USD için ABD formatı (1,234,567)
  */
 export function formatLargeNumber(num: number): string {
+  // TRY için - Türkiye formatı (nokta binlik ayraç)
+  return num.toLocaleString('tr-TR', { 
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0 
+  })
+}
+
+/**
+ * USD için büyük sayı formatlayıcı
+ * ABD formatı (virgül binlik ayraç)
+ */
+export function formatLargeNumberUSD(num: number): string {
   return num.toLocaleString('en-US', { 
     minimumFractionDigits: 0,
     maximumFractionDigits: 0 

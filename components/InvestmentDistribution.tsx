@@ -6,10 +6,10 @@ import { createClient } from '@/lib/supabase/client'
 import { usePrices } from '@/lib/hooks/usePrices'
 import { formatLargeNumber, formatLargeNumberUSD } from '@/lib/formatPrice'
 import type { Holding } from '@/lib/types/database.types'
-import { DollarSign, TrendingUp, TrendingDown, RefreshCw, Landmark, Globe, Bitcoin, Coins, Award, Wallet, PiggyBank } from 'lucide-react'
+import { Landmark, Globe, Bitcoin, Coins, DollarSign, RefreshCw } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 
-interface PortfolioAnalysisProps {
+interface InvestmentDistributionProps {
   userId: string
 }
 
@@ -19,7 +19,7 @@ interface UsdTryRate {
   cached: boolean
 }
 
-export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysisProps) {
+export default function InvestmentDistribution({ userId: _userId }: InvestmentDistributionProps) {
   const { activePortfolio } = usePortfolio()
   const [holdings, setHoldings] = useState<Holding[]>([])
   const [loading, setLoading] = useState(true)
@@ -55,7 +55,6 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
     const fetchUsdTryRate = async () => {
       setFetchingRate(true)
       try {
-        // Cache kontrolü ve API çağrısı (15dk cache)
         const response = await fetch('/api/price/quote?symbol=USD&asset_type=CASH')
         
         if (response.ok) {
@@ -84,15 +83,6 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
   const calculateInvestments = () => {
     if (!holdings.length || pricesLoading || !prices || !usdTryRate) {
       return {
-        totalTry: 0,
-        totalUsd: 0,
-        totalCostTry: 0,
-        totalCostUsd: 0,
-        totalProfitLossTry: 0,
-        totalProfitLossUsd: 0,
-        totalProfitLossPercent: 0,
-        bestPerformer: null as { symbol: string; percent: number } | null,
-        worstPerformer: null as { symbol: string; percent: number } | null,
         bist: 0,
         nasdaq: 0,
         crypto: 0,
@@ -109,26 +99,19 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
       }
     }
 
-    let totalTry = 0
-    let totalUsd = 0
-    let totalCostTry = 0
-    let totalCostUsd = 0
-    let bist = 0        // TR_STOCK güncel
-    let nasdaq = 0      // US_STOCK güncel
-    let crypto = 0      // CRYPTO güncel
-    let gold = 0        // CASH - GOLD güncel
-    let silver = 0      // CASH - SILVER güncel
-    let cash = 0        // CASH - TRY, USD, EUR güncel
+    let bist = 0
+    let nasdaq = 0
+    let crypto = 0
+    let gold = 0
+    let silver = 0
+    let cash = 0
 
-    let bistCost = 0        // TR_STOCK maliyet
-    let nasdaqCost = 0      // US_STOCK maliyet
-    let cryptoCost = 0      // CRYPTO maliyet
-    let goldCost = 0        // CASH - GOLD maliyet
-    let silverCost = 0      // CASH - SILVER maliyet
-    let cashCost = 0        // CASH - TRY, USD, EUR maliyet
-    
-    // Performans takibi için
-    const performances: { symbol: string; percent: number }[] = []
+    let bistCost = 0
+    let nasdaqCost = 0
+    let cryptoCost = 0
+    let goldCost = 0
+    let silverCost = 0
+    let cashCost = 0
 
     holdings.forEach(holding => {
       const priceData = prices[holding.symbol]
@@ -146,23 +129,9 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
       if (currency === 'TRY') {
         valueInTry = value
         costBasisInTry = costBasis
-        totalTry += value
-        totalUsd += value / usdTryRate.rate
-        totalCostTry += costBasis
-        totalCostUsd += costBasis / usdTryRate.rate
       } else if (currency === 'USD') {
         valueInTry = value * usdTryRate.rate
         costBasisInTry = costBasis * usdTryRate.rate
-        totalTry += valueInTry
-        totalUsd += value
-        totalCostTry += costBasisInTry
-        totalCostUsd += costBasis
-      }
-      
-      // Performans hesapla
-      if (costBasis > 0) {
-        const profitPercent = ((value - costBasis) / costBasis) * 100
-        performances.push({ symbol: holding.symbol, percent: profitPercent })
       }
 
       // Kategorilere ayır (hem güncel hem maliyet TRY bazında)
@@ -183,7 +152,6 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
           silver += valueInTry
           silverCost += costBasisInTry
         } else {
-          // TRY, USD, EUR
           cash += valueInTry
           cashCost += costBasisInTry
         }
@@ -198,31 +166,8 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
     if (gold > 0) chartData.push({ name: 'Altın', value: gold, color: '#FBBF24' })
     if (silver > 0) chartData.push({ name: 'Gümüş', value: silver, color: '#9CA3AF' })
     if (cash > 0) chartData.push({ name: 'Nakit', value: cash, color: '#10B981' })
-    
-    // En iyi ve en kötü performansı bul
-    let bestPerformer = null
-    let worstPerformer = null
-    if (performances.length > 0) {
-      performances.sort((a, b) => b.percent - a.percent)
-      bestPerformer = performances[0]
-      worstPerformer = performances[performances.length - 1]
-    }
-    
-    // Toplam kar/zarar hesapla
-    const totalProfitLossTry = totalTry - totalCostTry
-    const totalProfitLossUsd = totalUsd - totalCostUsd
-    const totalProfitLossPercent = totalCostTry > 0 ? (totalProfitLossTry / totalCostTry) * 100 : 0
 
     return {
-      totalTry,
-      totalUsd,
-      totalCostTry,
-      totalCostUsd,
-      totalProfitLossTry,
-      totalProfitLossUsd,
-      totalProfitLossPercent,
-      bestPerformer,
-      worstPerformer,
       bist,
       nasdaq,
       crypto,
@@ -253,9 +198,6 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
   }
 
   const { 
-    totalTry, totalUsd, totalCostTry, totalCostUsd,
-    totalProfitLossTry, totalProfitLossUsd, totalProfitLossPercent,
-    bestPerformer, worstPerformer,
     bist, nasdaq, crypto, gold, silver, cash,
     bistCost, nasdaqCost, cryptoCost, goldCost, silverCost, cashCost,
     chartData,
@@ -287,7 +229,7 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
 
   return (
     <div className="space-y-6">
-      {/* USD/TRY Kur Göstergesi - Sağ Üst Köşe */}
+      {/* USD/TRY Kur Göstergesi */}
       {usdTryRate && (
         <div className="flex justify-end">
           <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 flex items-center space-x-2">
@@ -308,171 +250,12 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
         </div>
       )}
 
-      {/* Toplam Kasa Kartları */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Toplam Kasa - TRY */}
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Toplam Kasa (TRY)</h3>
-            <TrendingUp className="w-6 h-6 opacity-80" />
-          </div>
-          
-          {pricesLoading ? (
-            <div className="flex items-center space-x-2">
-              <RefreshCw className="w-5 h-5 animate-spin" />
-              <span>Hesaplanıyor...</span>
-            </div>
-          ) : (
-            <div>
-              <div className="text-3xl font-bold mb-2">
-                ₺{formatLargeNumber(totalTry)}
-              </div>
-              <div className="text-sm opacity-90">
-                {holdings.length} varlık
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Toplam Kasa - USD */}
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Toplam Kasa (USD)</h3>
-            <DollarSign className="w-6 h-6 opacity-80" />
-          </div>
-          
-          {pricesLoading || !usdTryRate ? (
-            <div className="flex items-center space-x-2">
-              <RefreshCw className="w-5 h-5 animate-spin" />
-              <span>Hesaplanıyor...</span>
-            </div>
-          ) : (
-            <div>
-              <div className="text-3xl font-bold mb-2">
-                ${formatLargeNumberUSD(totalUsd)}
-              </div>
-              <div className="text-sm opacity-90">
-                {holdings.length} varlık
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Yeni Metrikler */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Toplam Kar/Zarar */}
-        <div className={`rounded-lg shadow-lg p-6 text-white ${
-          totalProfitLossTry >= 0 
-            ? 'bg-gradient-to-br from-emerald-500 to-emerald-600' 
-            : 'bg-gradient-to-br from-red-500 to-red-600'
-        }`}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold">Toplam Kar/Zarar</h3>
-            {totalProfitLossTry >= 0 ? (
-              <TrendingUp className="w-5 h-5 opacity-80" />
-            ) : (
-              <TrendingDown className="w-5 h-5 opacity-80" />
-            )}
-          </div>
-          
-          {pricesLoading ? (
-            <div className="flex items-center space-x-2">
-              <RefreshCw className="w-4 h-4 animate-spin" />
-              <span className="text-xs">Hesaplanıyor...</span>
-            </div>
-          ) : (
-            <div>
-              <div className="flex items-baseline gap-2 mb-2">
-                <span className="text-2xl font-bold">
-                  ₺{formatLargeNumber(Math.abs(totalProfitLossTry))}
-                </span>
-                <span className="text-xl font-bold opacity-90">
-                  (${formatLargeNumberUSD(Math.abs(totalProfitLossUsd))})
-                </span>
-              </div>
-              <div className="text-2xl font-bold">
-                {totalProfitLossPercent >= 0 ? '+' : ''}{totalProfitLossPercent.toFixed(2)}%
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* En İyi Performans */}
-        <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold">En İyi Performans</h3>
-            <Award className="w-5 h-5 opacity-80" />
-          </div>
-          
-          {pricesLoading ? (
-            <div className="flex items-center space-x-2">
-              <RefreshCw className="w-4 h-4 animate-spin" />
-              <span className="text-xs">Hesaplanıyor...</span>
-            </div>
-          ) : bestPerformer ? (
-            <div>
-              <div className="text-xl font-bold mb-1">
-                {bestPerformer.symbol}
-              </div>
-              <div className="text-2xl font-bold">
-                +{bestPerformer.percent.toFixed(2)}%
-              </div>
-            </div>
-          ) : (
-            <div className="text-sm opacity-80">Veri yok</div>
-          )}
-        </div>
-
-        {/* En Kötü Performans */}
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold">En Kötü Performans</h3>
-            <TrendingDown className="w-5 h-5 opacity-80" />
-          </div>
-          
-          {pricesLoading ? (
-            <div className="flex items-center space-x-2">
-              <RefreshCw className="w-4 h-4 animate-spin" />
-              <span className="text-xs">Hesaplanıyor...</span>
-            </div>
-          ) : worstPerformer ? (
-            <div>
-              <div className="text-xl font-bold mb-1">
-                {worstPerformer.symbol}
-              </div>
-              <div className="text-2xl font-bold">
-                {worstPerformer.percent.toFixed(2)}%
-              </div>
-            </div>
-          ) : (
-            <div className="text-sm opacity-80">Veri yok</div>
-          )}
-        </div>
-
-        {/* Toplam Yatırım */}
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold">Toplam Yatırım</h3>
-            <PiggyBank className="w-5 h-5 opacity-80" />
-          </div>
-          
-          {pricesLoading ? (
-            <div className="flex items-center space-x-2">
-              <RefreshCw className="w-4 h-4 animate-spin" />
-              <span className="text-xs">Hesaplanıyor...</span>
-            </div>
-          ) : (
-            <div>
-              <div className="text-2xl font-bold mb-2">
-                ₺{formatLargeNumber(totalCostTry)}
-              </div>
-              <div className="text-lg opacity-90">
-                (${formatLargeNumberUSD(totalCostUsd)})
-              </div>
-            </div>
-          )}
-        </div>
+      {/* Yatırım Dağılımı Başlık */}
+      <div>
+        <h2 className="text-xl font-bold text-gray-900">Yatırım Dağılımı</h2>
+        <p className="text-sm text-gray-600 mt-1">
+          Varlıklarınızın kategorilere göre dağılımı
+        </p>
       </div>
 
       {/* Yatırım Dağılımı Kartları */}
@@ -721,7 +504,7 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
       {/* Pasta Grafik */}
       {chartData.length > 0 && (
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Yatırım Dağılımı</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Dağılım Grafiği</h3>
           <ResponsiveContainer width="100%" height={400}>
             <PieChart>
               <Pie
@@ -749,18 +532,6 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
           </ResponsiveContainer>
         </div>
       )}
-
-      {/* Ek Bilgi */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="text-xs text-gray-500">
-          <p className="mb-1">
-            ⚡ Fiyatlar otomatik olarak güncellenir (15 dakikada bir)
-          </p>
-          <p>
-            💡 Tüm hesaplamalar güncel piyasa fiyatlarına göre yapılır
-          </p>
-        </div>
-      </div>
     </div>
   )
 }

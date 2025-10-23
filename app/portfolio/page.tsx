@@ -1,5 +1,6 @@
 import Navigation from '@/components/Navigation'
 import HoldingsList from '@/components/HoldingsList'
+import InvestmentDistribution from '@/components/InvestmentDistribution'
 import TransactionsList from '@/components/TransactionsList'
 import NotesList from '@/components/NotesList'
 import { PortfolioProvider } from '@/lib/contexts/PortfolioContext'
@@ -28,6 +29,9 @@ export default async function PortfolioPage() {
           <div className="space-y-6">
             {/* Varlıklar */}
             <HoldingsList userId={user.id} />
+
+            {/* Yatırım Dağılımı */}
+            <InvestmentDistribution userId={user.id} />
 
             {/* İşlem Geçmişi */}
             <TransactionsList userId={user.id} />

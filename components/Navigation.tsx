@@ -15,7 +15,7 @@ import {
 const navigation = [
   { name: 'Ana Panel', href: '/', icon: Home },
   { name: 'Portföyüm', href: '/portfolio', icon: Briefcase },
-  { name: 'Analiz', href: '/analysis', icon: BarChart3 },
+  { name: 'Portföy Analizi', href: '/analysis', icon: BarChart3 },
   { name: 'Ayarlar', href: '/settings', icon: Settings },
 ]
 
