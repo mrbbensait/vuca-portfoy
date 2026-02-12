@@ -54,30 +54,7 @@ export async function DELETE(
       // Notes silme başarısız olsa bile devam et
     }
 
-    // 4. Bu varlığa ait alertleri sil (payload içinde sembol olanlar)
-    // Not: Bu basit bir yaklaşım, daha gelişmiş JSONB query yapılabilir
-    const { data: alerts } = await supabase
-      .from('alerts')
-      .select('id, payload')
-      .eq('portfolio_id', holding.portfolio_id)
-
-    if (alerts && alerts.length > 0) {
-      const alertIdsToDelete = alerts
-        .filter(alert => {
-          const payload = alert.payload as { symbol?: string }
-          return payload.symbol === holding.symbol
-        })
-        .map(alert => alert.id)
-
-      if (alertIdsToDelete.length > 0) {
-        await supabase
-          .from('alerts')
-          .delete()
-          .in('id', alertIdsToDelete)
-      }
-    }
-
-    // 5. Holding'i sil
+    // 4. Holding'i sil
     const { error: holdingDeleteError } = await supabase
       .from('holdings')
       .delete()

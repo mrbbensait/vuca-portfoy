@@ -397,7 +397,7 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
                 <ul className="text-xs text-red-700 mt-1 space-y-0.5 list-disc list-inside">
                   <li>Varlık kaydı silinecek</li>
                   <li><strong>Bu varlığa ait tüm işlem geçmişi silinecek</strong></li>
-                  <li>İlgili notlar ve alertler silinecek</li>
+                  <li>İlgili notlar silinecek</li>
                 </ul>
               </div>
               

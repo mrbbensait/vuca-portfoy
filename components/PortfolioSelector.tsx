@@ -185,13 +185,19 @@ export default function PortfolioSelector() {
               )}
 
               {/* Yeni Portfolio Butonu */}
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="w-full mt-3 flex items-center justify-center space-x-2 px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg shadow-sm hover:shadow transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Yeni Portfolio Oluştur</span>
-              </button>
+              {portfolios.length >= 10 ? (
+                <div className="mt-3 px-3 py-2 text-xs text-gray-500 bg-gray-50 rounded-lg text-center">
+                  Maksimum 10 portföy oluşturabilirsiniz.
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="w-full mt-3 flex items-center justify-center space-x-2 px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg shadow-sm hover:shadow transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Yeni Portfolio Oluştur ({portfolios.length}/10)</span>
+                </button>
+              )}
             </div>
           </div>
         </>

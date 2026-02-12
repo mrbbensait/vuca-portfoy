@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react'
 import { usePortfolio } from '@/lib/contexts/PortfolioContext'
 import { createClient } from '@/lib/supabase/client'
 
-type TableName = 'holdings' | 'transactions' | 'notes' | 'alerts'
+type TableName = 'holdings' | 'transactions' | 'notes'
 
 interface UsePortfolioDataOptions {
   /** Otomatik veri çekmeyi devre dışı bırak (manuel fetch için) */

@@ -44,6 +44,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Maksimum portfolio limiti kontrolü
+    const MAX_PORTFOLIOS = 10
+    const { data: existingPortfolios } = await supabase
+      .from('portfolios')
+      .select('id')
+      .eq('user_id', user.id)
+
+    if (existingPortfolios && existingPortfolios.length >= MAX_PORTFOLIOS) {
+      return NextResponse.json(
+        { error: `En fazla ${MAX_PORTFOLIOS} portfolio oluşturabilirsiniz.` },
+        { status: 400 }
+      )
+    }
+
     const { data: portfolio, error } = await supabase
       .from('portfolios')
       .insert({

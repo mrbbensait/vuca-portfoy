@@ -4,7 +4,6 @@
 export type AssetType = 'TR_STOCK' | 'US_STOCK' | 'CRYPTO' | 'CASH'
 export type TransactionSide = 'BUY' | 'SELL'
 export type NoteScope = 'POSITION' | 'WEEKLY' | 'GENERAL'
-export type AlertType = 'PORTFOLIO_CHANGE' | 'TARGET_PRICE'
 
 export interface UsersPublic {
   id: string // uuid (auth.uid ile aynı)
@@ -68,16 +67,6 @@ export interface Note {
   updated_at: string
 }
 
-export interface Alert {
-  id: string
-  portfolio_id: string
-  user_id: string
-  type: AlertType
-  payload: Record<string, unknown> // örn: { "symbol":"ASELS.IS","target":95 }
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
 
 // Hesaplama sonuçları için yardımcı tipler
 export interface PortfolioValue {
