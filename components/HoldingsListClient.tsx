@@ -14,6 +14,15 @@ interface HoldingsListClientProps {
  * Client-side wrapper for holdings list
  * Provides centralized price management to all HoldingItem components
  */
+const BOTTOM_GROUP_SYMBOLS = ['USD', 'EUR', 'GOLD', 'SILVER', 'TRY']
+const BOTTOM_GROUP_ORDER: Record<string, number> = {
+  USD: 0,
+  EUR: 1,
+  GOLD: 2,
+  SILVER: 3,
+  TRY: 4,
+}
+
 export default function HoldingsListClient({ holdings, userId, portfolioId }: HoldingsListClientProps) {
   if (holdings.length === 0) {
     return (
@@ -23,6 +32,21 @@ export default function HoldingsListClient({ holdings, userId, portfolioId }: Ho
       </div>
     )
   }
+
+  const bistHoldings = holdings.filter(h => h.asset_type === 'TR_STOCK')
+  const abdHoldings = holdings.filter(h => h.asset_type === 'US_STOCK')
+  const cryptoHoldings = holdings.filter(h => h.asset_type === 'CRYPTO')
+  const bottomHoldings = holdings
+    .filter(h => BOTTOM_GROUP_SYMBOLS.includes(h.symbol))
+    .sort((a, b) => (BOTTOM_GROUP_ORDER[a.symbol] ?? 99) - (BOTTOM_GROUP_ORDER[b.symbol] ?? 99))
+
+  const groups = [
+    { key: 'bist', items: bistHoldings },
+    { key: 'abd', items: abdHoldings },
+    { key: 'crypto', items: cryptoHoldings },
+  ]
+
+  let renderedGroupCount = 0
 
   return (
     <PriceProvider holdings={holdings}>
@@ -41,17 +65,40 @@ export default function HoldingsListClient({ holdings, userId, portfolioId }: Ho
           <div className="text-right">İşlem</div>
         </div>
         
-        {/* Holdings List */}
-        <div>
-          {holdings.map(holding => (
-            <HoldingItem 
-              key={holding.id} 
-              holding={holding}
-              userId={userId}
-              portfolioId={portfolioId}
-            />
-          ))}
-        </div>
+        {/* Grouped Holdings: BIST → ABD → Kripto */}
+        {groups.map(group => {
+          if (group.items.length === 0) return null
+          const showSeparator = renderedGroupCount > 0
+          renderedGroupCount++
+          return (
+            <div key={group.key}>
+              {showSeparator && <div className="border-t-2 border-gray-300 mx-2" />}
+              {group.items.map(holding => (
+                <HoldingItem 
+                  key={holding.id} 
+                  holding={holding}
+                  userId={userId}
+                  portfolioId={portfolioId}
+                />
+              ))}
+            </div>
+          )
+        })}
+
+        {/* Bottom Group: USD, EUR, Altın, Gümüş, TL */}
+        {bottomHoldings.length > 0 && (
+          <div>
+            <div className="border-t-2 border-gray-400 mx-2" />
+            {bottomHoldings.map(holding => (
+              <HoldingItem 
+                key={holding.id} 
+                holding={holding}
+                userId={userId}
+                portfolioId={portfolioId}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </PriceProvider>
   )

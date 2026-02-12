@@ -86,16 +86,24 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
         bist: 0,
         nasdaq: 0,
         crypto: 0,
-        gold: 0,
-        silver: 0,
+        goldSilver: 0,
+        goldSilverCost: 0,
         cash: 0,
         bistCost: 0,
         nasdaqCost: 0,
         cryptoCost: 0,
-        goldCost: 0,
-        silverCost: 0,
         cashCost: 0,
-        chartData: []
+        chartData: [],
+        bistUsd: 0,
+        nasdaqUsd: 0,
+        cryptoUsd: 0,
+        goldSilverUsd: 0,
+        cashUsd: 0,
+        bistCostUsd: 0,
+        nasdaqCostUsd: 0,
+        cryptoCostUsd: 0,
+        goldSilverCostUsd: 0,
+        cashCostUsd: 0
       }
     }
 
@@ -163,46 +171,43 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
     if (bist > 0) chartData.push({ name: 'BIST', value: bist, color: '#EF4444' })
     if (nasdaq > 0) chartData.push({ name: 'NASDAQ', value: nasdaq, color: '#3B82F6' })
     if (crypto > 0) chartData.push({ name: 'Kripto', value: crypto, color: '#F59E0B' })
-    if (gold > 0) chartData.push({ name: 'Altın', value: gold, color: '#FBBF24' })
-    if (silver > 0) chartData.push({ name: 'Gümüş', value: silver, color: '#9CA3AF' })
+    const goldSilver = gold + silver
+    const goldSilverCost = goldCost + silverCost
+    if (goldSilver > 0) chartData.push({ name: 'Altın & Gümüş', value: goldSilver, color: '#FBBF24' })
     if (cash > 0) chartData.push({ name: 'Nakit', value: cash, color: '#10B981' })
 
     return {
       bist,
       nasdaq,
       crypto,
-      gold,
-      silver,
+      goldSilver,
+      goldSilverCost,
       cash,
       bistCost,
       nasdaqCost,
       cryptoCost,
-      goldCost,
-      silverCost,
       cashCost,
       chartData,
       // USD karşılıkları
       bistUsd: bist / usdTryRate.rate,
       nasdaqUsd: nasdaq / usdTryRate.rate,
       cryptoUsd: crypto / usdTryRate.rate,
-      goldUsd: gold / usdTryRate.rate,
-      silverUsd: silver / usdTryRate.rate,
+      goldSilverUsd: goldSilver / usdTryRate.rate,
       cashUsd: cash / usdTryRate.rate,
       bistCostUsd: bistCost / usdTryRate.rate,
       nasdaqCostUsd: nasdaqCost / usdTryRate.rate,
       cryptoCostUsd: cryptoCost / usdTryRate.rate,
-      goldCostUsd: goldCost / usdTryRate.rate,
-      silverCostUsd: silverCost / usdTryRate.rate,
+      goldSilverCostUsd: goldSilverCost / usdTryRate.rate,
       cashCostUsd: cashCost / usdTryRate.rate
     }
   }
 
   const { 
-    bist, nasdaq, crypto, gold, silver, cash,
-    bistCost, nasdaqCost, cryptoCost, goldCost, silverCost, cashCost,
+    bist, nasdaq, crypto, goldSilver, goldSilverCost, cash,
+    bistCost, nasdaqCost, cryptoCost, cashCost,
     chartData,
-    bistUsd, nasdaqUsd, cryptoUsd, goldUsd, silverUsd, cashUsd,
-    bistCostUsd, nasdaqCostUsd, cryptoCostUsd, goldCostUsd, silverCostUsd, cashCostUsd
+    bistUsd, nasdaqUsd, cryptoUsd, goldSilverUsd, cashUsd,
+    bistCostUsd, nasdaqCostUsd, cryptoCostUsd, goldSilverCostUsd, cashCostUsd
   } = calculateInvestments()
 
   // Kar/Zarar yüzde hesaplama fonksiyonu
@@ -259,7 +264,7 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
       </div>
 
       {/* Yatırım Dağılımı Kartları */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {/* BIST */}
         <div className="bg-white rounded-lg shadow-md p-5 border-l-4 border-red-500">
           <div className="flex items-center justify-between mb-2">
@@ -380,12 +385,12 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
           )}
         </div>
 
-        {/* Altın */}
+        {/* Altın ve Gümüş */}
         <div className="bg-white rounded-lg shadow-md p-5 border-l-4 border-yellow-500">
           <div className="flex items-center justify-between mb-2">
             <Coins className="w-5 h-5 text-yellow-500" />
             {(() => {
-              const profitLoss = calculateProfitLoss(gold, goldCost)
+              const profitLoss = calculateProfitLoss(goldSilver, goldSilverCost)
               return profitLoss !== null ? (
                 <span className={`text-xs font-bold px-2 py-0.5 rounded ${profitLoss >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                   {profitLoss >= 0 ? '+' : ''}{profitLoss.toFixed(2)}%
@@ -393,7 +398,7 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
               ) : null
             })()}
           </div>
-          <p className="text-sm text-gray-900 mb-2 font-semibold">Altın Yatırımı</p>
+          <p className="text-sm text-gray-900 mb-2 font-semibold">Altın ve Gümüş Yatırımı</p>
           {pricesLoading ? (
             <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
           ) : (
@@ -401,59 +406,19 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
               <div>
                 <p className="text-xs text-gray-700 mb-1 font-medium">Güncel Değer</p>
                 <p className="text-lg font-bold text-gray-900">
-                  ₺{formatLargeNumber(gold)}
+                  ₺{formatLargeNumber(goldSilver)}
                 </p>
                 <p className="text-xs text-gray-700">
-                  (${formatLargeNumberUSD(goldUsd || 0)})
+                  (${formatLargeNumberUSD(goldSilverUsd || 0)})
                 </p>
               </div>
               <div>
                 <p className="text-xs text-gray-700 mb-1 font-medium">Toplam Yatırım</p>
                 <p className="text-sm font-semibold text-gray-800">
-                  ₺{formatLargeNumber(goldCost)}
+                  ₺{formatLargeNumber(goldSilverCost)}
                 </p>
                 <p className="text-xs text-gray-700">
-                  (${formatLargeNumberUSD(goldCostUsd || 0)})
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Gümüş */}
-        <div className="bg-white rounded-lg shadow-md p-5 border-l-4 border-gray-500">
-          <div className="flex items-center justify-between mb-2">
-            <Coins className="w-5 h-5 text-gray-500" />
-            {(() => {
-              const profitLoss = calculateProfitLoss(silver, silverCost)
-              return profitLoss !== null ? (
-                <span className={`text-xs font-bold px-2 py-0.5 rounded ${profitLoss >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                  {profitLoss >= 0 ? '+' : ''}{profitLoss.toFixed(2)}%
-                </span>
-              ) : null
-            })()}
-          </div>
-          <p className="text-sm text-gray-900 mb-2 font-semibold">Gümüş Yatırımı</p>
-          {pricesLoading ? (
-            <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
-          ) : (
-            <div className="space-y-2">
-              <div>
-                <p className="text-xs text-gray-700 mb-1 font-medium">Güncel Değer</p>
-                <p className="text-lg font-bold text-gray-900">
-                  ₺{formatLargeNumber(silver)}
-                </p>
-                <p className="text-xs text-gray-700">
-                  (${formatLargeNumberUSD(silverUsd || 0)})
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-700 mb-1 font-medium">Toplam Yatırım</p>
-                <p className="text-sm font-semibold text-gray-800">
-                  ₺{formatLargeNumber(silverCost)}
-                </p>
-                <p className="text-xs text-gray-700">
-                  (${formatLargeNumberUSD(silverCostUsd || 0)})
+                  (${formatLargeNumberUSD(goldSilverCostUsd || 0)})
                 </p>
               </div>
             </div>

@@ -57,6 +57,7 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
         .select('*')
         .eq('portfolio_id', activePortfolio.id)
         .order('date', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(20)
 
       setAllTransactions(all || [])
