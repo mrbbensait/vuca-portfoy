@@ -16,7 +16,7 @@ import {
 import { usePrivacy } from '@/lib/contexts/PrivacyContext'
 
 const navigation = [
-  { name: 'Ana Panel', href: '/', icon: Home },
+  { name: 'Ana Panel', href: '/dashboard', icon: Home },
   { name: 'Portföyüm', href: '/portfolio', icon: Briefcase },
   { name: 'Portföy Analizi', href: '/analysis', icon: BarChart3 },
   { name: 'Ayarlar', href: '/settings', icon: Settings },
