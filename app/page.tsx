@@ -11,6 +11,10 @@ import {
   CheckCircle2,
   Activity,
   Wallet,
+  Layers,
+  CircleDollarSign,
+  Ban,
+  Gem,
 } from 'lucide-react'
 
 export default async function LandingPage() {
@@ -69,8 +73,8 @@ export default async function LandingPage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-28 sm:pt-28 sm:pb-36">
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-sm font-medium mb-8">
-              <Zap className="w-4 h-4" />
-              Yatırımlarınızı tek ekrandan yönetin
+              <Layers className="w-4 h-4" />
+              Tüm varlıklarınız, tek bir portföyde
             </div>
 
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 tracking-tight leading-[1.1]">
@@ -80,9 +84,28 @@ export default async function LandingPage() {
             </h1>
 
             <p className="mt-6 text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-              BIST hisseleri, ABD borsası ve kripto varlıklarınızı tek bir panelden takip edin. 
-              Gerçek zamanlı analizler, risk skorları ve akıllı önerilerle yatırımlarınızı kontrol altında tutun.
+              BIST hisseleri, ABD hisseleri, altın, gümüş, döviz ve kripto — tüm yatırımlarınızı 
+              tek bir portföyde birleştirin. Artık farklı uygulamalar arasında geçiş yapmak yok.
             </p>
+
+            {/* Asset Type Pills */}
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+              {[
+                { label: 'BIST Hisse', color: 'bg-red-50 text-red-700 border-red-200' },
+                { label: 'ABD Hisse', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+                { label: 'Altın', color: 'bg-amber-50 text-amber-700 border-amber-200' },
+                { label: 'Gümüş', color: 'bg-gray-100 text-gray-700 border-gray-300' },
+                { label: 'Döviz', color: 'bg-green-50 text-green-700 border-green-200' },
+                { label: 'Kripto', color: 'bg-purple-50 text-purple-700 border-purple-200' },
+              ].map((asset) => (
+                <span
+                  key={asset.label}
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${asset.color}`}
+                >
+                  {asset.label}
+                </span>
+              ))}
+            </div>
 
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
@@ -103,7 +126,7 @@ export default async function LandingPage() {
             {/* Mini Stats */}
             <div className="mt-16 grid grid-cols-3 gap-8 max-w-lg mx-auto">
               <div>
-                <p className="text-3xl font-bold text-gray-900">3+</p>
+                <p className="text-3xl font-bold text-gray-900">6</p>
                 <p className="text-sm text-gray-500 mt-1">Varlık Türü</p>
               </div>
               <div>
@@ -111,8 +134,8 @@ export default async function LandingPage() {
                 <p className="text-sm text-gray-500 mt-1">Ücretsiz</p>
               </div>
               <div>
-                <p className="text-3xl font-bold text-gray-900">7/24</p>
-                <p className="text-sm text-gray-500 mt-1">Anlık Takip</p>
+                <p className="text-3xl font-bold text-gray-900">1</p>
+                <p className="text-sm text-gray-500 mt-1">Tek Portföy</p>
               </div>
             </div>
           </div>
@@ -151,7 +174,7 @@ export default async function LandingPage() {
                     <span className="text-xs font-medium text-amber-700">Varlık Sayısı</span>
                   </div>
                   <p className="text-xl font-bold text-gray-900">24</p>
-                  <p className="text-xs text-amber-600 mt-1">3 farklı piyasa</p>
+                  <p className="text-xs text-amber-600 mt-1">6 farklı varlık türü</p>
                 </div>
               </div>
 
@@ -176,32 +199,74 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-24 bg-white">
+      {/* Problem → Solution Section */}
+      <section id="features" className="py-24 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
-              Yatırım yönetiminin her adımı için
+              Sorun: Dağınık portföy yönetimi
+            </h2>
+            <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
+              Piyasadaki uygulamalar sizi farklı platformlara mahkum ediyor — biri kripto için, biri hisse için, biri altın için. 
+              Portföyünüzün tamamını göremiyorsunuz.
+            </p>
+          </div>
+
+          {/* Problem Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            <div className="bg-red-50/60 border border-red-100 rounded-2xl p-6 text-center">
+              <Ban className="w-8 h-8 text-red-400 mx-auto mb-3" />
+              <p className="text-sm text-red-700 font-medium">Kripto için ayrı uygulama</p>
+            </div>
+            <div className="bg-red-50/60 border border-red-100 rounded-2xl p-6 text-center">
+              <Ban className="w-8 h-8 text-red-400 mx-auto mb-3" />
+              <p className="text-sm text-red-700 font-medium">Hisse senedi için ayrı uygulama</p>
+            </div>
+            <div className="bg-red-50/60 border border-red-100 rounded-2xl p-6 text-center">
+              <Ban className="w-8 h-8 text-red-400 mx-auto mb-3" />
+              <p className="text-sm text-red-700 font-medium">Altın ve döviz için ayrı uygulama</p>
+            </div>
+          </div>
+
+          {/* Solution */}
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-8 sm:p-12 text-center mb-20">
+            <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
+              <CheckCircle2 className="w-4 h-4" />
+              Çözüm: Portföy Röntgeni
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+              BIST, ABD, altın, gümüş, döviz ve kripto — hepsi tek portföyde
+            </h3>
+            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+              Farklı uygulamalar arasında geçiş yapmaya son verin. Tüm varlıklarınızı tek bir ekrandan yönetin, 
+              analiz edin ve portföyünüzün gerçek büyük resmini görün.
+            </p>
+          </div>
+
+          {/* Features Grid */}
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
+              Ve çok daha fazlası
             </h2>
             <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-              Portföy Röntgeni, yatırımlarınızı analiz etmek ve yönetmek için ihtiyacınız olan tüm araçları sunar.
+              Sadece birleştirmekle kalmıyoruz — derinlemesine analiz araçları da sunuyoruz.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Feature 1 */}
-            <div className="group p-8 rounded-2xl border border-gray-100 hover:border-blue-100 hover:bg-blue-50/30 transition-all duration-300">
+            <div className="group p-8 rounded-2xl border border-gray-100 bg-white hover:border-blue-100 hover:bg-blue-50/30 transition-all duration-300">
               <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-blue-200 transition-colors">
                 <Globe className="w-6 h-6 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Çoklu Piyasa Desteği</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">6 Varlık Türü, 1 Portföy</h3>
               <p className="text-gray-600 leading-relaxed">
-                BIST hisseleri, ABD borsası hisseleri ve kripto varlıklarınızı tek bir yerden takip edin ve yönetin.
+                BIST hisseleri, ABD hisseleri, altın, gümüş, döviz ve kripto — hepsini aynı portföyde takip edin.
               </p>
             </div>
 
             {/* Feature 2 */}
-            <div className="group p-8 rounded-2xl border border-gray-100 hover:border-green-100 hover:bg-green-50/30 transition-all duration-300">
+            <div className="group p-8 rounded-2xl border border-gray-100 bg-white hover:border-green-100 hover:bg-green-50/30 transition-all duration-300">
               <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-green-200 transition-colors">
                 <TrendingUp className="w-6 h-6 text-green-600" />
               </div>
@@ -212,7 +277,7 @@ export default async function LandingPage() {
             </div>
 
             {/* Feature 3 */}
-            <div className="group p-8 rounded-2xl border border-gray-100 hover:border-purple-100 hover:bg-purple-50/30 transition-all duration-300">
+            <div className="group p-8 rounded-2xl border border-gray-100 bg-white hover:border-purple-100 hover:bg-purple-50/30 transition-all duration-300">
               <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-purple-200 transition-colors">
                 <PieChart className="w-6 h-6 text-purple-600" />
               </div>
@@ -223,7 +288,7 @@ export default async function LandingPage() {
             </div>
 
             {/* Feature 4 */}
-            <div className="group p-8 rounded-2xl border border-gray-100 hover:border-amber-100 hover:bg-amber-50/30 transition-all duration-300">
+            <div className="group p-8 rounded-2xl border border-gray-100 bg-white hover:border-amber-100 hover:bg-amber-50/30 transition-all duration-300">
               <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-amber-200 transition-colors">
                 <Shield className="w-6 h-6 text-amber-600" />
               </div>
@@ -234,7 +299,7 @@ export default async function LandingPage() {
             </div>
 
             {/* Feature 5 */}
-            <div className="group p-8 rounded-2xl border border-gray-100 hover:border-red-100 hover:bg-red-50/30 transition-all duration-300">
+            <div className="group p-8 rounded-2xl border border-gray-100 bg-white hover:border-red-100 hover:bg-red-50/30 transition-all duration-300">
               <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-red-200 transition-colors">
                 <Activity className="w-6 h-6 text-red-600" />
               </div>
@@ -245,7 +310,7 @@ export default async function LandingPage() {
             </div>
 
             {/* Feature 6 */}
-            <div className="group p-8 rounded-2xl border border-gray-100 hover:border-indigo-100 hover:bg-indigo-50/30 transition-all duration-300">
+            <div className="group p-8 rounded-2xl border border-gray-100 bg-white hover:border-indigo-100 hover:bg-indigo-50/30 transition-all duration-300">
               <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-indigo-200 transition-colors">
                 <BarChart3 className="w-6 h-6 text-indigo-600" />
               </div>
@@ -287,7 +352,7 @@ export default async function LandingPage() {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">Varlıklarınızı Ekleyin</h3>
               <p className="text-gray-600">
-                Hisselerinizi, kriptolarınızı ve diğer varlıklarınızı portföyünüze ekleyin.
+                BIST, ABD hisseleri, altın, gümüş, döviz, kripto — ne varsa hepsini ekleyin.
               </p>
             </div>
 
@@ -313,12 +378,13 @@ export default async function LandingPage() {
                 Neden Portföy Röntgeni?
               </h2>
               <p className="text-lg text-gray-600 mb-8">
-                Yatırım portföyünüzü yönetmek hiç bu kadar kolay olmamıştı.
+                Piyasada her varlık türü için ayrı uygulama var. Biz hepsini tek çatı altında topladık.
               </p>
 
               <div className="space-y-4">
                 {[
-                  'BIST, ABD ve kripto piyasaları tek panelde',
+                  'BIST hisse, ABD hisse, altın, gümüş, döviz ve kripto tek portföyde',
+                  'Farklı uygulamalar arasında geçiş yapmaya son',
                   'Portföy sağlık skoru ile genel durum analizi',
                   'Varlık korelasyon matrisi ve risk ölçümü',
                   'PDF raporlama ve veri dışa aktarma',
@@ -390,10 +456,11 @@ export default async function LandingPage() {
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
-            Yatırımlarınızı kontrol altına alın
+            Tüm yatırımlarınız, tek bir portföyde
           </h2>
           <p className="text-lg sm:text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
-            Binlerce yatırımcı portföylerini Portföy Röntgeni ile yönetiyor. Siz de hemen başlayın.
+            Hisse, altın, gümüş, döviz, kripto — farklı uygulamalar arasında kaybolmayın. 
+            Portföy Röntgeni ile hepsini tek ekrandan yönetin.
           </p>
           <Link
             href={ctaHref}

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Portföy Röntgeni - Yatırım Portföy Yönetimi",
-  description: "TR hisse, ABD hisse ve kripto varlıklarınızı tek yerden yönetin",
+  description: "BIST hisse, ABD hisse, altın, gümüş, döviz ve kripto — tüm varlıklarınızı tek portföyde yönetin",
 };
 
 export default function RootLayout({
