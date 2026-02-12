@@ -7,6 +7,7 @@ import { usePrices } from '@/lib/hooks/usePrices'
 import { formatLargeNumber, formatLargeNumberUSD } from '@/lib/formatPrice'
 import type { Holding } from '@/lib/types/database.types'
 import { Landmark, Globe, Bitcoin, Coins, DollarSign, RefreshCw } from 'lucide-react'
+import Blur from './PrivacyBlur'
 
 interface InvestmentDistributionProps {
   userId: string
@@ -275,19 +276,19 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
               <div>
                 <p className="text-xs text-gray-700 mb-1 font-medium">Güncel Değer</p>
                 <p className="text-lg font-bold text-gray-900">
-                  ₺{formatLargeNumber(bist)}
+                  <Blur>₺{formatLargeNumber(bist)}</Blur>
                 </p>
                 <p className="text-xs text-gray-700">
-                  (${formatLargeNumberUSD(bistUsd || 0)})
+                  <Blur>(${formatLargeNumberUSD(bistUsd || 0)})</Blur>
                 </p>
               </div>
               <div>
                 <p className="text-xs text-gray-700 mb-1 font-medium">Toplam Yatırım</p>
                 <p className="text-sm font-semibold text-gray-800">
-                  ₺{formatLargeNumber(bistCost)}
+                  <Blur>₺{formatLargeNumber(bistCost)}</Blur>
                 </p>
                 <p className="text-xs text-gray-700">
-                  (${formatLargeNumberUSD(bistCostUsd || 0)})
+                  <Blur>(${formatLargeNumberUSD(bistCostUsd || 0)})</Blur>
                 </p>
               </div>
             </div>
@@ -315,19 +316,19 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
               <div>
                 <p className="text-xs text-gray-700 mb-1 font-medium">Güncel Değer</p>
                 <p className="text-lg font-bold text-gray-900">
-                  ₺{formatLargeNumber(nasdaq)}
+                  <Blur>₺{formatLargeNumber(nasdaq)}</Blur>
                 </p>
                 <p className="text-xs text-gray-700">
-                  (${formatLargeNumberUSD(nasdaqUsd || 0)})
+                  <Blur>(${formatLargeNumberUSD(nasdaqUsd || 0)})</Blur>
                 </p>
               </div>
               <div>
                 <p className="text-xs text-gray-700 mb-1 font-medium">Toplam Yatırım</p>
                 <p className="text-sm font-semibold text-gray-800">
-                  ₺{formatLargeNumber(nasdaqCost)}
+                  <Blur>₺{formatLargeNumber(nasdaqCost)}</Blur>
                 </p>
                 <p className="text-xs text-gray-700">
-                  (${formatLargeNumberUSD(nasdaqCostUsd || 0)})
+                  <Blur>(${formatLargeNumberUSD(nasdaqCostUsd || 0)})</Blur>
                 </p>
               </div>
             </div>
@@ -355,19 +356,19 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
               <div>
                 <p className="text-xs text-gray-700 mb-1 font-medium">Güncel Değer</p>
                 <p className="text-lg font-bold text-gray-900">
-                  ₺{formatLargeNumber(crypto)}
+                  <Blur>₺{formatLargeNumber(crypto)}</Blur>
                 </p>
                 <p className="text-xs text-gray-700">
-                  (${formatLargeNumberUSD(cryptoUsd || 0)})
+                  <Blur>(${formatLargeNumberUSD(cryptoUsd || 0)})</Blur>
                 </p>
               </div>
               <div>
                 <p className="text-xs text-gray-700 mb-1 font-medium">Toplam Yatırım</p>
                 <p className="text-sm font-semibold text-gray-800">
-                  ₺{formatLargeNumber(cryptoCost)}
+                  <Blur>₺{formatLargeNumber(cryptoCost)}</Blur>
                 </p>
                 <p className="text-xs text-gray-700">
-                  (${formatLargeNumberUSD(cryptoCostUsd || 0)})
+                  <Blur>(${formatLargeNumberUSD(cryptoCostUsd || 0)})</Blur>
                 </p>
               </div>
             </div>
@@ -395,19 +396,19 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
               <div>
                 <p className="text-xs text-gray-700 mb-1 font-medium">Güncel Değer</p>
                 <p className="text-lg font-bold text-gray-900">
-                  ₺{formatLargeNumber(goldSilver)}
+                  <Blur>₺{formatLargeNumber(goldSilver)}</Blur>
                 </p>
                 <p className="text-xs text-gray-700">
-                  (${formatLargeNumberUSD(goldSilverUsd || 0)})
+                  <Blur>(${formatLargeNumberUSD(goldSilverUsd || 0)})</Blur>
                 </p>
               </div>
               <div>
                 <p className="text-xs text-gray-700 mb-1 font-medium">Toplam Yatırım</p>
                 <p className="text-sm font-semibold text-gray-800">
-                  ₺{formatLargeNumber(goldSilverCost)}
+                  <Blur>₺{formatLargeNumber(goldSilverCost)}</Blur>
                 </p>
                 <p className="text-xs text-gray-700">
-                  (${formatLargeNumberUSD(goldSilverCostUsd || 0)})
+                  <Blur>(${formatLargeNumberUSD(goldSilverCostUsd || 0)})</Blur>
                 </p>
               </div>
             </div>
@@ -435,19 +436,19 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
               <div>
                 <p className="text-xs text-gray-700 mb-1 font-medium">Güncel Değer</p>
                 <p className="text-lg font-bold text-gray-900">
-                  ₺{formatLargeNumber(cash)}
+                  <Blur>₺{formatLargeNumber(cash)}</Blur>
                 </p>
                 <p className="text-xs text-gray-700">
-                  (${formatLargeNumberUSD(cashUsd || 0)})
+                  <Blur>(${formatLargeNumberUSD(cashUsd || 0)})</Blur>
                 </p>
               </div>
               <div>
                 <p className="text-xs text-gray-700 mb-1 font-medium">Toplam Yatırım</p>
                 <p className="text-sm font-semibold text-gray-800">
-                  ₺{formatLargeNumber(cashCost)}
+                  <Blur>₺{formatLargeNumber(cashCost)}</Blur>
                 </p>
                 <p className="text-xs text-gray-700">
-                  (${formatLargeNumberUSD(cashCostUsd || 0)})
+                  <Blur>(${formatLargeNumberUSD(cashCostUsd || 0)})</Blur>
                 </p>
               </div>
             </div>

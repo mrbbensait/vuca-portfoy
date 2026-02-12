@@ -116,3 +116,86 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({ error: 'İşlem ID gerekli' }, { status: 400 })
+    }
+
+    const supabase = await createClient()
+
+    // 1. Silinecek işlemi bul
+    const { data: tx, error: fetchErr } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (fetchErr || !tx) {
+      return NextResponse.json({ error: 'İşlem bulunamadı' }, { status: 404 })
+    }
+
+    // 2. Holding etkisini geri al
+    const { data: holding } = await supabase
+      .from('holdings')
+      .select('*')
+      .eq('portfolio_id', tx.portfolio_id)
+      .eq('symbol', tx.symbol)
+      .single()
+
+    if (tx.side === 'BUY') {
+      // Alış siliniyor → holding'den miktarı düş
+      if (holding) {
+        const newQuantity = holding.quantity - tx.quantity
+        if (newQuantity <= 0) {
+          await supabase.from('holdings').delete().eq('id', holding.id)
+        } else {
+          // Ortalama fiyatı yeniden hesapla
+          const totalCost = (holding.quantity * holding.avg_price) - (tx.quantity * tx.price)
+          const newAvgPrice = totalCost / newQuantity
+          await supabase
+            .from('holdings')
+            .update({ quantity: newQuantity, avg_price: Math.max(0, newAvgPrice) })
+            .eq('id', holding.id)
+        }
+      }
+    } else {
+      // Satış siliniyor → holding'e miktarı geri ekle
+      if (holding) {
+        const newQuantity = holding.quantity + tx.quantity
+        await supabase
+          .from('holdings')
+          .update({ quantity: newQuantity })
+          .eq('id', holding.id)
+      } else {
+        // Holding yoksa yeniden oluştur (tamamı satılmıştı)
+        await supabase.from('holdings').insert({
+          symbol: tx.symbol,
+          asset_type: tx.asset_type,
+          quantity: tx.quantity,
+          avg_price: tx.price,
+          portfolio_id: tx.portfolio_id,
+          user_id: tx.user_id,
+        })
+      }
+    }
+
+    // 3. İşlemi sil
+    const { error: delErr } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('id', id)
+
+    if (delErr) throw delErr
+
+    return NextResponse.json({ success: true })
+  } catch (error: unknown) {
+    console.error('Transaction DELETE error:', error)
+    const message = error instanceof Error ? error.message : 'An error occurred'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}

@@ -1,6 +1,8 @@
 import Navigation from '@/components/Navigation'
-import { Settings as SettingsIcon, User, DollarSign } from 'lucide-react'
+import { Settings as SettingsIcon, User, DollarSign, Shield, Download } from 'lucide-react'
 import ProfileSettings from '@/components/ProfileSettings'
+import SecuritySettings from '@/components/SecuritySettings'
+import DataExport from '@/components/DataExport'
 import { PortfolioProvider } from '@/lib/contexts/PortfolioContext'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -86,6 +88,24 @@ export default async function SettingsPage() {
             </div>
           </div>
 
+          {/* Güvenlik & Şifre */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <Shield className="w-5 h-5 mr-2 text-orange-600" />
+              Güvenlik & Şifre
+            </h2>
+            <SecuritySettings userId={user.id} userEmail={userEmail} />
+          </div>
+
+          {/* Veri Dışa Aktarma */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <Download className="w-5 h-5 mr-2 text-indigo-600" />
+              Veri Dışa Aktarma
+            </h2>
+            <DataExport userId={user.id} />
+          </div>
+
           {/* Uygulama Bilgileri */}
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Portföy Röntgeni V1</h2>
@@ -97,7 +117,7 @@ export default async function SettingsPage() {
                 <strong>Analizler:</strong> Getiri, risk, volatilite, çeşitlilik ve korelasyon analizleri
               </p>
               <p>
-                <strong>Raporlar:</strong> Aylık portföy raporları ve PDF çıktısı
+                <strong>Raporlar:</strong> Aylık portföy raporları
               </p>
             </div>
           </div>

@@ -9,8 +9,11 @@ import {
   Briefcase, 
   BarChart3,
   Settings, 
-  LogOut 
+  LogOut,
+  Eye,
+  EyeOff
 } from 'lucide-react'
+import { usePrivacy } from '@/lib/contexts/PrivacyContext'
 
 const navigation = [
   { name: 'Ana Panel', href: '/', icon: Home },
@@ -23,6 +26,7 @@ export default function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
+  const { isPrivate, togglePrivacy } = usePrivacy()
 
   const handleSignOut = async () => {
     // PRODUCTION MODE: Gerçek çıkış
@@ -63,6 +67,19 @@ export default function Navigation() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
+            {/* Gizlilik Modu Toggle */}
+            <button
+              onClick={togglePrivacy}
+              className={`inline-flex items-center px-2.5 py-2 text-sm font-medium rounded-md transition-colors ${
+                isPrivate
+                  ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+              title={isPrivate ? 'Gizlilik Modu: Açık' : 'Gizlilik Modu: Kapalı'}
+            >
+              {isPrivate ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+
             {/* Portfolio Seçici */}
             <PortfolioSelector />
             

@@ -1,5 +1,6 @@
 import Navigation from '@/components/Navigation'
 import PortfolioAnalysis from '@/components/PortfolioAnalysis'
+import NotesList from '@/components/NotesList'
 import { PortfolioProvider } from '@/lib/contexts/PortfolioContext'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -25,6 +26,11 @@ export default async function AnalysisPage() {
           </div>
 
           <PortfolioAnalysis userId={user.id} />
+
+          {/* Notlar */}
+          <div className="mt-6">
+            <NotesList userId={user.id} />
+          </div>
         </main>
       </div>
     </PortfolioProvider>

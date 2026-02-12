@@ -15,6 +15,7 @@ import { TrendingUp, TrendingDown, PieChart, Award } from 'lucide-react'
 import DistributionChart from './DistributionChart'
 import PortfolioStatistics from './PortfolioStatistics'
 import { createClient } from '@/lib/supabase/client'
+import Blur from './PrivacyBlur'
 import type { Holding, PriceHistory } from '@/lib/types/database.types'
 
 interface DashboardProps {
@@ -116,14 +117,14 @@ export default function Dashboard({ userId: _userId }: DashboardProps) {
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Toplam Portföy Değeri</h3>
           <p className="text-3xl font-bold text-gray-900">
-            ₺{totalValue.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+            <Blur>₺{totalValue.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</Blur>
           </p>
           <div className={`flex items-center mt-2 ${totalProfitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
             {totalProfitLoss >= 0 ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
             <span className="text-sm font-medium">
               {totalProfitLossPercent >= 0 ? '+' : ''}
               {totalProfitLossPercent.toFixed(2)}% 
-              (₺{totalProfitLoss.toLocaleString('tr-TR', { maximumFractionDigits: 0 })})
+              (<Blur>₺{totalProfitLoss.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</Blur>)
             </span>
           </div>
         </div>
@@ -196,7 +197,7 @@ export default function Dashboard({ userId: _userId }: DashboardProps) {
                     +{asset.profit_loss_percent.toFixed(2)}%
                   </p>
                   <p className="text-xs text-gray-500">
-                    ₺{asset.current_value.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                    <Blur>₺{asset.current_value.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</Blur>
                   </p>
                 </div>
               </div>
@@ -220,7 +221,7 @@ export default function Dashboard({ userId: _userId }: DashboardProps) {
                 {asset.profit_loss_percent.toFixed(2)}%
               </p>
               <p className="text-xs text-gray-500">
-                ₺{asset.current_value.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                <Blur>₺{asset.current_value.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</Blur>
               </p>
             </div>
           ))}

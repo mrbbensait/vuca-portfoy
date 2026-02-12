@@ -14,6 +14,8 @@ import {
   Info, Layers, Eye, Banknote
 } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
+import ProfitLossSection from '@/components/ProfitLossSection'
+import Blur from './PrivacyBlur'
 
 interface PortfolioAnalysisProps {
   userId: string
@@ -77,10 +79,10 @@ function CategoryCard({ data, loading }: { data: CategoryData; loading: boolean 
         </div>
       ) : (
         <>
-          <p className="text-lg font-bold text-gray-900">₺{formatLargeNumber(data.value)}</p>
-          <p className="text-xs text-gray-400">${formatLargeNumberUSD(data.valueUsd)}</p>
+          <p className="text-lg font-bold text-gray-900"><Blur>₺{formatLargeNumber(data.value)}</Blur></p>
+          <p className="text-xs text-gray-400"><Blur>${formatLargeNumberUSD(data.valueUsd)}</Blur></p>
           <div className="mt-2 pt-2 border-t border-gray-50">
-            <p className="text-xs text-gray-400">Maliyet: ₺{formatLargeNumber(data.cost)}</p>
+            <p className="text-xs text-gray-400"><Blur>Maliyet: ₺{formatLargeNumber(data.cost)}</Blur></p>
           </div>
         </>
       )}
@@ -366,7 +368,7 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
             <Wallet className="w-5 h-5 text-slate-400" />
           </div>
           {isCalc ? <div className="h-8 bg-slate-700 rounded animate-pulse w-32" /> : (
-            <p className="text-2xl font-bold">₺{formatLargeNumber(analysis?.totalTry || 0)}</p>
+            <p className="text-2xl font-bold"><Blur>₺{formatLargeNumber(analysis?.totalTry || 0)}</Blur></p>
           )}
           <p className="text-xs text-slate-400 mt-1">{holdings.length} varlık</p>
         </div>
@@ -377,7 +379,7 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
             <DollarSign className="w-5 h-5 text-blue-300" />
           </div>
           {isCalc ? <div className="h-8 bg-blue-500 rounded animate-pulse w-32" /> : (
-            <p className="text-2xl font-bold">${formatLargeNumberUSD(analysis?.totalUsd || 0)}</p>
+            <p className="text-2xl font-bold"><Blur>${formatLargeNumberUSD(analysis?.totalUsd || 0)}</Blur></p>
           )}
           <p className="text-xs text-blue-200 mt-1">{holdings.length} varlık</p>
         </div>
@@ -389,7 +391,7 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
           </div>
           {isCalc ? <div className="h-8 bg-white/20 rounded animate-pulse w-32" /> : (
             <>
-              <p className="text-2xl font-bold">{(analysis?.totalPL || 0) >= 0 ? '+' : '-'}₺{formatLargeNumber(Math.abs(analysis?.totalPL || 0))}</p>
+              <p className="text-2xl font-bold"><Blur>{(analysis?.totalPL || 0) >= 0 ? '+' : '-'}₺{formatLargeNumber(Math.abs(analysis?.totalPL || 0))}</Blur></p>
               <p className="text-sm font-semibold mt-1 opacity-90">{(analysis?.totalPLPct || 0) >= 0 ? '+' : ''}{(analysis?.totalPLPct || 0).toFixed(2)}%</p>
             </>
           )}
@@ -402,8 +404,8 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
           </div>
           {isCalc ? <div className="h-8 bg-purple-400 rounded animate-pulse w-32" /> : (
             <>
-              <p className="text-2xl font-bold">₺{formatLargeNumber(analysis?.totalCostTry || 0)}</p>
-              <p className="text-xs text-purple-200 mt-1">${formatLargeNumberUSD(analysis?.totalCostUsd || 0)}</p>
+              <p className="text-2xl font-bold"><Blur>₺{formatLargeNumber(analysis?.totalCostTry || 0)}</Blur></p>
+              <p className="text-xs text-purple-200 mt-1"><Blur>${formatLargeNumberUSD(analysis?.totalCostUsd || 0)}</Blur></p>
             </>
           )}
         </div>
@@ -458,6 +460,16 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
         </div>
       )}
 
+      {/* Kar & Zarar İstatistikleri */}
+      {analysis && usdTryRate && (
+        <ProfitLossSection
+          holdings={holdings}
+          prices={prices}
+          usdTryRate={usdTryRate.rate}
+          loading={isCalc}
+        />
+      )}
+
       {/* Chart + Categories */}
       {analysis && (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -478,7 +490,7 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ marginTop: '-10px' }}>
                   <div className="text-center">
                     <p className="text-xs text-gray-400">Toplam</p>
-                    <p className="text-sm font-bold text-gray-900">₺{formatLargeNumber(analysis.totalTry)}</p>
+                    <p className="text-sm font-bold text-gray-900"><Blur>₺{formatLargeNumber(analysis.totalTry)}</Blur></p>
                   </div>
                 </div>
                 <div className="flex flex-wrap justify-center gap-3 mt-2">
@@ -564,7 +576,7 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
                         <div className={`h-2 rounded-full transition-all duration-500 ${i === 0 ? 'bg-blue-500' : i === 1 ? 'bg-blue-400' : i === 2 ? 'bg-blue-300' : i === 3 ? 'bg-blue-200' : 'bg-blue-100'}`} style={{ width: `${Math.min(wt, 100)}%` }} />
                       </div>
                     </div>
-                    <span className="text-xs text-gray-500 w-20 text-right">₺{formatLargeNumber(hp.value)}</span>
+                    <span className="text-xs text-gray-500 w-20 text-right"><Blur>₺{formatLargeNumber(hp.value)}</Blur></span>
                   </div>
                 )
               })}

@@ -5,6 +5,7 @@ import { Holding } from '@/lib/types/database.types'
 import { Trash2, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react'
 import { useHoldingPrice } from './PriceProvider'
 import { formatPrice, formatLargeNumber } from '@/lib/formatPrice'
+import Blur from './PrivacyBlur'
 
 const ASSET_TYPE_LABELS: Record<string, string> = {
   TR_STOCK: 'BIST',
@@ -113,12 +114,12 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
         
         {/* Miktar */}
         <div className="text-right">
-          <p className="text-sm font-medium text-gray-900">{holding.quantity.toLocaleString('en-US')}</p>
+          <p className="text-sm font-medium text-gray-900"><Blur>{holding.quantity.toLocaleString('en-US')}</Blur></p>
         </div>
         
         {/* Maliyet */}
         <div className="text-right">
-          <p className="text-sm font-medium text-gray-900">{currencySymbol}{formatPrice(holding.avg_price)}</p>
+          <p className="text-sm font-medium text-gray-900"><Blur>{currencySymbol}{formatPrice(holding.avg_price)}</Blur></p>
         </div>
         
         {/* Güncel Fiyat */}
@@ -126,7 +127,7 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
           {loadingPrice ? (
             <p className="text-xs text-gray-400">...</p>
           ) : currentPrice ? (
-            <p className="text-sm font-medium text-gray-900">{currencySymbol}{formatPrice(currentPrice)}</p>
+            <p className="text-sm font-medium text-gray-900"><Blur>{currencySymbol}{formatPrice(currentPrice)}</Blur></p>
           ) : (
             <p className="text-xs text-gray-400">N/A</p>
           )}
@@ -134,13 +135,13 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
         
         {/* Toplam Alış */}
         <div className="text-right">
-          <p className="text-sm font-medium text-gray-900">{currencySymbol}{formatLargeNumber(costBasis)}</p>
+          <p className="text-sm font-medium text-gray-900"><Blur>{currencySymbol}{formatLargeNumber(costBasis)}</Blur></p>
         </div>
         
         {/* Güncel Toplam */}
         <div className="text-right">
           {currentTotal ? (
-            <p className="text-sm font-medium text-gray-900">{currencySymbol}{formatLargeNumber(currentTotal)}</p>
+            <p className="text-sm font-medium text-gray-900"><Blur>{currencySymbol}{formatLargeNumber(currentTotal)}</Blur></p>
           ) : (
             <p className="text-xs text-gray-400">N/A</p>
           )}
@@ -168,7 +169,7 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
         <div className="text-right">
           {profitLoss !== null ? (
             <p className={`text-sm font-bold ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {profitLoss >= 0 ? '+' : ''}{currencySymbol}{formatLargeNumber(Math.abs(profitLoss))}
+              <Blur>{profitLoss >= 0 ? '+' : ''}{currencySymbol}{formatLargeNumber(Math.abs(profitLoss))}</Blur>
             </p>
           ) : (
             <p className="text-xs text-gray-400">N/A</p>
@@ -219,18 +220,18 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
           <div className="grid grid-cols-4 gap-3 text-sm">
             <div>
               <p className="text-xs text-gray-500 mb-0.5">Miktar</p>
-              <p className="font-medium text-gray-900">{holding.quantity.toLocaleString('en-US')}</p>
+              <p className="font-medium text-gray-900"><Blur>{holding.quantity.toLocaleString('en-US')}</Blur></p>
             </div>
             <div>
               <p className="text-xs text-gray-500 mb-0.5">Maliyet</p>
-              <p className="font-medium text-gray-900">{currencySymbol}{formatPrice(holding.avg_price)}</p>
+              <p className="font-medium text-gray-900"><Blur>{currencySymbol}{formatPrice(holding.avg_price)}</Blur></p>
             </div>
             <div>
               <p className="text-xs text-gray-500 mb-0.5">Güncel</p>
               {loadingPrice ? (
                 <p className="text-xs text-gray-400">...</p>
               ) : currentPrice ? (
-                <p className="font-medium text-gray-900">{currencySymbol}{formatPrice(currentPrice)}</p>
+                <p className="font-medium text-gray-900"><Blur>{currencySymbol}{formatPrice(currentPrice)}</Blur></p>
               ) : (
                 <p className="text-xs text-gray-400">N/A</p>
               )}
@@ -244,12 +245,12 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
           <div className="grid grid-cols-4 gap-3 text-sm mt-2">
             <div>
               <p className="text-xs text-gray-500 mb-0.5">Toplam Alış</p>
-              <p className="font-medium text-gray-900">{currencySymbol}{formatLargeNumber(costBasis)}</p>
+              <p className="font-medium text-gray-900"><Blur>{currencySymbol}{formatLargeNumber(costBasis)}</Blur></p>
             </div>
             <div>
               <p className="text-xs text-gray-500 mb-0.5">Güncel Toplam</p>
               {currentTotal ? (
-                <p className="font-medium text-gray-900">{currencySymbol}{formatLargeNumber(currentTotal)}</p>
+                <p className="font-medium text-gray-900"><Blur>{currencySymbol}{formatLargeNumber(currentTotal)}</Blur></p>
               ) : (
                 <p className="text-xs text-gray-400">N/A</p>
               )}
@@ -275,7 +276,7 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
               <p className="text-xs text-gray-500 mb-0.5">K/Z</p>
               {profitLoss !== null ? (
                 <p className={`text-sm font-bold ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {profitLoss >= 0 ? '+' : ''}{currencySymbol}{formatLargeNumber(Math.abs(profitLoss))}
+                  <Blur>{profitLoss >= 0 ? '+' : ''}{currencySymbol}{formatLargeNumber(Math.abs(profitLoss))}</Blur>
                 </p>
               ) : (
                 <p className="text-xs text-gray-400">N/A</p>
@@ -312,30 +313,30 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-500">Miktar:</span>
-              <span className="font-medium text-gray-900">{holding.quantity.toLocaleString('en-US')}</span>
+              <span className="font-medium text-gray-900"><Blur>{holding.quantity.toLocaleString('en-US')}</Blur></span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">Maliyet:</span>
-              <span className="font-medium text-gray-900">{currencySymbol}{formatPrice(holding.avg_price)}</span>
+              <span className="font-medium text-gray-900"><Blur>{currencySymbol}{formatPrice(holding.avg_price)}</Blur></span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">Güncel:</span>
               {loadingPrice ? (
                 <span className="text-xs text-gray-400">Yükleniyor...</span>
               ) : currentPrice ? (
-                <span className="font-medium text-gray-900">{currencySymbol}{formatPrice(currentPrice)}</span>
+                <span className="font-medium text-gray-900"><Blur>{currencySymbol}{formatPrice(currentPrice)}</Blur></span>
               ) : (
                 <span className="text-xs text-gray-400">N/A</span>
               )}
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">Toplam Alış:</span>
-              <span className="font-medium text-gray-900">{currencySymbol}{formatLargeNumber(costBasis)}</span>
+              <span className="font-medium text-gray-900"><Blur>{currencySymbol}{formatLargeNumber(costBasis)}</Blur></span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">Güncel Toplam:</span>
               {currentTotal ? (
-                <span className="font-medium text-gray-900">{currencySymbol}{formatLargeNumber(currentTotal)}</span>
+                <span className="font-medium text-gray-900"><Blur>{currencySymbol}{formatLargeNumber(currentTotal)}</Blur></span>
               ) : (
                 <span className="text-xs text-gray-400">N/A</span>
               )}
@@ -351,7 +352,7 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
                       <TrendingDown className="w-3 h-3 text-red-600" />
                     )}
                     <span className={`text-sm font-bold ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {profitLoss >= 0 ? '+' : ''}{currencySymbol}{formatLargeNumber(Math.abs(profitLoss))}
+                      <Blur>{profitLoss >= 0 ? '+' : ''}{currencySymbol}{formatLargeNumber(Math.abs(profitLoss))}</Blur>
                     </span>
                   </div>
                   <span className={`text-xs font-bold ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
