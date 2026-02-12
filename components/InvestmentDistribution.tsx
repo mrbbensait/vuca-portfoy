@@ -7,7 +7,6 @@ import { usePrices } from '@/lib/hooks/usePrices'
 import { formatLargeNumber, formatLargeNumberUSD } from '@/lib/formatPrice'
 import type { Holding } from '@/lib/types/database.types'
 import { Landmark, Globe, Bitcoin, Coins, DollarSign, RefreshCw } from 'lucide-react'
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 
 interface InvestmentDistributionProps {
   userId: string
@@ -93,7 +92,6 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
         nasdaqCost: 0,
         cryptoCost: 0,
         cashCost: 0,
-        chartData: [],
         bistUsd: 0,
         nasdaqUsd: 0,
         cryptoUsd: 0,
@@ -166,15 +164,8 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
       }
     })
 
-    // Pasta grafik için data
-    const chartData = []
-    if (bist > 0) chartData.push({ name: 'BIST', value: bist, color: '#EF4444' })
-    if (nasdaq > 0) chartData.push({ name: 'NASDAQ', value: nasdaq, color: '#3B82F6' })
-    if (crypto > 0) chartData.push({ name: 'Kripto', value: crypto, color: '#F59E0B' })
     const goldSilver = gold + silver
     const goldSilverCost = goldCost + silverCost
-    if (goldSilver > 0) chartData.push({ name: 'Altın & Gümüş', value: goldSilver, color: '#FBBF24' })
-    if (cash > 0) chartData.push({ name: 'Nakit', value: cash, color: '#10B981' })
 
     return {
       bist,
@@ -187,7 +178,6 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
       nasdaqCost,
       cryptoCost,
       cashCost,
-      chartData,
       // USD karşılıkları
       bistUsd: bist / usdTryRate.rate,
       nasdaqUsd: nasdaq / usdTryRate.rate,
@@ -205,7 +195,6 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
   const { 
     bist, nasdaq, crypto, goldSilver, goldSilverCost, cash,
     bistCost, nasdaqCost, cryptoCost, cashCost,
-    chartData,
     bistUsd, nasdaqUsd, cryptoUsd, goldSilverUsd, cashUsd,
     bistCostUsd, nasdaqCostUsd, cryptoCostUsd, goldSilverCostUsd, cashCostUsd
   } = calculateInvestments()
@@ -466,37 +455,6 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
         </div>
       </div>
 
-      {/* Pasta Grafik */}
-      {chartData.length > 0 && (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Dağılım Grafiği</h3>
-          <ResponsiveContainer width="100%" height={400}>
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={(entry: unknown) => {
-                  const e = entry as { name: string; percent: number }
-                  return `${e.name}: ${(e.percent * 100).toFixed(1)}%`
-                }}
-                outerRadius={120}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip 
-                formatter={(value: number) => `₺${formatLargeNumber(value)}`}
-              />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      )}
     </div>
   )
 }
