@@ -45,7 +45,7 @@ const CACHE_TTL = 15 * 60 * 1000 // 15 dakika
 
 export function usePrices(holdings: Holding[]): UsePricesReturn {
   const [prices, setPrices] = useState<Record<string, PriceData>>({})
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(holdings.length > 0)
   const [error, setError] = useState<string | null>(null)
   const isFetchingRef = useRef(false)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -136,8 +136,12 @@ export function usePrices(holdings: Holding[]): UsePricesReturn {
 
   // İlk yükleme ve holding değişikliklerinde fetch
   useEffect(() => {
+    if (holdings.length === 0) {
+      setLoading(false)
+      return
+    }
     fetchPrices()
-  }, [fetchPrices])
+  }, [fetchPrices, holdings.length])
 
   // 15 dakikada bir otomatik yenileme
   useEffect(() => {

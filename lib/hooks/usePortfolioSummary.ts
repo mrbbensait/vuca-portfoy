@@ -99,7 +99,7 @@ export function usePortfolioSummary() {
     }
   }, [holdings, prices, pricesLoading, usdTryRate])
 
-  const isLoading = loading || pricesLoading || !usdTryRate
+  const isLoading = loading || (holdings.length > 0 && (pricesLoading || !usdTryRate))
 
   return { summary, loading: isLoading }
 }

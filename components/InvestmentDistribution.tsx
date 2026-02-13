@@ -222,6 +222,10 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
     )
   }
 
+  if (holdings.length === 0) {
+    return null
+  }
+
   return (
     <div className="space-y-6">
       {/* USD/TRY Kur Göstergesi */}
