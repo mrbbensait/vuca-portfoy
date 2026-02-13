@@ -15,13 +15,10 @@ export async function GET(
 
     const supabase = await createClient()
 
-    // Portföyü getir (is_public kontrolü RLS'de zaten var ama ek güvenlik)
+    // Portföyü getir
     const { data: portfolio, error: pError } = await supabase
       .from('portfolios')
-      .select(`
-        id, name, slug, description, follower_count, is_public, created_at, user_id,
-        users_public!portfolios_user_id_fkey(display_name, avatar_url, bio)
-      `)
+      .select('id, name, slug, description, follower_count, is_public, created_at, user_id')
       .eq('id', id)
       .eq('is_public', true)
       .single()
@@ -29,6 +26,13 @@ export async function GET(
     if (pError || !portfolio) {
       return NextResponse.json({ error: 'Portföy bulunamadı veya gizli' }, { status: 404 })
     }
+
+    // Profil bilgisi (ayrı sorgu — FK yok)
+    const { data: profile } = await supabase
+      .from('users_public')
+      .select('display_name, avatar_url, bio')
+      .eq('id', portfolio.user_id)
+      .single()
 
     // Holdings
     const { data: holdings } = await supabase
@@ -44,11 +48,6 @@ export async function GET(
       .eq('portfolio_id', id)
       .order('date', { ascending: false })
       .limit(50)
-
-    // Profil bilgisi
-    const profile = Array.isArray(portfolio.users_public)
-      ? portfolio.users_public[0]
-      : portfolio.users_public
 
     // Mevcut kullanıcı takip ediyor mu?
     const { data: { user } } = await supabase.auth.getUser()

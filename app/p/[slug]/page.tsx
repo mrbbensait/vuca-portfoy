@@ -18,10 +18,7 @@ export default async function PublicPortfolioPage({ params }: PageProps) {
   // Slug ile portföyü bul
   const { data: portfolio, error } = await supabase
     .from('portfolios')
-    .select(`
-      id, name, slug, description, follower_count, is_public, created_at, user_id,
-      users_public!portfolios_user_id_fkey(display_name, avatar_url, bio)
-    `)
+    .select('id, name, slug, description, follower_count, is_public, created_at, user_id')
     .eq('slug', slug)
     .eq('is_public', true)
     .single()
@@ -29,6 +26,13 @@ export default async function PublicPortfolioPage({ params }: PageProps) {
   if (error || !portfolio) {
     notFound()
   }
+
+  // Profil bilgisi (ayrı sorgu — FK yok)
+  const { data: profile } = await supabase
+    .from('users_public')
+    .select('display_name, avatar_url, bio')
+    .eq('id', portfolio.user_id)
+    .single()
 
   // Holdings
   const { data: holdings } = await supabase
@@ -44,11 +48,6 @@ export default async function PublicPortfolioPage({ params }: PageProps) {
     .eq('portfolio_id', portfolio.id)
     .order('date', { ascending: false })
     .limit(50)
-
-  // Profil bilgisi
-  const profile = Array.isArray(portfolio.users_public)
-    ? portfolio.users_public[0]
-    : portfolio.users_public
 
   // Mevcut kullanıcı kontrol
   const { data: { user } } = await supabase.auth.getUser()

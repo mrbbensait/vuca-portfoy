@@ -14,13 +14,10 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // Base query: public portföyler + sahip bilgisi + holding sayısı
+    // Base query: public portföyler
     let query = supabase
       .from('portfolios')
-      .select(`
-        id, name, slug, description, follower_count, is_public, created_at, user_id,
-        users_public!portfolios_user_id_fkey(display_name, avatar_url)
-      `, { count: 'exact' })
+      .select('id, name, slug, description, follower_count, is_public, created_at, user_id', { count: 'exact' })
       .eq('is_public', true)
 
     // Arama
@@ -50,7 +47,24 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error
 
-    // Her portföy için holding sayısını al
+    // Sahip profilleri (ayrı sorgu — FK yok)
+    const userIds = [...new Set((portfolios || []).map(p => p.user_id))]
+    let profileMap: Record<string, { display_name: string | null; avatar_url: string | null }> = {}
+
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('users_public')
+        .select('id, display_name, avatar_url')
+        .in('id', userIds)
+
+      if (profiles) {
+        profiles.forEach(p => {
+          profileMap[p.id] = { display_name: p.display_name, avatar_url: p.avatar_url }
+        })
+      }
+    }
+
+    // Holding sayıları
     const portfolioIds = (portfolios || []).map(p => p.id)
     let holdingCounts: Record<string, number> = {}
 
@@ -70,10 +84,7 @@ export async function GET(request: NextRequest) {
 
     // Sonuçları zenginleştir
     const enriched = (portfolios || []).map(p => {
-      // Supabase join tek kayıt için bile dizi dönebilir
-      const profile = Array.isArray(p.users_public)
-        ? p.users_public[0]
-        : p.users_public
+      const profile = profileMap[p.user_id]
       return {
         ...p,
         owner_name: profile?.display_name || 'Anonim',

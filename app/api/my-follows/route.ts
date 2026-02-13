@@ -11,52 +11,66 @@ export async function GET() {
       return NextResponse.json({ error: 'Giriş yapmalısınız' }, { status: 401 })
     }
 
-    // Takip edilen portföyleri getir (portföy + sahip bilgisi ile)
+    // Takip kayıtlarını getir
     const { data: follows, error } = await supabase
       .from('portfolio_follows')
-      .select(`
-        id, created_at,
-        portfolios!portfolio_follows_portfolio_id_fkey(
-          id, name, slug, description, follower_count, is_public, created_at, user_id,
-          users_public!portfolios_user_id_fkey(display_name, avatar_url)
-        )
-      `)
+      .select('id, created_at, portfolio_id')
       .eq('follower_id', user.id)
       .order('created_at', { ascending: false })
 
     if (error) throw error
 
-    // Portföy ID'lerini topla (holding sayısı için)
-    const portfolioIds = (follows || [])
-      .map(f => {
-        const p = Array.isArray(f.portfolios) ? f.portfolios[0] : f.portfolios
-        return p?.id
-      })
-      .filter(Boolean) as string[]
+    const portfolioIds = (follows || []).map(f => f.portfolio_id)
 
-    let holdingCounts: Record<string, number> = {}
-    if (portfolioIds.length > 0) {
-      const { data: counts } = await supabase
-        .from('holdings')
-        .select('portfolio_id')
-        .in('portfolio_id', portfolioIds)
+    if (portfolioIds.length === 0) {
+      return NextResponse.json({ success: true, data: [], total: 0 })
+    }
 
-      if (counts) {
-        holdingCounts = counts.reduce((acc: Record<string, number>, h: { portfolio_id: string }) => {
-          acc[h.portfolio_id] = (acc[h.portfolio_id] || 0) + 1
-          return acc
-        }, {})
+    // Portföyleri getir
+    const { data: portfolios } = await supabase
+      .from('portfolios')
+      .select('id, name, slug, description, follower_count, is_public, created_at, user_id')
+      .in('id', portfolioIds)
+
+    const portfolioMap = new Map((portfolios || []).map(p => [p.id, p]))
+
+    // Sahip profilleri (ayrı sorgu — FK yok)
+    const userIds = [...new Set((portfolios || []).map(p => p.user_id))]
+    let profileMap: Record<string, { display_name: string | null; avatar_url: string | null }> = {}
+
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('users_public')
+        .select('id, display_name, avatar_url')
+        .in('id', userIds)
+
+      if (profiles) {
+        profiles.forEach(p => {
+          profileMap[p.id] = { display_name: p.display_name, avatar_url: p.avatar_url }
+        })
       }
+    }
+
+    // Holding sayıları
+    let holdingCounts: Record<string, number> = {}
+    const { data: counts } = await supabase
+      .from('holdings')
+      .select('portfolio_id')
+      .in('portfolio_id', portfolioIds)
+
+    if (counts) {
+      holdingCounts = counts.reduce((acc: Record<string, number>, h: { portfolio_id: string }) => {
+        acc[h.portfolio_id] = (acc[h.portfolio_id] || 0) + 1
+        return acc
+      }, {})
     }
 
     // Sonuçları zenginleştir
     const enriched = (follows || []).map(f => {
-      const portfolio = Array.isArray(f.portfolios) ? f.portfolios[0] : f.portfolios
+      const portfolio = portfolioMap.get(f.portfolio_id)
       if (!portfolio) return null
 
-      const profile = Array.isArray(portfolio.users_public)
-        ? portfolio.users_public[0]
-        : portfolio.users_public
+      const profile = profileMap[portfolio.user_id]
 
       return {
         follow_id: f.id,
