@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { Plus, X, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { usePortfolio } from '@/lib/contexts/PortfolioContext'
 import { AssetType, TransactionSide } from '@/lib/types/database.types'
@@ -13,6 +14,8 @@ interface AddTransactionButtonProps {
 
 export default function AddTransactionButton({ userId }: AddTransactionButtonProps) {
   const { activePortfolio } = usePortfolio()
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [fetchingPrice, setFetchingPrice] = useState(false)
@@ -41,6 +44,15 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
     date: new Date().toISOString().split('T')[0],
     note: '',
   })
+
+  // URL'den ?action=add parametresi ile otomatik modal açma
+  useEffect(() => {
+    if (searchParams.get('action') === 'add' && activePortfolio) {
+      setIsOpen(true)
+      // URL'den parametreyi temizle
+      router.replace('/portfolio', { scroll: false })
+    }
+  }, [searchParams, activePortfolio, router])
 
   // Sembol değiştiğinde validasyon ve fiyat çek
   useEffect(() => {

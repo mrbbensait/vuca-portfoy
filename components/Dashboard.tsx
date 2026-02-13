@@ -1,232 +1,335 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { usePortfolio } from '@/lib/contexts/PortfolioContext'
-import { 
-  calculateAssetPerformance, 
-  calculateDistribution, 
-  calculateReturns, 
-  calculatePortfolioScore,
-  calculateDiversificationScore,
-  calculateVolatility,
-  getCurrentPrice 
-} from '@/lib/calculations'
-import { TrendingUp, TrendingDown, PieChart, Award } from 'lucide-react'
-import DistributionChart from './DistributionChart'
-import PortfolioStatistics from './PortfolioStatistics'
-import { createClient } from '@/lib/supabase/client'
-import Blur from './PrivacyBlur'
-import type { Holding, PriceHistory } from '@/lib/types/database.types'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Home, TrendingUp, TrendingDown, Minus, CalendarDays, Clock, Wallet, Plus, FileDown, BarChart3, Loader2, Trophy, ThumbsDown } from 'lucide-react'
+import { usePortfolioSummary } from '@/lib/hooks/usePortfolioSummary'
+import { formatLargeNumber } from '@/lib/formatPrice'
+import { generateHoldingsPDF, PdfApiResponse } from '@/components/DataExport'
 
 interface DashboardProps {
   userId: string
+  displayName: string
 }
 
-export default function Dashboard({ userId: _userId }: DashboardProps) {
+function getGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour >= 5 && hour < 12) return 'Günaydın'
+  if (hour >= 12 && hour < 18) return 'İyi günler'
+  if (hour >= 18 && hour < 22) return 'İyi akşamlar'
+  return 'İyi geceler'
+}
+
+function getFirstName(name: string): string {
+  return name.split(' ')[0]
+}
+
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('tr-TR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date)
+}
+
+function formatTime(date: Date): string {
+  return new Intl.DateTimeFormat('tr-TR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).format(date)
+}
+
+export default function Dashboard({ userId, displayName }: DashboardProps) {
   const { activePortfolio, loading: portfolioLoading } = usePortfolio()
-  const [holdings, setHoldings] = useState<Holding[]>([])
-  const [priceHistory, setPriceHistory] = useState<PriceHistory[]>([])
-  const [loading, setLoading] = useState(true)
+  const { summary, loading: summaryLoading } = usePortfolioSummary()
+  const [now, setNow] = useState(new Date())
+  const [pdfLoading, setPdfLoading] = useState(false)
+  const router = useRouter()
 
-  const supabase = createClient()
-
+  // Canlı saat
   useEffect(() => {
-    const fetchData = async () => {
-      if (!activePortfolio) return
+    const timer = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
 
-      setLoading(true)
-      
-      // Portfolio'ya ait holdings'leri çek
-      const { data: holdingsData } = await supabase
-        .from('holdings')
-        .select('*')
-        .eq('portfolio_id', activePortfolio.id)
-
-      // Price history'yi çek  
-      const { data: priceData } = await supabase
-        .from('price_history')
-        .select('*')
-
-      setHoldings(holdingsData || [])
-      setPriceHistory(priceData || [])
-      setLoading(false)
+  const handleDownloadPDF = async () => {
+    if (!activePortfolio) return
+    setPdfLoading(true)
+    try {
+      const response = await fetch(`/api/export/pdf?user_id=${userId}&portfolio_id=${activePortfolio.id}`)
+      if (!response.ok) throw new Error('PDF oluşturulamadı')
+      const result: PdfApiResponse = await response.json()
+      if (!result.success) throw new Error(result.error || 'PDF verisi alınamadı')
+      generateHoldingsPDF(result.data)
+    } catch (err) {
+      console.error('PDF download error:', err)
+    } finally {
+      setPdfLoading(false)
     }
+  }
 
-    fetchData()
-  }, [activePortfolio])
-
-  if (portfolioLoading || loading) {
+  if (portfolioLoading) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Yükleniyor...</p>
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-gray-500">Yükleniyor...</p>
+        </div>
       </div>
     )
   }
 
   if (!activePortfolio) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Portfolio seçilmedi</p>
-      </div>
-    )
-  }
-  // Veri kontrolü
-  if (!holdings || holdings.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Henüz varlık eklenmemiş.</p>
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <Home className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-sm text-gray-500">Lütfen bir portföy seçin.</p>
+        </div>
       </div>
     )
   }
 
-  // Hesaplamalar
-  const performances = holdings.map(h => 
-    calculateAssetPerformance(h, getCurrentPrice(h.symbol, priceHistory))
-  )
-
-  const totalValue = performances.reduce((sum, p) => sum + p.current_value, 0)
-  const totalCost = performances.reduce((sum, p) => sum + p.cost_basis, 0)
-  const totalProfitLoss = totalValue - totalCost
-  const totalProfitLossPercent = totalCost > 0 ? (totalProfitLoss / totalCost) * 100 : 0
-
-  const returns = calculateReturns(priceHistory, holdings)
-  const distribution = calculateDistribution(performances)
-  const volatility = calculateVolatility(priceHistory, holdings)
-  const diversificationScore = calculateDiversificationScore(performances)
-  const portfolioScore = calculatePortfolioScore(returns.monthly, volatility, diversificationScore)
-
-  // En iyi ve en kötü 5 varlık
-  const sortedByPerformance = [...performances].sort((a, b) => 
-    b.profit_loss_percent - a.profit_loss_percent
-  )
-  const top5 = sortedByPerformance.slice(0, 5)
-  const bottom5 = sortedByPerformance.slice(-5).reverse()
+  const isPositive = (summary?.totalPL ?? 0) > 0
+  const isNegative = (summary?.totalPL ?? 0) < 0
+  const isNeutral = !isPositive && !isNegative
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Ana Panel</h1>
-      </div>
-
-      {/* Portfolio İstatistikleri - Örnek Kullanım */}
-      <PortfolioStatistics />
-
-      {/* Portföy Özet Kartları */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Toplam Değer */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Toplam Portföy Değeri</h3>
-          <p className="text-3xl font-bold text-gray-900">
-            <Blur>₺{totalValue.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</Blur>
-          </p>
-          <div className={`flex items-center mt-2 ${totalProfitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {totalProfitLoss >= 0 ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
-            <span className="text-sm font-medium">
-              {totalProfitLossPercent >= 0 ? '+' : ''}
-              {totalProfitLossPercent.toFixed(2)}% 
-              (<Blur>₺{totalProfitLoss.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</Blur>)
-            </span>
-          </div>
+      {/* Hoş Geldin + Günlük Özet Bandı */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white shadow-xl">
+        {/* Dekoratif arka plan */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-blue-400 blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-indigo-500 blur-3xl" />
         </div>
 
-        {/* Günlük Getiri */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Günlük Getiri</h3>
-          <p className={`text-3xl font-bold ${returns.daily >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {returns.daily >= 0 ? '+' : ''}{returns.daily.toFixed(2)}%
-          </p>
-          <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-            <span>Haftalık: {returns.weekly >= 0 ? '+' : ''}{returns.weekly.toFixed(2)}%</span>
-          </div>
-        </div>
-
-        {/* Aylık Getiri */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Aylık Getiri</h3>
-          <p className={`text-3xl font-bold ${returns.monthly >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {returns.monthly >= 0 ? '+' : ''}{returns.monthly.toFixed(2)}%
-          </p>
-          <div className="flex items-center mt-2 text-sm text-gray-600">
-            <span>Volatilite: {volatility.toFixed(2)}%</span>
-          </div>
-        </div>
-
-        {/* Portföy Sağlık Skoru */}
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow p-6 text-white">
-          <h3 className="text-sm font-medium opacity-90 mb-2 flex items-center">
-            <Award className="w-4 h-4 mr-1" />
-            Portföy Sağlık Skoru
-          </h3>
-          <p className="text-4xl font-bold">
-            {portfolioScore.total}/100
-          </p>
-          <div className="mt-2 text-xs opacity-90">
-            Getiri: {portfolioScore.return_score}/40 • 
-            Çeşitlilik: {portfolioScore.diversification_score}/30 • 
-            Risk: {portfolioScore.volatility_score}/30
-          </div>
-        </div>
-      </div>
-
-      {/* Dağılım ve Performans */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Dağılım Grafiği */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <PieChart className="w-5 h-5 mr-2" />
-            Varlık Dağılımı
-          </h3>
-          <DistributionChart distribution={distribution} />
-        </div>
-
-        {/* En İyi 5 Varlık */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center text-green-600">
-            <TrendingUp className="w-5 h-5 mr-2" />
-            En İyi 5 Varlık
-          </h3>
-          <div className="space-y-3">
-            {top5.map(asset => (
-              <div key={asset.symbol} className="flex justify-between items-center">
-                <div>
-                  <p className="font-medium text-gray-900">{asset.symbol}</p>
-                  <p className="text-xs text-gray-500">{asset.asset_type}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-green-600">
-                    +{asset.profit_loss_percent.toFixed(2)}%
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    <Blur>₺{asset.current_value.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</Blur>
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* En Zayıf 5 Varlık */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center text-red-600">
-          <TrendingDown className="w-5 h-5 mr-2" />
-          En Zayıf 5 Varlık
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {bottom5.map(asset => (
-            <div key={asset.symbol} className="border border-gray-200 rounded-lg p-4">
-              <p className="font-medium text-gray-900 mb-1">{asset.symbol}</p>
-              <p className="text-xs text-gray-500 mb-2">{asset.asset_type}</p>
-              <p className="font-semibold text-red-600">
-                {asset.profit_loss_percent.toFixed(2)}%
-              </p>
-              <p className="text-xs text-gray-500">
-                <Blur>₺{asset.current_value.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</Blur>
+        <div className="relative px-6 py-6 sm:px-8 sm:py-7">
+          {/* Üst Satır: Selamlama + Tarih/Saat */}
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            {/* Sol: Selamlama */}
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                {getGreeting()}, {getFirstName(displayName)} 👋
+              </h1>
+              <p className="mt-1 text-blue-200/80 text-sm sm:text-base">
+                {activePortfolio.name} portföyün bugün nasıl?
               </p>
             </div>
-          ))}
+
+            {/* Sağ: Tarih ve Saat */}
+            <div className="flex items-center gap-4 text-sm text-blue-200/70 shrink-0">
+              <div className="flex items-center gap-1.5">
+                <CalendarDays className="w-4 h-4" />
+                <span>{formatDate(now)}</span>
+              </div>
+              <div className="flex items-center gap-1.5 font-mono tabular-nums bg-white/10 px-3 py-1 rounded-lg">
+                <Clock className="w-4 h-4" />
+                <span>{formatTime(now)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Alt Satır: Portföy Özet Bandı */}
+          <div className="mt-6 pt-5 border-t border-white/10">
+            {summaryLoading ? (
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm text-blue-200/60">Portföy değeri hesaplanıyor...</span>
+              </div>
+            ) : summary ? (
+              <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-8">
+                {/* Toplam Değer */}
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Wallet className="w-4 h-4 text-blue-300/70" />
+                    <span className="text-xs uppercase tracking-wider text-blue-300/70 font-medium">
+                      Portföy Değeri
+                    </span>
+                  </div>
+                  <div className="text-3xl sm:text-4xl font-bold tracking-tight">
+                    ₺{formatLargeNumber(summary.totalTry)}
+                  </div>
+                </div>
+
+                {/* Günlük Değişim */}
+                <div className={`flex items-center gap-3 px-4 py-2.5 rounded-xl ${
+                  isPositive 
+                    ? 'bg-emerald-500/15 border border-emerald-400/20' 
+                    : isNegative 
+                      ? 'bg-red-500/15 border border-red-400/20' 
+                      : 'bg-white/5 border border-white/10'
+                }`}>
+                  {isPositive ? (
+                    <TrendingUp className="w-5 h-5 text-emerald-400" />
+                  ) : isNegative ? (
+                    <TrendingDown className="w-5 h-5 text-red-400" />
+                  ) : (
+                    <Minus className="w-5 h-5 text-blue-300/70" />
+                  )}
+                  <div>
+                    <div className="text-xs text-blue-200/60 mb-0.5">Toplam Kar/Zarar</div>
+                    <div className="flex items-baseline gap-2">
+                      <span className={`text-lg font-bold ${
+                        isPositive ? 'text-emerald-400' : isNegative ? 'text-red-400' : 'text-blue-200'
+                      }`}>
+                        {isPositive ? '+' : '-'}₺{formatLargeNumber(Math.abs(summary.totalPL))}
+                      </span>
+                      <span className={`text-sm font-semibold px-2 py-0.5 rounded-md ${
+                        isPositive 
+                          ? 'bg-emerald-500/20 text-emerald-300' 
+                          : isNegative 
+                            ? 'bg-red-500/20 text-red-300' 
+                            : 'bg-white/10 text-blue-200/60'
+                      }`}>
+                        {isNeutral ? '0.00%' : `${summary.totalPLPct >= 0 ? '+' : ''}${summary.totalPLPct.toFixed(2)}%`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Maliyet */}
+                <div className="hidden sm:block">
+                  <div className="text-xs text-blue-200/50 mb-0.5">Toplam Yatırım</div>
+                  <div className="text-sm font-medium text-blue-200/70">
+                    ₺{formatLargeNumber(summary.totalCostTry)}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-blue-200/50">Portföy özeti yüklenemedi.</p>
+            )}
+          </div>
         </div>
       </div>
+      {/* Hızlı Aksiyonlar */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <button
+          onClick={() => router.push('/portfolio?action=add')}
+          className="group flex items-center gap-3 bg-white rounded-xl border border-gray-200 px-5 py-4 hover:border-blue-300 hover:shadow-md transition-all"
+        >
+          <div className="p-2.5 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
+            <Plus className="w-5 h-5" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-semibold text-gray-900">Varlık Ekle</p>
+            <p className="text-xs text-gray-500">Yeni işlem kaydet</p>
+          </div>
+        </button>
+
+        <button
+          onClick={handleDownloadPDF}
+          disabled={pdfLoading}
+          className="group flex items-center gap-3 bg-white rounded-xl border border-gray-200 px-5 py-4 hover:border-emerald-300 hover:shadow-md transition-all disabled:opacity-60"
+        >
+          <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 transition-colors">
+            {pdfLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileDown className="w-5 h-5" />}
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-semibold text-gray-900">{pdfLoading ? 'Hazırlanıyor...' : 'PDF Rapor İndir'}</p>
+            <p className="text-xs text-gray-500">Portföy varlıkları raporu</p>
+          </div>
+        </button>
+
+        <Link
+          href="/analysis"
+          className="group flex items-center gap-3 bg-white rounded-xl border border-gray-200 px-5 py-4 hover:border-purple-300 hover:shadow-md transition-all"
+        >
+          <div className="p-2.5 rounded-lg bg-purple-50 text-purple-600 group-hover:bg-purple-100 transition-colors">
+            <BarChart3 className="w-5 h-5" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-semibold text-gray-900">Analizi Gör</p>
+            <p className="text-xs text-gray-500">Detaylı portföy analizi</p>
+          </div>
+        </Link>
+      </div>
+
+      {/* Günün Kazananı / Kaybedeni */}
+      {summary && summary.holdingPerformances.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Top 3 Kazanan */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-emerald-50">
+                  <Trophy className="w-4 h-4 text-emerald-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900">En Çok Kazananlar</h3>
+              </div>
+              <span className="flex items-center gap-1 text-[10px] text-gray-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Açık pozisyonlar
+              </span>
+            </div>
+            <div className="space-y-3">
+              {summary.holdingPerformances.slice(0, 3).map((hp) => {
+                const maxPct = Math.abs(summary.holdingPerformances[0]?.profitLossPercent || 1)
+                const barWidth = maxPct > 0 ? Math.min((Math.abs(hp.profitLossPercent) / maxPct) * 100, 100) : 0
+                return (
+                  <div key={hp.symbol} className="flex items-center gap-3">
+                    <span className="text-xs font-semibold text-gray-900 w-20 truncate">{hp.symbol}</span>
+                    <div className="flex-1 h-5 bg-gray-50 rounded-full overflow-hidden relative">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-700"
+                        style={{ width: `${barWidth}%` }}
+                      />
+                    </div>
+                    <span className={`text-xs font-bold tabular-nums w-16 text-right ${
+                      hp.profitLossPercent >= 0 ? 'text-emerald-600' : 'text-red-600'
+                    }`}>
+                      {hp.profitLossPercent >= 0 ? '+' : ''}{hp.profitLossPercent.toFixed(2)}%
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Bottom 3 Kaybeden */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-red-50">
+                  <ThumbsDown className="w-4 h-4 text-red-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900">En Çok Kaybedenler</h3>
+              </div>
+              <span className="flex items-center gap-1 text-[10px] text-gray-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                Açık pozisyonlar
+              </span>
+            </div>
+            <div className="space-y-3">
+              {summary.holdingPerformances.slice(-3).reverse().map((hp) => {
+                const worstPct = Math.abs(summary.holdingPerformances[summary.holdingPerformances.length - 1]?.profitLossPercent || 1)
+                const barWidth = worstPct > 0 ? Math.min((Math.abs(hp.profitLossPercent) / worstPct) * 100, 100) : 0
+                return (
+                  <div key={hp.symbol} className="flex items-center gap-3">
+                    <span className="text-xs font-semibold text-gray-900 w-20 truncate">{hp.symbol}</span>
+                    <div className="flex-1 h-5 bg-gray-50 rounded-full overflow-hidden relative">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-red-400 to-red-500 transition-all duration-700"
+                        style={{ width: `${barWidth}%` }}
+                      />
+                    </div>
+                    <span className={`text-xs font-bold tabular-nums w-16 text-right ${
+                      hp.profitLossPercent >= 0 ? 'text-emerald-600' : 'text-red-600'
+                    }`}>
+                      {hp.profitLossPercent >= 0 ? '+' : ''}{hp.profitLossPercent.toFixed(2)}%
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

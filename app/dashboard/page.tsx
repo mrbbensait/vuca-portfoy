@@ -12,12 +12,20 @@ export default async function DashboardPage() {
     redirect('/auth/login')
   }
 
+  const { data: userProfile } = await supabase
+    .from('users_public')
+    .select('display_name')
+    .eq('id', user.id)
+    .single()
+
+  const displayName = userProfile?.display_name || user.email?.split('@')[0] || 'Kullanıcı'
+
   return (
     <PortfolioProvider userId={user.id}>
       <div className="min-h-screen bg-gray-50">
         <Navigation />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Dashboard userId={user.id} />
+          <Dashboard userId={user.id} displayName={displayName} />
         </main>
       </div>
     </PortfolioProvider>

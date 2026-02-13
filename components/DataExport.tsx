@@ -28,7 +28,7 @@ interface HoldingData {
   createdAt: string
 }
 
-interface PdfApiResponse {
+export interface PdfApiResponse {
   success: boolean
   error?: string
   data: {
@@ -82,7 +82,7 @@ function pdfCurrency(currency: string): string {
   return currency === 'TRY' ? 'TL' : '$'
 }
 
-function generateHoldingsPDF(apiData: PdfApiResponse['data']) {
+export function generateHoldingsPDF(apiData: PdfApiResponse['data']) {
   const { holdings, summary, usdTryRate } = apiData
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
