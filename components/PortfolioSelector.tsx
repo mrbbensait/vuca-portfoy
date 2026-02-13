@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { usePortfolio } from '@/lib/contexts/PortfolioContext'
-import { ChevronDown, Plus, Edit2, Trash2, Check } from 'lucide-react'
+import { ChevronDown, Plus, Edit2, Trash2, Check, Globe, Lock } from 'lucide-react'
+import PortfolioVisibilityToggle from './PortfolioVisibilityToggle'
 
 export default function PortfolioSelector() {
   const { portfolios, activePortfolio, loading, setActivePortfolio, createPortfolio, updatePortfolio, deletePortfolio } = usePortfolio()
@@ -12,6 +13,7 @@ export default function PortfolioSelector() {
   const [newName, setNewName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [showVisibilityModal, setShowVisibilityModal] = useState(false)
 
   const handleCreate = async () => {
     if (!newName.trim()) {
@@ -82,8 +84,11 @@ export default function PortfolioSelector() {
           <span className="text-[10px] font-medium text-blue-100 uppercase tracking-wider">
             Aktif Portföy
           </span>
-          <span className="text-sm font-semibold text-white">
+          <span className="text-sm font-semibold text-white flex items-center">
             {activePortfolio?.name || 'Portfolio Seç'}
+            {activePortfolio?.is_public && (
+              <Globe className="w-3 h-3 ml-1.5 text-blue-200" />
+            )}
           </span>
         </div>
         <ChevronDown className={`w-5 h-5 text-blue-100 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''} group-hover:text-white`} />
@@ -152,6 +157,13 @@ export default function PortfolioSelector() {
                           )}
                         </button>
                         <div className="flex items-center space-x-1">
+                          <span title={portfolio.is_public ? 'Herkese Açık' : 'Gizli'}>
+                            {portfolio.is_public ? (
+                              <Globe className="w-3.5 h-3.5 text-green-500" />
+                            ) : (
+                              <Lock className="w-3.5 h-3.5 text-gray-300" />
+                            )}
+                          </span>
                           <button
                             onClick={() => {
                               setEditingId(portfolio.id)
@@ -183,6 +195,22 @@ export default function PortfolioSelector() {
                   {error}
                 </div>
               )}
+
+              {/* Görünürlük Ayarları Butonu */}
+              <button
+                onClick={() => {
+                  setShowVisibilityModal(true)
+                  setIsOpen(false)
+                }}
+                className="w-full mt-2 flex items-center justify-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors"
+              >
+                {activePortfolio?.is_public ? (
+                  <Globe className="w-4 h-4 text-green-500" />
+                ) : (
+                  <Lock className="w-4 h-4 text-gray-400" />
+                )}
+                <span>Görünürlük Ayarları</span>
+              </button>
 
               {/* Yeni Portfolio Butonu */}
               {portfolios.length >= 10 ? (
@@ -252,6 +280,10 @@ export default function PortfolioSelector() {
             </div>
           </div>
         </>
+      )}
+      {/* Görünürlük Modal */}
+      {showVisibilityModal && (
+        <PortfolioVisibilityToggle onClose={() => setShowVisibilityModal(false)} />
       )}
     </div>
   )

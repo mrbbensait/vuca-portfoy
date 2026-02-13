@@ -9,6 +9,9 @@ export interface UsersPublic {
   id: string // uuid (auth.uid ile aynı)
   display_name: string | null
   base_currency: string // default 'TRY'
+  avatar_url: string | null
+  bio: string | null
+  is_profile_public: boolean
   created_at: string
 }
 
@@ -16,6 +19,10 @@ export interface Portfolio {
   id: string
   user_id: string
   name: string
+  is_public: boolean
+  slug: string | null
+  description: string | null
+  follower_count: number
   created_at: string
   updated_at: string
 }
@@ -103,4 +110,11 @@ export interface PortfolioScore {
   return_score: number // 0-40
   diversification_score: number // 0-30
   volatility_score: number // 0-30
+}
+
+export interface PortfolioFollow {
+  id: string
+  follower_id: string
+  portfolio_id: string
+  created_at: string
 }

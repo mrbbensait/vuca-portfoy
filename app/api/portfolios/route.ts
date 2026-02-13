@@ -83,14 +83,41 @@ export async function POST(request: Request) {
   }
 }
 
-// PATCH - Portfolio adını güncelle
+// PATCH - Portfolio güncelle (ad, görünürlük, slug, açıklama)
 export async function PATCH(request: Request) {
   try {
     const body = await request.json()
-    const { id, name } = body
+    const { id, name, is_public, slug, description } = body
 
-    if (!id || !name || name.trim().length === 0) {
-      return NextResponse.json({ error: 'Portfolio ID ve adı gerekli' }, { status: 400 })
+    if (!id) {
+      return NextResponse.json({ error: 'Portfolio ID gerekli' }, { status: 400 })
+    }
+
+    // En az bir güncellenecek alan olmalı
+    if (name === undefined && is_public === undefined && slug === undefined && description === undefined) {
+      return NextResponse.json({ error: 'Güncellenecek alan belirtilmedi' }, { status: 400 })
+    }
+
+    // Name varsa boş olmamalı
+    if (name !== undefined && (!name || name.trim().length === 0)) {
+      return NextResponse.json({ error: 'Portfolio adı boş olamaz' }, { status: 400 })
+    }
+
+    // Slug validasyonu
+    if (slug !== undefined && slug !== null && slug !== '') {
+      const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+      if (!slugRegex.test(slug)) {
+        return NextResponse.json(
+          { error: 'Slug sadece küçük harf, rakam ve tire içerebilir' },
+          { status: 400 }
+        )
+      }
+      if (slug.length < 3 || slug.length > 80) {
+        return NextResponse.json(
+          { error: 'Slug 3-80 karakter arasında olmalı' },
+          { status: 400 }
+        )
+      }
     }
 
     const supabase = await createClient()
@@ -100,9 +127,21 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Güncellenecek alanları hazırla
+    const updateData: Record<string, unknown> = {}
+    if (name !== undefined) updateData.name = name.trim()
+    if (is_public !== undefined) updateData.is_public = is_public
+    if (slug !== undefined) updateData.slug = slug || null
+    if (description !== undefined) updateData.description = description || null
+
+    // Portföy gizliye alınıyorsa slug'ı da temizle
+    if (is_public === false) {
+      updateData.slug = null
+    }
+
     const { data: portfolio, error } = await supabase
       .from('portfolios')
-      .update({ name: name.trim() })
+      .update(updateData)
       .eq('id', id)
       .eq('user_id', user.id)
       .select()
@@ -110,6 +149,10 @@ export async function PATCH(request: Request) {
 
     if (error) {
       if (error.code === '23505') {
+        // Slug veya name duplicate hatası
+        if (error.message?.includes('slug')) {
+          return NextResponse.json({ error: 'Bu slug zaten kullanılıyor. Lütfen farklı bir slug deneyin.' }, { status: 409 })
+        }
         return NextResponse.json({ error: 'Bu isimde bir portfolio zaten var' }, { status: 409 })
       }
       throw error
