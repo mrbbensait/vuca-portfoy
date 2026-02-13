@@ -14,7 +14,6 @@ import {
   Eye,
   EyeOff,
   Compass,
-  Heart,
   User
 } from 'lucide-react'
 import { usePrivacy } from '@/lib/contexts/PrivacyContext'
@@ -24,7 +23,6 @@ const staticNavigation = [
   { name: 'Portföyüm', href: '/portfolio', icon: Briefcase },
   { name: 'Portföy Analizi', href: '/analysis', icon: BarChart3 },
   { name: 'Keşfet', href: '/explore', icon: Compass },
-  { name: 'Takip', href: '/following', icon: Heart },
 ]
 
 export default function Navigation() {

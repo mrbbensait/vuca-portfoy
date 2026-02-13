@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import {
-  Briefcase, TrendingUp, TrendingDown, Users, Calendar,
+  Briefcase, TrendingUp, TrendingDown, Calendar,
   ArrowUpDown, ChevronUp, ChevronDown, ReceiptText, Eye
 } from 'lucide-react'
 import Link from 'next/link'
@@ -52,7 +52,6 @@ interface PortfolioData {
   name: string
   slug: string | null
   description: string | null
-  follower_count: number
   created_at: string
   owner_name: string
   owner_avatar: string | null
@@ -63,10 +62,6 @@ interface PublicPortfolioViewProps {
   portfolio: PortfolioData
   holdings: PublicHolding[]
   transactions: PublicTransaction[]
-  isFollowing: boolean
-  onFollow?: () => void
-  onUnfollow?: () => void
-  followLoading?: boolean
 }
 
 type HoldingSortField = 'symbol' | 'quantity' | 'avg_price' | 'asset_type'
@@ -77,10 +72,6 @@ export default function PublicPortfolioView({
   portfolio,
   holdings,
   transactions,
-  isFollowing,
-  onFollow,
-  onUnfollow,
-  followLoading,
 }: PublicPortfolioViewProps) {
   const [activeTab, setActiveTab] = useState<'holdings' | 'transactions'>('holdings')
   const [hSortField, setHSortField] = useState<HoldingSortField>('symbol')
@@ -174,34 +165,13 @@ export default function PublicPortfolioView({
             </div>
 
             <div className="flex items-center gap-3">
-              {/* İstatistikler */}
               <div className="flex items-center gap-4 text-sm text-gray-500">
-                <div className="flex items-center gap-1.5">
-                  <Users className="w-4 h-4" />
-                  <span className="font-semibold text-gray-700">{portfolio.follower_count}</span>
-                  <span>takipçi</span>
-                </div>
                 <div className="flex items-center gap-1.5">
                   <Briefcase className="w-4 h-4" />
                   <span className="font-semibold text-gray-700">{holdings.length}</span>
                   <span>varlık</span>
                 </div>
               </div>
-
-              {/* Follow butonu */}
-              {onFollow && onUnfollow && (
-                <button
-                  onClick={isFollowing ? onUnfollow : onFollow}
-                  disabled={followLoading}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                    isFollowing
-                      ? 'bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-600 border border-gray-200'
-                      : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
-                  } disabled:opacity-50`}
-                >
-                  {followLoading ? '...' : isFollowing ? 'Takibi Bırak' : 'Takip Et'}
-                </button>
-              )}
             </div>
           </div>
 

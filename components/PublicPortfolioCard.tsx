@@ -1,14 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { Users, Briefcase, Calendar } from 'lucide-react'
+import { Briefcase, Calendar } from 'lucide-react'
 
 interface PublicPortfolioCardProps {
   id: string
   name: string
   slug: string | null
   description: string | null
-  follower_count: number
   holding_count: number
   owner_name: string
   owner_avatar: string | null
@@ -19,7 +18,6 @@ export default function PublicPortfolioCard({
   name,
   slug,
   description,
-  follower_count,
   holding_count,
   owner_name,
   created_at,
@@ -58,11 +56,6 @@ export default function PublicPortfolioCard({
 
         {/* İstatistikler */}
         <div className="flex items-center gap-4 mt-4 pt-3 border-t border-gray-100">
-          <div className="flex items-center gap-1.5 text-xs text-gray-500">
-            <Users className="w-3.5 h-3.5" />
-            <span className="font-medium">{follower_count}</span>
-            <span>takipçi</span>
-          </div>
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
             <Briefcase className="w-3.5 h-3.5" />
             <span className="font-medium">{holding_count}</span>

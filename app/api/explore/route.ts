@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50)
-    const sort = searchParams.get('sort') || 'followers' // followers | newest | name
+    const sort = searchParams.get('sort') || 'newest' // newest | name
     const search = searchParams.get('search') || ''
 
     const offset = (page - 1) * limit
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     // Base query: public portföyler
     let query = supabase
       .from('portfolios')
-      .select('id, name, slug, description, follower_count, is_public, created_at, user_id', { count: 'exact' })
+      .select('id, name, slug, description, is_public, created_at, user_id', { count: 'exact' })
       .eq('is_public', true)
 
     // Arama
@@ -27,9 +27,6 @@ export async function GET(request: NextRequest) {
 
     // Sıralama
     switch (sort) {
-      case 'followers':
-        query = query.order('follower_count', { ascending: false })
-        break
       case 'newest':
         query = query.order('created_at', { ascending: false })
         break
@@ -37,7 +34,7 @@ export async function GET(request: NextRequest) {
         query = query.order('name', { ascending: true })
         break
       default:
-        query = query.order('follower_count', { ascending: false })
+        query = query.order('created_at', { ascending: false })
     }
 
     // Sayfalama

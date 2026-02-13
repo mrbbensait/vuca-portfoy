@@ -18,7 +18,7 @@ export async function GET(
     // Portföyü getir
     const { data: portfolio, error: pError } = await supabase
       .from('portfolios')
-      .select('id, name, slug, description, follower_count, is_public, created_at, user_id')
+      .select('id, name, slug, description, is_public, created_at, user_id')
       .eq('id', id)
       .eq('is_public', true)
       .single()
@@ -49,19 +49,6 @@ export async function GET(
       .order('date', { ascending: false })
       .limit(50)
 
-    // Mevcut kullanıcı takip ediyor mu?
-    const { data: { user } } = await supabase.auth.getUser()
-    let isFollowing = false
-    if (user) {
-      const { data: follow } = await supabase
-        .from('portfolio_follows')
-        .select('id')
-        .eq('follower_id', user.id)
-        .eq('portfolio_id', id)
-        .single()
-      isFollowing = !!follow
-    }
-
     return NextResponse.json({
       success: true,
       data: {
@@ -73,7 +60,6 @@ export async function GET(
         },
         holdings: holdings || [],
         transactions: transactions || [],
-        isFollowing,
       },
     })
   } catch (error: unknown) {

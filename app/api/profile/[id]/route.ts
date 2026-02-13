@@ -33,10 +33,10 @@ export async function GET(
     // Public portföyleri getir
     const { data: portfolios } = await supabase
       .from('portfolios')
-      .select('id, name, slug, description, follower_count, is_public, created_at')
+      .select('id, name, slug, description, is_public, created_at')
       .eq('user_id', id)
       .eq('is_public', true)
-      .order('follower_count', { ascending: false })
+      .order('created_at', { ascending: false })
 
     // Profil gizliyse VE public portföyü yoksa VE kendi profili değilse → 403
     const hasPublicPortfolios = (portfolios || []).length > 0

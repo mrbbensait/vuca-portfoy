@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
-  User, Calendar, Briefcase, Users, Loader2, ArrowLeft,
+  User, Calendar, Briefcase, Loader2, ArrowLeft,
   Globe, Lock, Compass
 } from 'lucide-react'
 
@@ -21,7 +21,6 @@ interface ProfilePortfolio {
   name: string
   slug: string | null
   description: string | null
-  follower_count: number
   is_public: boolean
   created_at: string
   holding_count: number
@@ -221,10 +220,6 @@ export default function ProfilePage() {
                       <p className="text-sm text-gray-600 mt-1.5 line-clamp-2">{portfolio.description}</p>
                     )}
                     <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
-                      <span className="inline-flex items-center gap-1 text-xs text-gray-500">
-                        <Users className="w-3.5 h-3.5" />
-                        <span className="font-medium">{portfolio.follower_count}</span> takipçi
-                      </span>
                       <span className="inline-flex items-center gap-1 text-xs text-gray-500">
                         <Briefcase className="w-3.5 h-3.5" />
                         <span className="font-medium">{portfolio.holding_count}</span> varlık

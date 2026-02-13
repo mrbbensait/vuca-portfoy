@@ -18,7 +18,7 @@ export default async function PublicPortfolioPage({ params }: PageProps) {
   // Slug ile portföyü bul
   const { data: portfolio, error } = await supabase
     .from('portfolios')
-    .select('id, name, slug, description, follower_count, is_public, created_at, user_id')
+    .select('id, name, slug, description, is_public, created_at, user_id')
     .eq('slug', slug)
     .eq('is_public', true)
     .single()
@@ -49,21 +49,6 @@ export default async function PublicPortfolioPage({ params }: PageProps) {
     .order('date', { ascending: false })
     .limit(50)
 
-  // Mevcut kullanıcı kontrol
-  const { data: { user } } = await supabase.auth.getUser()
-  let isFollowing = false
-  const isOwnPortfolio = user?.id === portfolio.user_id
-
-  if (user && !isOwnPortfolio) {
-    const { data: follow } = await supabase
-      .from('portfolio_follows')
-      .select('id')
-      .eq('follower_id', user.id)
-      .eq('portfolio_id', portfolio.id)
-      .single()
-    isFollowing = !!follow
-  }
-
   const portfolioData = {
     ...portfolio,
     owner_name: profile?.display_name || 'Anonim',
@@ -76,10 +61,6 @@ export default async function PublicPortfolioPage({ params }: PageProps) {
       portfolio={portfolioData}
       holdings={holdings || []}
       transactions={transactions || []}
-      initialIsFollowing={isFollowing}
-      isLoggedIn={!!user}
-      isOwnPortfolio={isOwnPortfolio}
-      portfolioId={portfolio.id}
     />
   )
 }

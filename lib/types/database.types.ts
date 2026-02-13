@@ -22,7 +22,6 @@ export interface Portfolio {
   is_public: boolean
   slug: string | null
   description: string | null
-  follower_count: number
   created_at: string
   updated_at: string
 }
@@ -112,9 +111,3 @@ export interface PortfolioScore {
   volatility_score: number // 0-30
 }
 
-export interface PortfolioFollow {
-  id: string
-  follower_id: string
-  portfolio_id: string
-  created_at: string
-}

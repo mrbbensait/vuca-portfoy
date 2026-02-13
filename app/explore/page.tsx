@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Search, SlidersHorizontal, TrendingUp, Clock, SortAsc, Loader2, Compass } from 'lucide-react'
+import { Search, SlidersHorizontal, Clock, SortAsc, Loader2, Compass } from 'lucide-react'
 import PublicPortfolioCard from '@/components/PublicPortfolioCard'
 import Link from 'next/link'
 
@@ -10,7 +10,6 @@ interface ExplorePortfolio {
   name: string
   slug: string | null
   description: string | null
-  follower_count: number
   holding_count: number
   owner_name: string
   owner_avatar: string | null
@@ -24,10 +23,9 @@ interface Pagination {
   totalPages: number
 }
 
-type SortOption = 'followers' | 'newest' | 'name'
+type SortOption = 'newest' | 'name'
 
 const SORT_OPTIONS: { value: SortOption; label: string; icon: React.ElementType }[] = [
-  { value: 'followers', label: 'Popüler', icon: TrendingUp },
   { value: 'newest', label: 'En Yeni', icon: Clock },
   { value: 'name', label: 'İsim (A-Z)', icon: SortAsc },
 ]
@@ -37,7 +35,7 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, totalPages: 0 })
   const [search, setSearch] = useState('')
-  const [sort, setSort] = useState<SortOption>('followers')
+  const [sort, setSort] = useState<SortOption>('newest')
   const [searchDebounce, setSearchDebounce] = useState('')
 
   // Debounce search
