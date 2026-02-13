@@ -36,7 +36,7 @@ export async function GET() {
 
     // Sahip profilleri (ayrı sorgu — FK yok)
     const userIds = [...new Set((portfolios || []).map(p => p.user_id))]
-    let profileMap: Record<string, { display_name: string | null; avatar_url: string | null }> = {}
+    const profileMap: Record<string, { display_name: string | null; avatar_url: string | null }> = {}
 
     if (userIds.length > 0) {
       const { data: profiles } = await supabase
