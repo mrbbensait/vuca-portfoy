@@ -25,6 +25,7 @@ interface PublicPortfolioClientProps {
   transactions: PublicTransaction[]
   initialIsFollowing: boolean
   isLoggedIn: boolean
+  isOwnPortfolio: boolean
   portfolioId: string
 }
 
@@ -34,6 +35,7 @@ export default function PublicPortfolioClient({
   transactions,
   initialIsFollowing,
   isLoggedIn,
+  isOwnPortfolio,
   portfolioId,
 }: PublicPortfolioClientProps) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing)
@@ -109,8 +111,8 @@ export default function PublicPortfolioClient({
           holdings={holdings}
           transactions={transactions}
           isFollowing={isFollowing}
-          onFollow={handleFollow}
-          onUnfollow={handleUnfollow}
+          onFollow={isOwnPortfolio ? undefined : handleFollow}
+          onUnfollow={isOwnPortfolio ? undefined : handleUnfollow}
           followLoading={followLoading}
         />
       </main>

@@ -52,7 +52,9 @@ export default async function PublicPortfolioPage({ params }: PageProps) {
   // Mevcut kullanıcı kontrol
   const { data: { user } } = await supabase.auth.getUser()
   let isFollowing = false
-  if (user) {
+  const isOwnPortfolio = user?.id === portfolio.user_id
+
+  if (user && !isOwnPortfolio) {
     const { data: follow } = await supabase
       .from('portfolio_follows')
       .select('id')
@@ -76,6 +78,7 @@ export default async function PublicPortfolioPage({ params }: PageProps) {
       transactions={transactions || []}
       initialIsFollowing={isFollowing}
       isLoggedIn={!!user}
+      isOwnPortfolio={isOwnPortfolio}
       portfolioId={portfolio.id}
     />
   )

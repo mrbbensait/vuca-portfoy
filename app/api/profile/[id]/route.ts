@@ -26,13 +26,9 @@ export async function GET(
       return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 404 })
     }
 
-    // Profil gizliyse ve istek yapan kendi profili değilse 403
+    // Mevcut kullanıcıyı kontrol et
     const { data: { user } } = await supabase.auth.getUser()
     const isOwnProfile = user?.id === id
-
-    if (!profile.is_profile_public && !isOwnProfile) {
-      return NextResponse.json({ error: 'Bu profil gizli' }, { status: 403 })
-    }
 
     // Public portföyleri getir
     const { data: portfolios } = await supabase
@@ -41,6 +37,12 @@ export async function GET(
       .eq('user_id', id)
       .eq('is_public', true)
       .order('follower_count', { ascending: false })
+
+    // Profil gizliyse VE public portföyü yoksa VE kendi profili değilse → 403
+    const hasPublicPortfolios = (portfolios || []).length > 0
+    if (!profile.is_profile_public && !hasPublicPortfolios && !isOwnProfile) {
+      return NextResponse.json({ error: 'Bu profil gizli' }, { status: 403 })
+    }
 
     // Holding sayıları
     const portfolioIds = (portfolios || []).map(p => p.id)

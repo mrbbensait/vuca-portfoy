@@ -39,12 +39,10 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Landing page, auth, explore, public portföy ve profil sayfaları herkese açık
+  // Sadece landing page ve auth sayfaları herkese açık
+  // /explore, /p/, /profile/ artık giriş yapmış kullanıcılara özel
   const isPublicPath = request.nextUrl.pathname === '/' 
     || request.nextUrl.pathname.startsWith('/auth')
-    || request.nextUrl.pathname.startsWith('/explore')
-    || request.nextUrl.pathname.startsWith('/p/')
-    || request.nextUrl.pathname.startsWith('/profile/')
 
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone()
