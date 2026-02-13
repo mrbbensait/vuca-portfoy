@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -13,16 +12,16 @@ import {
   LogOut,
   Eye,
   EyeOff,
-  Compass,
-  User
+  Compass
 } from 'lucide-react'
 import { usePrivacy } from '@/lib/contexts/PrivacyContext'
 
-const staticNavigation = [
+const navigation = [
   { name: 'Ana Panel', href: '/dashboard', icon: Home },
   { name: 'Portföyüm', href: '/portfolio', icon: Briefcase },
   { name: 'Portföy Analizi', href: '/analysis', icon: BarChart3 },
   { name: 'Keşfet', href: '/explore', icon: Compass },
+  { name: 'Ayarlar', href: '/settings', icon: Settings },
 ]
 
 export default function Navigation() {
@@ -30,19 +29,6 @@ export default function Navigation() {
   const router = useRouter()
   const supabase = createClient()
   const { isPrivate, togglePrivacy } = usePrivacy()
-  const [userId, setUserId] = useState<string | null>(null)
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) setUserId(user.id)
-    })
-  }, [supabase.auth])
-
-  const navigation = [
-    ...staticNavigation,
-    ...(userId ? [{ name: 'Profilim', href: `/profile/${userId}`, icon: User }] : []),
-    { name: 'Ayarlar', href: '/settings', icon: Settings },
-  ]
 
   const handleSignOut = async () => {
     // PRODUCTION MODE: Gerçek çıkış

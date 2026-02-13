@@ -41,10 +41,18 @@ export default async function SettingsPage() {
         <div className="space-y-6">
           {/* Profil Bilgileri */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              <User className="w-5 h-5 mr-2 text-blue-600" />
-              Profil Bilgileri
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                <User className="w-5 h-5 mr-2 text-blue-600" />
+                Profil Bilgileri
+              </h2>
+              <a
+                href={`/profile/${user.id}`}
+                className="text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+              >
+                Profilimi Gör
+              </a>
+            </div>
             <ProfileSettings userId={user.id} userProfile={userProfile} userEmail={userEmail} />
           </div>
 
