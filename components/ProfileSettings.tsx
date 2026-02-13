@@ -11,6 +11,7 @@ interface ProfileSettingsProps {
 
 export default function ProfileSettings({ userId, userProfile }: ProfileSettingsProps) {
   const [displayName, setDisplayName] = useState(userProfile?.display_name || '')
+  const [bio, setBio] = useState(userProfile?.bio || '')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
@@ -26,6 +27,7 @@ export default function ProfileSettings({ userId, userProfile }: ProfileSettings
         body: JSON.stringify({
           user_id: userId,
           display_name: displayName,
+          bio: bio || null,
         }),
       })
 
@@ -43,7 +45,7 @@ export default function ProfileSettings({ userId, userProfile }: ProfileSettings
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       {message && (
         <div className={`p-3 rounded-lg text-sm ${
           message.type === 'success' 
@@ -66,6 +68,22 @@ export default function ProfileSettings({ userId, userProfile }: ProfileSettings
           className="w-full md:w-96 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
           placeholder="Ahmet Yılmaz"
         />
+      </div>
+
+      <div>
+        <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
+          Hakkımda
+        </label>
+        <textarea
+          id="bio"
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+          rows={3}
+          maxLength={300}
+          className="w-full md:w-96 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 resize-none"
+          placeholder="Kısa bir biyografi yazın..."
+        />
+        <p className="text-xs text-gray-400 mt-1">{bio.length}/300 karakter</p>
       </div>
 
       <button
