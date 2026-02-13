@@ -131,15 +131,10 @@ export default function ProfilePage() {
           <div className="h-24 bg-gradient-to-r from-blue-500 to-indigo-600" />
           <div className="px-6 pb-6">
             <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-10">
-              {/* Avatar */}
               <div className="w-20 h-20 rounded-full bg-white border-4 border-white shadow-md flex items-center justify-center overflow-hidden">
-                {profile.avatar_url ? (
-                  <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
-                    <User className="w-8 h-8 text-blue-500" />
-                  </div>
-                )}
+                <div className="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                  <User className="w-8 h-8 text-blue-500" />
+                </div>
               </div>
 
               <div className="flex-1 pb-1">
