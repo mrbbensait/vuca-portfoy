@@ -80,7 +80,11 @@ export default function PortfolioVisibilityToggle({ onClose }: PortfolioVisibili
 
       setSuccess(true)
       await refreshPortfolios()
-      setTimeout(() => setSuccess(false), 3000)
+      // Kısa süre başarı mesajı göster, sonra modal'ı kapat
+      setTimeout(() => {
+        setSuccess(false)
+        onClose()
+      }, 1200)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Bir hata oluştu')
     } finally {

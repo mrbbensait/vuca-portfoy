@@ -52,10 +52,19 @@ export default function RegisterPage() {
     }
 
     if (authData.user) {
-      setMessage('Kayıt başarılı! E-posta adresinizi doğrulayın.')
-      setTimeout(() => {
-        router.push('/auth/login')
-      }, 2000)
+      // E-posta doğrulama kapalıysa session oluşur, direkt dashboard'a yönlendir
+      if (authData.session) {
+        setMessage('Kayıt başarılı! Yönlendiriliyorsunuz...')
+        setTimeout(() => {
+          router.push('/dashboard')
+        }, 1000)
+      } else {
+        // E-posta doğrulama açıksa
+        setMessage('Kayıt başarılı! E-posta adresinizi doğrulayın.')
+        setTimeout(() => {
+          router.push('/auth/login')
+        }, 2000)
+      }
     }
 
     setLoading(false)
