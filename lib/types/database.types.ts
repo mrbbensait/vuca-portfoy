@@ -4,6 +4,7 @@
 export type AssetType = 'TR_STOCK' | 'US_STOCK' | 'CRYPTO' | 'CASH'
 export type TransactionSide = 'BUY' | 'SELL'
 export type NoteScope = 'POSITION' | 'WEEKLY' | 'GENERAL'
+export type ActivityType = 'NEW_TRADE' | 'HOLDING_CLOSED' | 'PORTFOLIO_UPDATED'
 
 export interface UsersPublic {
   id: string // uuid (auth.uid ile aynı)
@@ -73,6 +74,24 @@ export interface Note {
   updated_at: string
 }
 
+
+export interface PortfolioFollow {
+  id: string
+  follower_id: string
+  portfolio_id: string
+  last_seen_at: string | null
+  created_at: string
+}
+
+export interface PortfolioActivity {
+  id: string
+  portfolio_id: string
+  actor_id: string
+  type: ActivityType
+  title: string
+  metadata: Record<string, unknown>
+  created_at: string
+}
 
 // Hesaplama sonuçları için yardımcı tipler
 export interface PortfolioValue {

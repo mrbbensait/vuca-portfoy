@@ -131,7 +131,12 @@ export default function PublicPortfolioView({
   const sortedTransactions = [...transactions].sort((a, b) => {
     let cmp = 0
     switch (tSortField) {
-      case 'date': cmp = new Date(a.date).getTime() - new Date(b.date).getTime(); break
+      case 'date': {
+        cmp = new Date(a.date).getTime() - new Date(b.date).getTime()
+        // Aynı tarihteki işlemleri created_at ile sırala (son eklenen önce)
+        if (cmp === 0) cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        break
+      }
       case 'symbol': cmp = a.symbol.localeCompare(b.symbol); break
       case 'side': cmp = a.side.localeCompare(b.side); break
       case 'price': cmp = a.price - b.price; break

@@ -47,7 +47,34 @@ export default async function PublicPortfolioPage({ params }: PageProps) {
     .select('id, symbol, asset_type, side, quantity, price, fee, date, created_at')
     .eq('portfolio_id', portfolio.id)
     .order('date', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(50)
+
+  // Takipçi sayısı
+  const { count: followerCount } = await supabase
+    .from('portfolio_follows')
+    .select('*', { count: 'exact', head: true })
+    .eq('portfolio_id', portfolio.id)
+
+  // Mevcut kullanıcı takip ediyor mu?
+  const { data: { user } } = await supabase.auth.getUser()
+  let isFollowing = false
+  let isOwnPortfolio = false
+
+  if (user) {
+    isOwnPortfolio = user.id === portfolio.user_id
+
+    if (!isOwnPortfolio) {
+      const { data: followRow } = await supabase
+        .from('portfolio_follows')
+        .select('id')
+        .eq('follower_id', user.id)
+        .eq('portfolio_id', portfolio.id)
+        .single()
+
+      isFollowing = !!followRow
+    }
+  }
 
   const portfolioData = {
     ...portfolio,
@@ -61,6 +88,9 @@ export default async function PublicPortfolioPage({ params }: PageProps) {
       portfolio={portfolioData}
       holdings={holdings || []}
       transactions={transactions || []}
+      followerCount={followerCount || 0}
+      isFollowing={isFollowing}
+      isOwnPortfolio={isOwnPortfolio}
     />
   )
 }

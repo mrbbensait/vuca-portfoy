@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import PortfolioSelector from './PortfolioSelector'
+import NotificationBell from '@/components/NotificationBell'
 import { 
   Home, 
   Briefcase, 
@@ -81,6 +82,9 @@ export default function Navigation() {
             >
               {isPrivate ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
+
+            {/* Bildirimler */}
+            <NotificationBell />
 
             {/* Portfolio Seçici */}
             <PortfolioSelector />

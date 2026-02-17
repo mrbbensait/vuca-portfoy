@@ -134,9 +134,21 @@ export async function PATCH(request: Request) {
     if (slug !== undefined) updateData.slug = slug || null
     if (description !== undefined) updateData.description = description || null
 
-    // Portföy gizliye alınıyorsa slug'ı da temizle
+    // Portföy gizliye alınıyorsa slug'ı da temizle + takipleri/aktiviteleri sil
     if (is_public === false) {
       updateData.slug = null
+
+      // Takipleri temizle (artık private portföy takip edilemez)
+      await supabase
+        .from('portfolio_follows')
+        .delete()
+        .eq('portfolio_id', id)
+
+      // Aktiviteleri temizle (private portföyün aktiviteleri görünmemeli)
+      await supabase
+        .from('portfolio_activities')
+        .delete()
+        .eq('portfolio_id', id)
     }
 
     const { data: portfolio, error } = await supabase

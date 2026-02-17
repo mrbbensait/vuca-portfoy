@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Home, TrendingUp, TrendingDown, Minus, CalendarDays, Clock, Wallet, Plus, FileDown, BarChart3, Loader2, Trophy, ThumbsDown } from 'lucide-react'
+import FollowedPortfolios from '@/components/FollowedPortfolios'
 import { usePortfolioSummary } from '@/lib/hooks/usePortfolioSummary'
 import { formatLargeNumber } from '@/lib/formatPrice'
 import { generateHoldingsPDF, PdfApiResponse } from '@/components/DataExport'
@@ -255,6 +256,9 @@ export default function Dashboard({ userId, displayName }: DashboardProps) {
           </div>
         </Link>
       </div>
+
+      {/* Takip Ettiklerim Paneli */}
+      <FollowedPortfolios />
 
       {/* Günün Kazananı / Kaybedeni */}
       {summary && summary.holdingPerformances.length > 0 && (

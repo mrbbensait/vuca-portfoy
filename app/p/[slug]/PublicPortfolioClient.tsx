@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import PublicPortfolioView from '@/components/PublicPortfolioView'
 import type { PublicHolding, PublicTransaction } from '@/components/PublicPortfolioView'
+import FollowButton from '@/components/FollowButton'
 
 interface PortfolioData {
   id: string
@@ -21,12 +22,18 @@ interface PublicPortfolioClientProps {
   portfolio: PortfolioData
   holdings: PublicHolding[]
   transactions: PublicTransaction[]
+  followerCount: number
+  isFollowing: boolean
+  isOwnPortfolio: boolean
 }
 
 export default function PublicPortfolioClient({
   portfolio,
   holdings,
   transactions,
+  followerCount,
+  isFollowing,
+  isOwnPortfolio,
 }: PublicPortfolioClientProps) {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -46,6 +53,13 @@ export default function PublicPortfolioClient({
               <span className="text-xl font-bold text-blue-600">Portföy Röntgeni</span>
             </div>
             <div className="flex items-center gap-3">
+              {!isOwnPortfolio && (
+                <FollowButton
+                  portfolioId={portfolio.id}
+                  initialIsFollowing={isFollowing}
+                  initialFollowerCount={followerCount}
+                />
+              )}
               <Link
                 href="/dashboard"
                 className="text-sm font-medium text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-50 transition-colors"
