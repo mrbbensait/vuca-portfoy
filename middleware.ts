@@ -44,6 +44,9 @@ export async function middleware(request: NextRequest) {
   const isPublicPath = request.nextUrl.pathname === '/' 
     || request.nextUrl.pathname.startsWith('/auth')
 
+  // Admin sayfaları — auth zorunlu (role kontrolü admin layout'ta yapılır)
+  const isAdminPath = request.nextUrl.pathname.startsWith('/admin')
+
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
@@ -53,6 +56,14 @@ export async function middleware(request: NextRequest) {
   if (user && request.nextUrl.pathname.startsWith('/auth')) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
+    return NextResponse.redirect(url)
+  }
+
+  // Admin path için ek koruma: giriş yapmamış kullanıcılar login'e yönlendirilir
+  // Role kontrolü middleware'de yapılmaz (DB sorgusu pahalı), layout.tsx'de yapılır
+  if (!user && isAdminPath) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/login'
     return NextResponse.redirect(url)
   }
 
