@@ -32,9 +32,9 @@ CREATE TABLE IF NOT EXISTS portfolio_activities (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   portfolio_id UUID NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
   actor_id UUID NOT NULL,               -- işlemi yapan kişi (user_id)
-  type TEXT NOT NULL CHECK (type IN ('NEW_TRADE', 'HOLDING_CLOSED', 'PORTFOLIO_UPDATED')),
-  title TEXT NOT NULL,                   -- "Alış: 100 ASELS.IS"
-  metadata JSONB DEFAULT '{}' NOT NULL,  -- {symbol, side, quantity, price, asset_type}
+  type TEXT NOT NULL CHECK (type IN ('NEW_TRADE', 'HOLDING_CLOSED', 'PORTFOLIO_UPDATED', 'NEW_ANNOUNCEMENT')),
+  title TEXT NOT NULL,                   -- "Alış: 100 ASELS.IS" veya "Yeni Duyuru: Tesla Planı"
+  metadata JSONB DEFAULT '{}' NOT NULL,  -- {symbol, side, quantity, price, asset_type} veya {announcement_id, title, content_preview}
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 

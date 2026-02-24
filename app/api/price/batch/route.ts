@@ -323,7 +323,8 @@ export async function POST(request: Request) {
             if (cacheError) {
               console.error(`❌ Cache save FAILED for ${holding.symbol}:`, cacheError)
             } else {
-              console.log(`✅ Cache saved: ${holding.symbol} = $${price}`)
+              const currencySymbol = currency === 'TRY' ? '₺' : currency === 'USD' ? '$' : currency
+              console.log(`✅ Cache saved: ${holding.symbol} = ${currencySymbol}${price.toFixed(2)}`)
             }
           } catch (cacheErr) {
             console.error('❌ Cache save exception:', cacheErr)

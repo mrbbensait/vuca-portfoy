@@ -1,15 +1,17 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import {
   Briefcase, TrendingUp, TrendingDown, Calendar,
-  ArrowUpDown, ChevronUp, ChevronDown, ReceiptText, Eye, Loader2, StickyNote
+  ArrowUpDown, ChevronUp, ChevronDown, ReceiptText, Eye, Loader2, StickyNote, Megaphone
 } from 'lucide-react'
 import Link from 'next/link'
 import { formatPrice } from '@/lib/formatPrice'
 import { usePrices } from '@/lib/hooks/usePrices'
+import AnnouncementsList from './AnnouncementsList'
 
 // Public view için kısmi tipler (Supabase select ile eşleşir)
 export interface PublicHolding {
@@ -71,6 +73,7 @@ interface PublicPortfolioViewProps {
   portfolio: PortfolioData
   holdings: PublicHolding[]
   transactions: PublicTransaction[]
+  isOwner?: boolean
 }
 
 type HoldingSortField = 'symbol' | 'avg_price' | 'current_price' | 'pnl_pct' | 'created_at'
@@ -123,13 +126,23 @@ export default function PublicPortfolioView({
   portfolio,
   holdings,
   transactions,
+  isOwner = false,
 }: PublicPortfolioViewProps) {
-  const [activeTab, setActiveTab] = useState<'holdings' | 'transactions'>('holdings')
+  const searchParams = useSearchParams()
+  const [activeTab, setActiveTab] = useState<'holdings' | 'transactions' | 'announcements'>('holdings')
   const [hSortField, setHSortField] = useState<HoldingSortField>('symbol')
   const [hSortDir, setHSortDir] = useState<SortDir>('asc')
   const [tSortField, setTSortField] = useState<TxSortField>('date')
   const [tSortDir, setTSortDir] = useState<SortDir>('desc')
   const [noteTooltipId, setNoteTooltipId] = useState<string | null>(null)
+
+  // URL'den tab parametresini oku
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab === 'transactions' || tab === 'announcements' || tab === 'holdings') {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
 
   // Güncel fiyatları çek
   const { prices, loading: pricesLoading } = usePrices(holdings)
@@ -298,6 +311,17 @@ export default function PublicPortfolioView({
           >
             <ReceiptText className="w-4 h-4 inline mr-2" />
             İşlem Geçmişi ({transactions.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('announcements')}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'announcements'
+                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Megaphone className="w-4 h-4 inline mr-2" />
+            Duyurular
           </button>
         </div>
 
@@ -510,6 +534,16 @@ export default function PublicPortfolioView({
                 <p className="text-xs text-gray-400">Son 50 işlem gösteriliyor</p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Announcements Tab */}
+        {activeTab === 'announcements' && (
+          <div className="p-6">
+            <AnnouncementsList 
+              portfolioId={portfolio.id} 
+              isOwner={isOwner}
+            />
           </div>
         )}
       </div>

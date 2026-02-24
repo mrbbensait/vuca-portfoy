@@ -3,6 +3,7 @@ import HoldingsList from '@/components/HoldingsList'
 import InvestmentDistribution from '@/components/InvestmentDistribution'
 import TransactionsList from '@/components/TransactionsList'
 import NotesList from '@/components/NotesList'
+import PortfolioAnnouncements from '@/components/PortfolioAnnouncements'
 import { PortfolioProvider } from '@/lib/contexts/PortfolioContext'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -38,6 +39,9 @@ export default async function PortfolioPage() {
 
             {/* Notlar */}
             <NotesList userId={user.id} />
+
+            {/* Duyurular (Sadece Public Portföyler) - En Alta */}
+            <PortfolioAnnouncements userId={user.id} />
           </div>
         </main>
       </div>

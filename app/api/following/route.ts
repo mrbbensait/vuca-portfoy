@@ -52,13 +52,13 @@ export async function GET() {
       owner_name: ownerMap[p.user_id]?.display_name || 'Anonim',
     }))
 
-    // Son 5 aktivite (tüm takip edilen portföylerden)
-    const { data: activities } = await supabase
+    // Son aktiviteler (işlemler + duyurular ayrı ayrı)
+    const { data: allActivities } = await supabase
       .from('portfolio_activities')
       .select('id, portfolio_id, title, type, created_at, metadata')
       .in('portfolio_id', portfolioIds)
       .order('created_at', { ascending: false })
-      .limit(5)
+      .limit(20)  // Hem işlemleri hem duyuruları yakalamak için
 
     // Portföy adı eşleştirmesi
     const pMap: Record<string, { name: string; slug: string | null }> = {}
@@ -66,7 +66,7 @@ export async function GET() {
       portfolios.forEach(p => { pMap[p.id] = { name: p.name, slug: p.slug } })
     }
 
-    const recentActivities = (activities || []).map(a => ({
+    const recentActivities = (allActivities || []).map(a => ({
       id: a.id,
       title: a.title,
       type: a.type,

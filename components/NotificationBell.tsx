@@ -1,14 +1,14 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Bell, TrendingUp, TrendingDown, X, Check, ExternalLink } from 'lucide-react'
+import { Bell, TrendingUp, TrendingDown, X, Check, ExternalLink, Megaphone } from 'lucide-react'
 import Link from 'next/link'
 
 interface ActivityItem {
   id: string
   portfolio_id: string
   actor_id: string
-  type: 'NEW_TRADE' | 'HOLDING_CLOSED' | 'PORTFOLIO_UPDATED'
+  type: 'NEW_TRADE' | 'HOLDING_CLOSED' | 'PORTFOLIO_UPDATED' | 'NEW_ANNOUNCEMENT'
   title: string
   metadata: {
     symbol?: string
@@ -16,6 +16,8 @@ interface ActivityItem {
     quantity?: number
     price?: number
     asset_type?: string
+    announcement_id?: string
+    content_preview?: string
   }
   created_at: string
   portfolio_name: string
@@ -70,18 +72,11 @@ export default function NotificationBell() {
     }
   }
 
-  // Sayfa yüklendiğinde ve 60 saniyede bir okunmamış sayısını çek
+  // Sayfa yüklendiğinde ve 5 dakikada bir okunmamış sayısını çek
   useEffect(() => {
     fetchUnreadCount()
-    const interval = setInterval(fetchUnreadCount, 60000)
+    const interval = setInterval(fetchUnreadCount, 300000)
     return () => clearInterval(interval)
-  }, [fetchUnreadCount])
-
-  // Sayfa odağına geldiğinde de kontrol et
-  useEffect(() => {
-    const handleFocus = () => fetchUnreadCount()
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
   }, [fetchUnreadCount])
 
   // Dropdown dışına tıklanınca kapat
@@ -124,8 +119,11 @@ export default function NotificationBell() {
     return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })
   }
 
-  const getActivityIcon = (metadata: ActivityItem['metadata']) => {
-    if (metadata.side === 'BUY') {
+  const getActivityIcon = (activity: ActivityItem) => {
+    if (activity.type === 'NEW_ANNOUNCEMENT') {
+      return <Megaphone className="w-4 h-4 text-emerald-500" />
+    }
+    if (activity.metadata.side === 'BUY') {
       return <TrendingUp className="w-4 h-4 text-green-500" />
     }
     return <TrendingDown className="w-4 h-4 text-red-500" />
@@ -190,17 +188,26 @@ export default function NotificationBell() {
                 </p>
               </div>
             ) : (
-              activities.map((activity) => (
-                <Link
-                  key={activity.id}
-                  href={activity.portfolio_slug ? `/p/${activity.portfolio_slug}` : '#'}
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0"
-                >
-                  {/* Icon */}
-                  <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                    {getActivityIcon(activity.metadata)}
-                  </div>
+              activities.map((activity) => {
+                const getHref = () => {
+                  if (!activity.portfolio_slug) return '#'
+                  if (activity.type === 'NEW_ANNOUNCEMENT') {
+                    return `/p/${activity.portfolio_slug}?tab=announcements`
+                  }
+                  return `/p/${activity.portfolio_slug}?tab=transactions`
+                }
+                
+                return (
+                  <Link
+                    key={activity.id}
+                    href={getHref()}
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0"
+                  >
+                    {/* Icon */}
+                    <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                      {getActivityIcon(activity)}
+                    </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
@@ -225,10 +232,11 @@ export default function NotificationBell() {
                     </div>
                   </div>
 
-                  {/* Arrow */}
-                  <ExternalLink className="w-3.5 h-3.5 text-gray-300 mt-1 flex-shrink-0" />
-                </Link>
-              ))
+                    {/* Arrow */}
+                    <ExternalLink className="w-3.5 h-3.5 text-gray-300 mt-1 flex-shrink-0" />
+                  </Link>
+                )
+              })
             )}
           </div>
 
