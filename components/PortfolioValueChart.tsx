@@ -63,11 +63,11 @@ export default function PortfolioValueChart({ holdings, priceHistory }: Portfoli
               tickFormatter={(value) => `₺${(value / 1000).toFixed(0)}K`}
             />
             <Tooltip
-              formatter={(value: number) => [
-                `₺${value.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}`,
+              formatter={(value: any) => [
+                `₺${(value as number).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}`,
                 'Portföy Değeri'
               ]}
-              labelFormatter={(label) => `Tarih: ${label}`}
+              labelFormatter={(label: any) => `Tarih: ${label}`}
             />
             <Legend />
             <Line 

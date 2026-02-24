@@ -5,7 +5,7 @@ import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import {
   Briefcase, TrendingUp, TrendingDown, Calendar,
-  ArrowUpDown, ChevronUp, ChevronDown, ReceiptText, Eye, Loader2
+  ArrowUpDown, ChevronUp, ChevronDown, ReceiptText, Eye, Loader2, StickyNote
 } from 'lucide-react'
 import Link from 'next/link'
 import { formatPrice } from '@/lib/formatPrice'
@@ -30,6 +30,7 @@ export interface PublicTransaction {
   price: number
   fee: number | null
   date: string
+  note: string | null
   created_at: string
 }
 
@@ -76,6 +77,48 @@ type HoldingSortField = 'symbol' | 'avg_price' | 'current_price' | 'pnl_pct' | '
 type TxSortField = 'date' | 'symbol' | 'side' | 'price' | 'pnl_pct'
 type SortDir = 'asc' | 'desc'
 
+// Not içindeki linkleri tıklanabilir hale getiren fonksiyon
+function renderNoteWithLinks(note: string) {
+  // URL pattern: http/https ile başlayan VEYA www. ile başlayan
+  const urlPattern = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g
+  const parts = note.split(urlPattern).filter(Boolean)
+  
+  return parts.map((part, index) => {
+    // HTTP/HTTPS ile başlayan link
+    if (part && part.match(/^https?:\/\//)) {
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-400 hover:text-blue-300 underline decoration-1 underline-offset-2 hover:decoration-2 transition-all"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      )
+    }
+    // www. ile başlayan link (http:// ekle)
+    if (part && part.match(/^www\./)) {
+      return (
+        <a
+          key={index}
+          href={`https://${part}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-400 hover:text-blue-300 underline decoration-1 underline-offset-2 hover:decoration-2 transition-all"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      )
+    }
+    // Normal text
+    return <span key={index}>{part}</span>
+  })
+}
+
 export default function PublicPortfolioView({
   portfolio,
   holdings,
@@ -86,6 +129,7 @@ export default function PublicPortfolioView({
   const [hSortDir, setHSortDir] = useState<SortDir>('asc')
   const [tSortField, setTSortField] = useState<TxSortField>('date')
   const [tSortDir, setTSortDir] = useState<SortDir>('desc')
+  const [noteTooltipId, setNoteTooltipId] = useState<string | null>(null)
 
   // Güncel fiyatları çek
   const { prices, loading: pricesLoading } = usePrices(holdings)
@@ -402,6 +446,32 @@ export default function PublicPortfolioView({
                             <span className={`px-1.5 py-0.5 text-[9px] font-semibold rounded border ${ASSET_TYPE_COLORS[tx.asset_type]}`}>
                               {ASSET_TYPE_LABELS[tx.asset_type]}
                             </span>
+                            {/* Not ikonu */}
+                            {tx.note && (
+                              <div 
+                                className="relative"
+                                onMouseEnter={() => setNoteTooltipId(tx.id)}
+                                onMouseLeave={() => setNoteTooltipId(null)}
+                              >
+                                <button
+                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-200 hover:bg-amber-100 transition-colors"
+                                >
+                                  <StickyNote className="w-3.5 h-3.5 text-amber-500" />
+                                  <span className="text-[10px] font-medium text-amber-600">Not</span>
+                                </button>
+                                {noteTooltipId === tx.id && (
+                                  <div className="absolute left-0 top-full mt-1.5 z-50 max-w-lg p-4 bg-gray-900 text-white text-sm rounded-lg shadow-2xl max-h-96 overflow-y-auto">
+                                    <div className="flex items-center gap-2 mb-2.5 text-amber-300 font-semibold">
+                                      <StickyNote className="w-4 h-4" /> İşlem Notu
+                                    </div>
+                                    <div className="leading-relaxed whitespace-pre-wrap break-words">
+                                      {renderNoteWithLinks(tx.note)}
+                                    </div>
+                                    <div className="absolute -top-1 left-4 w-2 h-2 bg-gray-900 rotate-45" />
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">

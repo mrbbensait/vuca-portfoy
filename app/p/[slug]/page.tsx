@@ -44,7 +44,7 @@ export default async function PublicPortfolioPage({ params }: PageProps) {
   // Transactions (son 50)
   const { data: transactions } = await supabase
     .from('transactions')
-    .select('id, symbol, asset_type, side, quantity, price, fee, date, created_at')
+    .select('id, symbol, asset_type, side, quantity, price, fee, date, note, created_at')
     .eq('portfolio_id', portfolio.id)
     .order('date', { ascending: false })
     .order('created_at', { ascending: false })

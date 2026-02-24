@@ -192,7 +192,7 @@ export default function AdminDashboard() {
                     cy="50%"
                     outerRadius={90}
                     dataKey="value"
-                    label={(props: Record<string, unknown>) =>
+                    label={(props: any) =>
                       `${props.name} ${((props.percent as number) * 100).toFixed(0)}%`
                     }
                     labelLine={false}
@@ -201,7 +201,7 @@ export default function AdminDashboard() {
                       <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number) => [formatCurrency(value), 'Güncel Değer']} />
+                  <Tooltip formatter={(value: any) => [formatCurrency(value as number), 'Güncel Değer']} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -248,8 +248,8 @@ export default function AdminDashboard() {
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} interval="preserveStartEnd" />
                 <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                 <Tooltip
-                  formatter={(value: number) => [`${value} kayıt`, 'Yeni Kullanıcı']}
-                  labelFormatter={(label: string) => label}
+                  formatter={(value: any) => [`${value} kayıt`, 'Yeni Kullanıcı']}
+                  labelFormatter={(label: any) => label}
                 />
                 <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
               </BarChart>

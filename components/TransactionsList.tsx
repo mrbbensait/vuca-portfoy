@@ -81,6 +81,48 @@ function getDateRange(filter: DateFilter): { start: Date; end: Date } | null {
 
 const PAGE_SIZE = 15
 
+// Not içindeki linkleri tıklanabilir hale getiren fonksiyon
+function renderNoteWithLinks(note: string) {
+  // URL pattern: http/https ile başlayan VEYA www. ile başlayan
+  const urlPattern = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g
+  const parts = note.split(urlPattern).filter(Boolean)
+  
+  return parts.map((part, index) => {
+    // HTTP/HTTPS ile başlayan link
+    if (part && part.match(/^https?:\/\//)) {
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-400 hover:text-blue-300 underline decoration-1 underline-offset-2 hover:decoration-2 transition-all"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      )
+    }
+    // www. ile başlayan link (http:// ekle)
+    if (part && part.match(/^www\./)) {
+      return (
+        <a
+          key={index}
+          href={`https://${part}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-400 hover:text-blue-300 underline decoration-1 underline-offset-2 hover:decoration-2 transition-all"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      )
+    }
+    // Normal text
+    return <span key={index}>{part}</span>
+  })
+}
+
 export default function TransactionsList({ userId }: TransactionsListProps) {
   const { activePortfolio } = usePortfolio()
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -536,21 +578,25 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
                           </span>
                           {/* Not ikonu */}
                           {tx.note && (
-                            <div className="relative">
+                            <div 
+                              className="relative"
+                              onMouseEnter={() => setNoteTooltipId(tx.id)}
+                              onMouseLeave={() => setNoteTooltipId(null)}
+                            >
                               <button
-                                onMouseEnter={() => setNoteTooltipId(tx.id)}
-                                onMouseLeave={() => setNoteTooltipId(null)}
                                 className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-200 hover:bg-amber-100 transition-colors"
                               >
                                 <StickyNote className="w-3.5 h-3.5 text-amber-500" />
                                 <span className="text-[10px] font-medium text-amber-600">Not</span>
                               </button>
                               {noteTooltipId === tx.id && (
-                                <div className="absolute left-0 top-full mt-1.5 z-50 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl leading-relaxed">
-                                  <div className="flex items-center gap-1.5 mb-1.5 text-amber-300 font-semibold">
-                                    <StickyNote className="w-3 h-3" /> İşlem Notu
+                                <div className="absolute left-0 top-full mt-1.5 z-50 max-w-lg p-4 bg-gray-900 text-white text-sm rounded-lg shadow-2xl max-h-96 overflow-y-auto">
+                                  <div className="flex items-center gap-2 mb-2.5 text-amber-300 font-semibold">
+                                    <StickyNote className="w-4 h-4" /> İşlem Notu
                                   </div>
-                                  {tx.note}
+                                  <div className="leading-relaxed whitespace-pre-wrap break-words">
+                                    {renderNoteWithLinks(tx.note)}
+                                  </div>
                                   <div className="absolute -top-1 left-4 w-2 h-2 bg-gray-900 rotate-45" />
                                 </div>
                               )}

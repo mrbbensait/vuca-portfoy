@@ -484,7 +484,7 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
                     <Pie data={analysis.chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={110} paddingAngle={2} dataKey="value" label={renderCustomLabel} labelLine={false}>
                       {analysis.chartData.map((entry, i) => (<Cell key={i} fill={entry.color} stroke="white" strokeWidth={2} />))}
                     </Pie>
-                    <Tooltip formatter={(value: number) => [`₺${formatLargeNumber(value)}`, 'Değer']} contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px' }} />
+                    <Tooltip formatter={(value: any) => [`₺${formatLargeNumber(value as number)}`, 'Değer']} contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px' }} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ marginTop: '-10px' }}>
