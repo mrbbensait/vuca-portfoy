@@ -37,12 +37,13 @@ export async function POST(
       return NextResponse.json({ error: 'Kendi portföyünüzü takip edemezsiniz' }, { status: 400 })
     }
 
-    // Takip et
+    // Takip et (last_seen_at'i şu anki zamana set et - eski aktiviteler bildirim olmasın)
     const { data: follow, error: fError } = await supabase
       .from('portfolio_follows')
       .insert({
         follower_id: user.id,
         portfolio_id: portfolioId,
+        last_seen_at: new Date().toISOString(),
       })
       .select()
       .single()
