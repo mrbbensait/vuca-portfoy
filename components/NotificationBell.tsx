@@ -104,6 +104,12 @@ export default function NotificationBell() {
     setIsOpen(false)
   }
 
+  const handleNotificationClick = () => {
+    // Bildirime tıklanınca tüm bildirimleri okundu işaretle
+    markAllSeen()
+    setIsOpen(false)
+  }
+
   const formatTime = (dateStr: string) => {
     const now = new Date()
     const date = new Date(dateStr)
@@ -201,7 +207,7 @@ export default function NotificationBell() {
                   <Link
                     key={activity.id}
                     href={getHref()}
-                    onClick={() => setIsOpen(false)}
+                    onClick={handleNotificationClick}
                     className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0"
                   >
                     {/* Icon */}
