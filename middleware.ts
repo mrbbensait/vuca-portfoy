@@ -39,6 +39,9 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // API route'ları middleware'den exclude - kendi auth kontrollerini yapıyorlar
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api')
+  
   // Sadece landing page ve auth sayfaları herkese açık
   // /explore, /p/, /profile/ artık giriş yapmış kullanıcılara özel
   const isPublicPath = request.nextUrl.pathname === '/' 
@@ -47,7 +50,7 @@ export async function middleware(request: NextRequest) {
   // Admin sayfaları — auth zorunlu (role kontrolü admin layout'ta yapılır)
   const isAdminPath = request.nextUrl.pathname.startsWith('/admin')
 
-  if (!user && !isPublicPath) {
+  if (!user && !isPublicPath && !isApiRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     return NextResponse.redirect(url)

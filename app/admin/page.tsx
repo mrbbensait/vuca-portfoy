@@ -12,6 +12,7 @@ import {
   DollarSign,
   Wallet,
   PiggyBank,
+  Mail,
 } from 'lucide-react'
 import {
   BarChart,
@@ -52,6 +53,13 @@ interface StatsData {
   dailySignups: { date: string; count: number }[]
 }
 
+interface InvitationStats {
+  total_invitations: number
+  active_invitations: number
+  total_uses: number
+  available_slots: number
+}
+
 const PIE_COLORS = ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981']
 
 function formatCurrency(value: number): string {
@@ -64,6 +72,7 @@ function formatCurrency(value: number): string {
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<StatsData | null>(null)
+  const [invitationStats, setInvitationStats] = useState<InvitationStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -81,6 +90,21 @@ export default function AdminDashboard() {
       }
     }
     fetchStats()
+  }, [])
+
+  useEffect(() => {
+    async function fetchInvitationStats() {
+      try {
+        const res = await fetch('/api/admin/invitations?limit=1')
+        if (res.ok) {
+          const data = await res.json()
+          setInvitationStats(data.stats)
+        }
+      } catch (err) {
+        console.error('Failed to fetch invitation stats:', err)
+      }
+    }
+    fetchInvitationStats()
   }, [])
 
   if (loading) {
@@ -173,6 +197,49 @@ export default function AdminDashboard() {
         <KpiCard icon={ArrowLeftRight} label="İşlem" value={overview.totalTransactions} sub={`+${overview.newTransactionsLast7Days} bu hafta`} color="amber" />
         <KpiCard icon={Package} label="Holding" value={overview.totalHoldings} sub={`${overview.totalFollows} takip`} color="emerald" />
       </div>
+
+      {/* Davet Sistemi Widget */}
+      {invitationStats && (
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-blue-600 rounded-lg">
+                <Mail className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Davet Sistemi</h3>
+                <p className="text-sm text-gray-600">Kayıt için davet linki yönetimi</p>
+              </div>
+            </div>
+            <a
+              href="/admin/invitations"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+            >
+              Yönet
+            </a>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="bg-white rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">Aktif Davet</p>
+              <p className="text-2xl font-bold text-blue-600">{invitationStats.active_invitations}</p>
+            </div>
+            <div className="bg-white rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">Toplam Kayıt</p>
+              <p className="text-2xl font-bold text-green-600">{invitationStats.total_uses}</p>
+            </div>
+            <div className="bg-white rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">Boş Slot</p>
+              <p className="text-2xl font-bold text-orange-600">
+                {invitationStats.available_slots === -1 ? '∞' : invitationStats.available_slots}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">Toplam Davet</p>
+              <p className="text-2xl font-bold text-gray-900">{invitationStats.total_invitations}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Grafikler — 2 sütun */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

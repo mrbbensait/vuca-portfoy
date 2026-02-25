@@ -27,49 +27,99 @@ export function PortfolioProvider({ children, userId }: { children: ReactNode; u
   const fetchPortfolios = async () => {
     setLoading(true)
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        console.warn('No active session found, waiting...')
+        setLoading(false)
+        return
+      }
+
       const { data, error } = await supabase
         .from('portfolios')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error('Portfolio query error:', error)
+        throw error
+      }
 
       if (data && data.length > 0) {
         setPortfolios(data)
         
-        // LocalStorage'dan aktif portfolio ID'yi al
         const savedPortfolioId = localStorage.getItem('activePortfolioId')
         const savedPortfolio = data.find(p => p.id === savedPortfolioId)
         
-        // Eğer kayıtlı portfolio varsa onu, yoksa ilkini seç
         setActivePortfolioState(savedPortfolio || data[0])
       } else {
-        // Hiç portfolio yoksa oluştur
+        // Portföy bulunamadı, oluşturmayı dene
         const { data: newPortfolio, error: createError } = await supabase
           .from('portfolios')
           .insert({ user_id: userId, name: 'Varsayılan Portföy' })
           .select()
           .single()
 
-        if (createError) throw createError
+        if (createError) {
+          console.error('Portfolio create error:', createError)
+          
+          // Eğer trigger zaten oluşturmuşsa tekrar fetch et
+          // Session timing sorunu olabilir, 500ms bekleyip tekrar dene
+          await new Promise(resolve => setTimeout(resolve, 500))
+          const { data: retryData, error: retryError } = await supabase
+            .from('portfolios')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: true })
+          
+          if (retryError || !retryData || retryData.length === 0) {
+            throw createError
+          }
+          
+          // Retry'da bulundu
+          setPortfolios(retryData)
+          setActivePortfolioState(retryData[0])
+          return
+        }
 
         if (newPortfolio) {
           setPortfolios([newPortfolio])
           setActivePortfolioState(newPortfolio)
         }
       }
-    } catch (error) {
-      console.error('Portfolio fetch error:', error)
+    } catch (error: any) {
+      console.error('Portfolio fetch error:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+      })
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    if (userId) {
-      fetchPortfolios()
+    let retryCount = 0
+    const maxRetries = 3
+    const retryDelay = 1000
+
+    async function fetchWithRetry() {
+      if (!userId) return
+
+      try {
+        await fetchPortfolios()
+      } catch (error) {
+        if (retryCount < maxRetries) {
+          retryCount++
+          console.log(`Retrying portfolio fetch (${retryCount}/${maxRetries})...`)
+          setTimeout(fetchWithRetry, retryDelay)
+        }
+      }
     }
+
+    fetchWithRetry()
   }, [userId])
 
   // Aktif portfolio değiştiğinde localStorage'a kaydet

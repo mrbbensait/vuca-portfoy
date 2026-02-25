@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 export default function RegisterPage() {
@@ -12,8 +12,26 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [invitationCode, setInvitationCode] = useState<string | null>(null)
+  const [invitationValid, setInvitationValid] = useState<boolean | null>(null)
+  const [validatingInvite, setValidatingInvite] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
+
+  // Davet kodu kontrolü
+  useEffect(() => {
+    const code = searchParams.get('invite')
+    
+    if (!code) {
+      setError('Bu platform sadece davetiye ile üyelik kabul etmektedir. Lütfen geçerli bir davet linki kullanın.')
+      setInvitationValid(false)
+      return
+    }
+
+    setInvitationCode(code)
+    validateInvitation(code)
+  }, [searchParams])
 
   // Environment variable kontrolü
   useEffect(() => {
@@ -24,14 +42,40 @@ export default function RegisterPage() {
     }
   }, [])
 
+  const validateInvitation = async (code: string) => {
+    setValidatingInvite(true)
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/invitations/validate?code=${code}`)
+      const data = await response.json()
+
+      if (data.valid) {
+        setInvitationValid(true)
+      } else {
+        setInvitationValid(false)
+        setError(data.error || 'Geçersiz davet kodu')
+      }
+    } catch (err) {
+      setInvitationValid(false)
+      setError('Davet kodu doğrulanamadı')
+    } finally {
+      setValidatingInvite(false)
+    }
+  }
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!invitationValid || !invitationCode) {
+      setError('Geçerli bir davet kodu gerekli')
+      return
+    }
+
     setLoading(true)
     setError(null)
     setMessage(null)
 
-    // Kullanıcı oluştur - Profil ve portföy otomatik oluşturulacak (trigger ile)
-    // Production URL'i kullan (Vercel/Production'da NEXT_PUBLIC_SITE_URL varsa)
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
     
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -41,6 +85,7 @@ export default function RegisterPage() {
         emailRedirectTo: `${siteUrl}/auth/callback`,
         data: {
           display_name: displayName || email.split('@')[0],
+          invitation_code: invitationCode,
         },
       },
     })
@@ -52,14 +97,41 @@ export default function RegisterPage() {
     }
 
     if (authData.user) {
-      // E-posta doğrulama kapalıysa session oluşur, direkt dashboard'a yönlendir
+      try {
+        const validateResponse = await fetch(`/api/invitations/validate?code=${invitationCode}`)
+        const validateData = await validateResponse.json()
+
+        if (!validateData.valid || !validateData.invitation) {
+          setError('Davet kodu artık geçerli değil')
+          setLoading(false)
+          return
+        }
+
+        const useResponse = await fetch('/api/invitations/use', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            invitation_id: validateData.invitation.id,
+            user_id: authData.user.id,
+          }),
+        })
+
+        const useData = await useResponse.json()
+
+        if (!useData.success) {
+          console.error('Failed to record invitation use:', useData.error)
+        }
+      } catch (inviteError) {
+        console.error('Invitation tracking error:', inviteError)
+      }
+
       if (authData.session) {
         setMessage('Kayıt başarılı! Yönlendiriliyorsunuz...')
+        // Session'ın tam oturması ve trigger'ın tamamlanması için daha uzun bekle
         setTimeout(() => {
           router.push('/dashboard')
-        }, 1000)
+        }, 2500)
       } else {
-        // E-posta doğrulama açıksa
         setMessage('Kayıt başarılı! E-posta adresinizi doğrulayın.')
         setTimeout(() => {
           router.push('/auth/login')
@@ -140,10 +212,10 @@ export default function RegisterPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !invitationValid || validatingInvite}
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
           >
-            {loading ? 'Kayıt yapılıyor...' : 'Kayıt Ol'}
+            {validatingInvite ? 'Davet kodu doğrulanıyor...' : loading ? 'Kayıt yapılıyor...' : 'Kayıt Ol'}
           </button>
         </form>
 

@@ -11,6 +11,7 @@ import {
   ScrollText,
   Shield,
   ChevronLeft,
+  Mail,
 } from 'lucide-react'
 
 interface AdminSidebarProps {
@@ -23,6 +24,7 @@ const navItems = [
   { href: '/admin/users', label: 'Kullanıcılar', icon: Users },
   { href: '/admin/portfolios', label: 'Portföyler', icon: Briefcase },
   { href: '/admin/transactions', label: 'İşlemler', icon: ArrowLeftRight },
+  { href: '/admin/invitations', label: 'Davetler', icon: Mail },
   { href: '/admin/system', label: 'Sistem Sağlığı', icon: Server },
   { href: '/admin/audit', label: 'Audit Log', icon: ScrollText },
 ]
