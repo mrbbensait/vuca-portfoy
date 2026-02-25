@@ -31,3 +31,37 @@ body {
   pointer-events: none;
   transition: filter 0.2s ease;
 }
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 3s ease-in-out infinite;
+}
+
+@keyframes neon-pulse {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(239, 68, 68, 0.5),
+                0 0 10px rgba(239, 68, 68, 0.5),
+                0 0 15px rgba(239, 68, 68, 0.5),
+                0 0 20px rgba(239, 68, 68, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.8),
+                0 0 20px rgba(239, 68, 68, 0.8),
+                0 0 30px rgba(239, 68, 68, 0.6),
+                0 0 40px rgba(239, 68, 68, 0.4);
+    transform: scale(1.05);
+  }
+}
+
+.animate-neon-pulse {
+  animation: neon-pulse 2s ease-in-out infinite;
+}

@@ -12,6 +12,7 @@ import {
   Shield,
   ChevronLeft,
   Mail,
+  MessageSquare,
 } from 'lucide-react'
 
 interface AdminSidebarProps {
@@ -25,6 +26,7 @@ const navItems = [
   { href: '/admin/portfolios', label: 'Portföyler', icon: Briefcase },
   { href: '/admin/transactions', label: 'İşlemler', icon: ArrowLeftRight },
   { href: '/admin/invitations', label: 'Davetler', icon: Mail },
+  { href: '/admin/feedback', label: 'Geri Bildirimler', icon: MessageSquare },
   { href: '/admin/system', label: 'Sistem Sağlığı', icon: Server },
   { href: '/admin/audit', label: 'Audit Log', icon: ScrollText },
 ]

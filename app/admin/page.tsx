@@ -13,6 +13,8 @@ import {
   Wallet,
   PiggyBank,
   Mail,
+  MessageSquare,
+  AlertCircle,
 } from 'lucide-react'
 import {
   BarChart,
@@ -60,6 +62,13 @@ interface InvitationStats {
   available_slots: number
 }
 
+interface FeedbackStats {
+  unresolved_count: number
+  last_7_days_count: number
+  critical_count: number
+  total_count: number
+}
+
 const PIE_COLORS = ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981']
 
 function formatCurrency(value: number): string {
@@ -73,6 +82,7 @@ function formatCurrency(value: number): string {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<StatsData | null>(null)
   const [invitationStats, setInvitationStats] = useState<InvitationStats | null>(null)
+  const [feedbackStats, setFeedbackStats] = useState<FeedbackStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -105,6 +115,21 @@ export default function AdminDashboard() {
       }
     }
     fetchInvitationStats()
+  }, [])
+
+  useEffect(() => {
+    async function fetchFeedbackStats() {
+      try {
+        const res = await fetch('/api/admin/feedback?limit=1')
+        if (res.ok) {
+          const data = await res.json()
+          setFeedbackStats(data.stats)
+        }
+      } catch (err) {
+        console.error('Failed to fetch feedback stats:', err)
+      }
+    }
+    fetchFeedbackStats()
   }, [])
 
   if (loading) {
@@ -236,6 +261,50 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-lg p-4">
               <p className="text-sm text-gray-600 mb-1">Toplam Davet</p>
               <p className="text-2xl font-bold text-gray-900">{invitationStats.total_invitations}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Geri Bildirim Widget */}
+      {feedbackStats && (
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-purple-600 rounded-lg">
+                <MessageSquare className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Geri Bildirimler</h3>
+                <p className="text-sm text-gray-600">Beta kullanıcı geri bildirimleri</p>
+              </div>
+            </div>
+            <a
+              href="/admin/feedback"
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium"
+            >
+              Yönet
+            </a>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="bg-white rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">Toplam</p>
+              <p className="text-2xl font-bold text-purple-600">{feedbackStats.total_count}</p>
+            </div>
+            <div className="bg-white rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">Çözülmemiş</p>
+              <p className="text-2xl font-bold text-orange-600">{feedbackStats.unresolved_count}</p>
+            </div>
+            <div className="bg-white rounded-lg p-4 relative">
+              <p className="text-sm text-gray-600 mb-1">Kritik</p>
+              <p className="text-2xl font-bold text-red-600">{feedbackStats.critical_count}</p>
+              {feedbackStats.critical_count > 0 && (
+                <AlertCircle className="absolute top-2 right-2 w-4 h-4 text-red-500 animate-pulse" />
+              )}
+            </div>
+            <div className="bg-white rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">Son 7 Gün</p>
+              <p className="text-2xl font-bold text-gray-900">{feedbackStats.last_7_days_count}</p>
             </div>
           </div>
         </div>
