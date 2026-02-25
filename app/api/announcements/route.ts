@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import type { AnnouncementLink } from '@/lib/types/database.types'
+import { buildAnnouncementMessage, sendHybridTelegramNotification } from '@/lib/telegram/sendMessage'
 
 // GET — Bir portföyün duyurularını getir
 export async function GET(request: NextRequest) {
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
     // 1. Portföyün public olduğunu doğrula
     const { data: portfolio } = await supabase
       .from('portfolios')
-      .select('is_public, name, slug, user_id')
+      .select('is_public, name, slug, user_id, telegram_enabled, telegram_bot_token, telegram_channel_id')
       .eq('id', portfolio_id)
       .single()
 
@@ -100,58 +101,28 @@ export async function POST(request: Request) {
       console.error('Activity insert error (non-blocking):', activityError)
     }
 
-    // 4. Telegram bildirimi (opsiyonel)
+    // 4. Telegram bildirimi (hibrit: global kanal + kullanıcının kendi kanalı)
     if (send_to_telegram) {
       try {
-        const botToken = process.env.TELEGRAM_BOT_TOKEN
-        const channelId = process.env.TELEGRAM_CHANNEL_ID
-        
-        if (botToken && channelId) {
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-          
-          // Telegram mesaj formatı
-          let text = `📢  <b>Yeni Duyuru</b>\n\n`
-          text += `"<b>${portfolio.name}</b>" portföyünden yeni bir duyuru yayınlandı:\n\n`
-          text += `<b>${title}</b>\n\n`
-          text += `${content.substring(0, 200)}${content.length > 200 ? '...' : ''}\n\n`
-          
-          if (links && links.length > 0) {
-            text += `🔗 ${links.length} link paylaşıldı\n\n`
-          }
-          
-          text += `━━━━━━━━━━━━━━━━━━━━━\n\n`
-          text += `Detaylar ve linkler için portföyü ziyaret edin.`
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+        const { text, buttons } = buildAnnouncementMessage({
+          portfolioName: portfolio.name,
+          portfolioSlug: portfolio.slug,
+          title,
+          content,
+          links: links as { url: string }[],
+          announcementId: announcement.id,
+          appUrl,
+        })
 
-          // Inline keyboard butonları
-          const buttons: { text: string; url: string }[][] = []
-          if (portfolio.slug) {
-            buttons.push([{ text: '📢  Duyuruyu Gör', url: `${appUrl}/p/${portfolio.slug}?tab=announcements#announcement-${announcement.id}` }])
-            buttons.push([{ text: '📊  Portföyü İncele', url: `${appUrl}/p/${portfolio.slug}` }])
-          }
-
-          const telegramBody: Record<string, unknown> = {
-            chat_id: channelId,
-            text,
-            parse_mode: 'HTML',
-            disable_web_page_preview: true,
-          }
-
-          // Telegram inline butonlar sadece https URL kabul eder
-          if (!appUrl.includes('localhost')) {
-            telegramBody.reply_markup = { inline_keyboard: buttons }
-          }
-
-          const tgRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(telegramBody),
-          })
-
-          if (!tgRes.ok) {
-            const errBody = await tgRes.json().catch(() => ({}))
-            console.error('[Telegram Error]', errBody)
-          }
-        }
+        await sendHybridTelegramNotification({
+          text,
+          buttons,
+          appUrl,
+          portfolioTelegramEnabled: portfolio.telegram_enabled,
+          portfolioBotToken: portfolio.telegram_bot_token,
+          portfolioChannelId: portfolio.telegram_channel_id,
+        })
       } catch (tgErr) {
         console.error('[Telegram Send Error (non-blocking)]', tgErr)
       }

@@ -1,8 +1,9 @@
 import Navigation from '@/components/Navigation'
-import { Settings as SettingsIcon, User, DollarSign, Shield, Download } from 'lucide-react'
+import { Settings as SettingsIcon, User, DollarSign, Shield, Download, Send } from 'lucide-react'
 import ProfileSettings from '@/components/ProfileSettings'
 import SecuritySettings from '@/components/SecuritySettings'
 import DataExport from '@/components/DataExport'
+import TelegramSettings from '@/components/TelegramSettings'
 import { PortfolioProvider } from '@/lib/contexts/PortfolioContext'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -20,6 +21,12 @@ export default async function SettingsPage() {
     .select('*')
     .eq('id', user.id)
     .single()
+
+  const { data: portfolios } = await supabase
+    .from('portfolios')
+    .select('id, name, is_public')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: true })
 
   const userEmail = user.email || 'email@example.com'
 
@@ -112,6 +119,18 @@ export default async function SettingsPage() {
               Veri Dışa Aktarma
             </h2>
             <DataExport userId={user.id} />
+          </div>
+
+          {/* Telegram Entegrasyonu */}
+          <div id="telegram" className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-1 flex items-center">
+              <Send className="w-5 h-5 mr-2 text-blue-500" />
+              Telegram Entegrasyonu
+            </h2>
+            <p className="text-sm text-gray-500 mb-5">
+              Public portföyünüzdeki işlemler ve duyuruları kendi Telegram kanalınıza otomatik olarak iletin.
+            </p>
+            <TelegramSettings portfolios={portfolios || []} />
           </div>
 
           {/* Uygulama Bilgileri */}

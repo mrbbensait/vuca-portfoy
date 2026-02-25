@@ -4,6 +4,7 @@ import InvestmentDistribution from '@/components/InvestmentDistribution'
 import TransactionsList from '@/components/TransactionsList'
 import NotesList from '@/components/NotesList'
 import PortfolioAnnouncements from '@/components/PortfolioAnnouncements'
+import TelegramConnectBanner from '@/components/TelegramConnectBanner'
 import { PortfolioProvider } from '@/lib/contexts/PortfolioContext'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -42,6 +43,9 @@ export default async function PortfolioPage() {
 
             {/* Duyurular (Sadece Public Portföyler) - En Alta */}
             <PortfolioAnnouncements userId={user.id} />
+
+            {/* Telegram Bağlantı Bilgilendirmesi - En Alta, sadece public + bağlanmamışsa */}
+            <TelegramConnectBanner />
           </div>
         </main>
       </div>

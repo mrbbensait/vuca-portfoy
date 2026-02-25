@@ -30,6 +30,9 @@ export interface Portfolio {
   description: string | null
   created_at: string
   updated_at: string
+  telegram_enabled: boolean
+  telegram_bot_token: string | null
+  telegram_channel_id: string | null
 }
 
 export interface Holding {

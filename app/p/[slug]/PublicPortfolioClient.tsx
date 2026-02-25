@@ -78,6 +78,7 @@ export default function PublicPortfolioClient({
           transactions={transactions}
           isOwner={isOwnPortfolio}
         />
+
       </main>
     </div>
   )

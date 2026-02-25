@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { buildTradeMessage, sendHybridTelegramNotification } from '@/lib/telegram/sendMessage'
 
 export async function POST(request: Request) {
   try {
@@ -113,7 +114,7 @@ export async function POST(request: Request) {
     try {
       const { data: portfolio } = await supabase
         .from('portfolios')
-        .select('is_public, name, slug')
+        .select('is_public, name, slug, telegram_enabled, telegram_bot_token, telegram_channel_id')
         .eq('id', portfolio_id)
         .single()
 
@@ -129,69 +130,27 @@ export async function POST(request: Request) {
           metadata: { symbol, side, quantity: parseFloat(quantity), price: parseFloat(price), asset_type },
         })
 
-        // ✅ 5. Telegram bildirimi (doğrudan Telegram API'ye)
-        const botToken = process.env.TELEGRAM_BOT_TOKEN
-        const channelId = process.env.TELEGRAM_CHANNEL_ID
-        if (botToken && channelId) {
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-          const isBuy = side === 'BUY'
-          const sideEmoji = isBuy ? '🟢' : '🔴'
-          const assetCategories: Record<string, string> = {
-            TR_STOCK: 'BIST',
-            US_STOCK: 'Nasdaq',
-            CRYPTO: 'Kripto',
-            CASH: 'Döviz / Nakit',
-          }
-          const assetCategory = assetCategories[asset_type] || 'Diğer'
-          // Sembolden .IS uzantısını ve USDT suffix'ini temizle
-          const cleanSymbol = symbol.replace(/\.IS$/i, '').replace(/USDT$/i, '')
-          const now = new Date()
-          const dateStr = now.toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })
-          const timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+        // ✅ 5. Hibrit Telegram bildirimi (global kanal + kullanıcının kendi kanalı)
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+        const { text, buttons } = buildTradeMessage({
+          portfolioName: portfolio.name,
+          portfolioSlug: portfolio.slug,
+          symbol,
+          side,
+          assetType: asset_type,
+          quantity,
+          price,
+          appUrl,
+        })
 
-          let text = `${sideEmoji}  <b>${assetCategory}</b>\n\n`
-          text += `"<b>${portfolio.name}</b>" portföyüne yeni bir işlem eklendi.\n\n`
-          text += `📅  ${dateStr} · ${timeStr}\n`
-          text += `📌  ${cleanSymbol}\n\n`
-          text += `━━━━━━━━━━━━━━━━━━━━━\n\n`
-          text += `Portföy Röntgeni, <b>VUCA</b>'nın ücretsiz sunduğu bir uygulamadır. `
-          text += `Piyasada tüm varlıklarımızı takip edebileceğimiz tek bir platformun olmamasından dolayı geliştirilmiştir.\n\n`
-          text += `Herkes kendi portföyünü oluşturabilir, özel ya da halka açık şekilde yayınlayabilir. `
-          text += `Halka açık portföyleri incelemek için ücretsiz üye olmanız yeterlidir.\n\n`
-          text += `<i>Detaylı bilgi için web uygulamasını ziyaret edebilirsiniz.</i>`
-
-          // Inline keyboard butonları
-          const buttons: { text: string; url: string }[][] = []
-          if (portfolio.slug) {
-            buttons.push([{ text: '📊  Portföyü İncele', url: `${appUrl}/p/${portfolio.slug}` }])
-          }
-          buttons.push([{ text: '🌐  Portföy Röntgeni', url: appUrl }])
-
-          const telegramBody: Record<string, unknown> = {
-            chat_id: channelId,
-            text,
-            parse_mode: 'HTML',
-            disable_web_page_preview: true,
-          }
-          // Telegram inline butonlar sadece https URL kabul eder (localhost çalışmaz)
-          if (!appUrl.includes('localhost')) {
-            telegramBody.reply_markup = { inline_keyboard: buttons }
-          }
-
-          try {
-            const tgRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(telegramBody),
-            })
-            if (!tgRes.ok) {
-              const errBody = await tgRes.json().catch(() => ({}))
-              console.error('[Telegram Error]', errBody)
-            }
-          } catch (tgErr) {
-            console.error('[Telegram Fetch Error]', tgErr)
-          }
-        }
+        await sendHybridTelegramNotification({
+          text,
+          buttons,
+          appUrl,
+          portfolioTelegramEnabled: portfolio.telegram_enabled,
+          portfolioBotToken: portfolio.telegram_bot_token,
+          portfolioChannelId: portfolio.telegram_channel_id,
+        })
       }
     } catch (activityError) {
       // Activity/Telegram yazılamasa bile işlem başarılı sayılır
