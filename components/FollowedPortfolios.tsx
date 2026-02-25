@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Users, ExternalLink, TrendingUp, TrendingDown, Compass, Activity, Megaphone } from 'lucide-react'
+import { Users, ExternalLink, Compass } from 'lucide-react'
 
 interface FollowedPortfolio {
   portfolio_id: string
@@ -11,24 +11,8 @@ interface FollowedPortfolio {
   owner_name: string
 }
 
-interface RecentActivity {
-  id: string
-  title: string
-  type: 'NEW_TRADE' | 'HOLDING_CLOSED' | 'PORTFOLIO_UPDATED' | 'NEW_ANNOUNCEMENT'
-  created_at: string
-  metadata: { 
-    side?: string
-    symbol?: string
-    announcement_id?: string
-    content_preview?: string
-  }
-  portfolio_name: string
-  portfolio_slug: string | null
-}
-
 export default function FollowedPortfolios() {
   const [portfolios, setPortfolios] = useState<FollowedPortfolio[]>([])
-  const [activities, setActivities] = useState<RecentActivity[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -41,28 +25,12 @@ export default function FollowedPortfolios() {
       const data = await res.json()
       if (data.success) {
         setPortfolios(data.data.portfolios)
-        setActivities(data.data.recentActivities)
       }
     } catch {
       // Sessizce yut
     } finally {
       setLoading(false)
     }
-  }
-
-  const formatTime = (dateStr: string) => {
-    const now = new Date()
-    const date = new Date(dateStr)
-    const diffMs = now.getTime() - date.getTime()
-    const diffMin = Math.floor(diffMs / 60000)
-    const diffHour = Math.floor(diffMs / 3600000)
-    const diffDay = Math.floor(diffMs / 86400000)
-
-    if (diffMin < 1) return 'Az önce'
-    if (diffMin < 60) return `${diffMin} dk önce`
-    if (diffHour < 24) return `${diffHour} saat önce`
-    if (diffDay < 7) return `${diffDay} gün önce`
-    return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })
   }
 
   if (loading) {
@@ -119,7 +87,7 @@ export default function FollowedPortfolios() {
         </div>
       ) : (
         <div className="space-y-4">
-          {/* Takip Edilen Portföyler - Ayrı Bölüm */}
+          {/* Takip Edilen Portföyler */}
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {portfolios.map((p) => (
@@ -142,89 +110,6 @@ export default function FollowedPortfolios() {
               ))}
             </div>
           </div>
-
-          {/* Son Hareketler ve Duyurular - Yan Yana */}
-          {activities.length > 0 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-              {/* Son İşlemler - Ayrı Bölüm */}
-              {activities.filter(a => a.type !== 'NEW_ANNOUNCEMENT').length > 0 && (
-                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-3 border border-amber-100">
-                  <div className="flex items-center gap-2 mb-2.5">
-                    <div className="p-1 rounded-md bg-amber-100">
-                      <Activity className="w-3.5 h-3.5 text-amber-600" />
-                    </div>
-                    <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Son Hareketler
-                    </h4>
-                  </div>
-                  <div className="space-y-1.5">
-                    {activities.filter(a => a.type !== 'NEW_ANNOUNCEMENT').slice(0, 5).map((a) => (
-                      <Link
-                        key={a.id}
-                        href={a.portfolio_slug ? `/p/${a.portfolio_slug}?tab=transactions` : '#'}
-                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-white border border-transparent hover:border-amber-200 hover:shadow-sm transition-all group"
-                      >
-                        <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
-                          a.metadata.side === 'BUY'
-                            ? 'bg-emerald-100 text-emerald-600'
-                            : 'bg-red-100 text-red-600'
-                        }`}>
-                          {a.metadata.side === 'BUY' ? (
-                            <TrendingUp className="w-3 h-3" />
-                          ) : (
-                            <TrendingDown className="w-3 h-3" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-gray-800 truncate">{a.title}</p>
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <span className="text-[10px] text-blue-600 font-medium truncate">{a.portfolio_name}</span>
-                            <span className="text-[10px] text-gray-300">·</span>
-                            <span className="text-[10px] text-gray-400">{formatTime(a.created_at)}</span>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Son Duyurular - Ayrı Bölüm */}
-              {activities.filter(a => a.type === 'NEW_ANNOUNCEMENT').length > 0 && (
-                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg p-3 border border-emerald-100">
-                  <div className="flex items-center gap-2 mb-2.5">
-                    <div className="p-1 rounded-md bg-emerald-100">
-                      <Megaphone className="w-3.5 h-3.5 text-emerald-600" />
-                    </div>
-                    <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Son Duyurular
-                    </h4>
-                  </div>
-                  <div className="space-y-1.5">
-                    {activities.filter(a => a.type === 'NEW_ANNOUNCEMENT').slice(0, 5).map((a) => (
-                      <Link
-                        key={a.id}
-                        href={a.portfolio_slug ? `/p/${a.portfolio_slug}?tab=announcements` : '#'}
-                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-white border border-transparent hover:border-emerald-200 hover:shadow-sm transition-all group"
-                      >
-                        <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-emerald-100 text-emerald-600">
-                          <Megaphone className="w-3 h-3" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-gray-800 truncate">{a.title}</p>
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <span className="text-[10px] text-blue-600 font-medium truncate">{a.portfolio_name}</span>
-                            <span className="text-[10px] text-gray-300">·</span>
-                            <span className="text-[10px] text-gray-400">{formatTime(a.created_at)}</span>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       )}
     </div>

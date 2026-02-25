@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Bell, TrendingUp, TrendingDown, X, Check, ExternalLink, Megaphone } from 'lucide-react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 
 interface ActivityItem {
   id: string
@@ -32,6 +33,7 @@ export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const supabase = createClient()
 
   // Okunmamış sayısını çek
   const fetchUnreadCount = useCallback(async () => {
@@ -72,10 +74,57 @@ export default function NotificationBell() {
     }
   }
 
-  // Sayfa yüklendiğinde ve 5 dakikada bir okunmamış sayısını çek
+  // Realtime subscription: Takip edilen portföylerde yeni aktivite olduğunda anında bildir
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    const setupRealtime = async () => {
+      // Önce takip edilen portföyleri al
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: followedPortfolios } = await supabase
+        .from('portfolio_follows')
+        .select('portfolio_id')
+        .eq('follower_id', user.id)
+
+      if (!followedPortfolios || followedPortfolios.length === 0) return
+
+      const portfolioIds = followedPortfolios.map(f => f.portfolio_id)
+
+      // Realtime channel oluştur ve portfolio_activities tablosunu dinle
+      channel = supabase
+        .channel('notification-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'portfolio_activities',
+            filter: `portfolio_id=in.(${portfolioIds.join(',')})`
+          },
+          () => {
+            // Yeni aktivite geldiğinde okunmamış sayısını güncelle
+            fetchUnreadCount()
+          }
+        )
+        .subscribe()
+    }
+
+    setupRealtime()
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel)
+      }
+    }
+  }, [supabase, fetchUnreadCount])
+
+  // Fallback: Sayfa yüklendiğinde ve 5 dakikada bir okunmamış sayısını çek
+  // (Realtime çalışmazsa veya gecikmeli olursa diye)
   useEffect(() => {
     fetchUnreadCount()
-    const interval = setInterval(fetchUnreadCount, 300000)
+    const interval = setInterval(fetchUnreadCount, 300000) // 5 dakika
     return () => clearInterval(interval)
   }, [fetchUnreadCount])
 
@@ -188,9 +237,9 @@ export default function NotificationBell() {
             ) : activities.length === 0 ? (
               <div className="text-center py-8 px-4">
                 <Bell className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">Henüz bildirim yok</p>
+                <p className="text-sm text-gray-500">Yeni bildirim yok</p>
                 <p className="text-xs text-gray-400 mt-1">
-                  Takip ettiğiniz portföylerdeki işlemler burada görünecek
+                  Takip ettiğiniz portföylerdeki yeni işlemler burada görünecek
                 </p>
               </div>
             ) : (

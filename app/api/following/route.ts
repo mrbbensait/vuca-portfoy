@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
-// GET — Kullanıcının takip ettiği portföyler + son 5 aktivite
+// GET — Kullanıcının takip ettiği portföyler
 export async function GET() {
   try {
     const supabase = await createClient()
@@ -19,7 +19,7 @@ export async function GET() {
 
     if (fErr) throw fErr
     if (!follows || follows.length === 0) {
-      return NextResponse.json({ success: true, data: { portfolios: [], recentActivities: [] } })
+      return NextResponse.json({ success: true, data: { portfolios: [] } })
     }
 
     const portfolioIds = follows.map(f => f.portfolio_id)
@@ -52,33 +52,9 @@ export async function GET() {
       owner_name: ownerMap[p.user_id]?.display_name || 'Anonim',
     }))
 
-    // Son aktiviteler (işlemler + duyurular ayrı ayrı)
-    const { data: allActivities } = await supabase
-      .from('portfolio_activities')
-      .select('id, portfolio_id, title, type, created_at, metadata')
-      .in('portfolio_id', portfolioIds)
-      .order('created_at', { ascending: false })
-      .limit(20)  // Hem işlemleri hem duyuruları yakalamak için
-
-    // Portföy adı eşleştirmesi
-    const pMap: Record<string, { name: string; slug: string | null }> = {}
-    if (portfolios) {
-      portfolios.forEach(p => { pMap[p.id] = { name: p.name, slug: p.slug } })
-    }
-
-    const recentActivities = (allActivities || []).map(a => ({
-      id: a.id,
-      title: a.title,
-      type: a.type,
-      created_at: a.created_at,
-      metadata: a.metadata as Record<string, unknown>,
-      portfolio_name: pMap[a.portfolio_id]?.name || '',
-      portfolio_slug: pMap[a.portfolio_id]?.slug || null,
-    }))
-
     return NextResponse.json({
       success: true,
-      data: { portfolios: portfolioList, recentActivities },
+      data: { portfolios: portfolioList },
     })
   } catch (error: unknown) {
     console.error('GET following error:', error)

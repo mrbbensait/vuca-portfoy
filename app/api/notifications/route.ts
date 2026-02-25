@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
-// GET — Takip edilen portföylerin aktivite akışı (pull-based)
+// GET — Sadece okunmamış bildirimleri getir (last_seen_at bazlı)
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
@@ -13,28 +13,37 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50)
-    const offset = parseInt(searchParams.get('offset') || '0')
 
-    // Takip edilen portföy ID'lerini al
-    const { data: followedIds } = await supabase
+    // Takip edilen portföyleri ve last_seen_at'leri al
+    const { data: follows, error: fError } = await supabase
       .from('portfolio_follows')
-      .select('portfolio_id')
+      .select('portfolio_id, last_seen_at')
       .eq('follower_id', user.id)
 
-    if (!followedIds || followedIds.length === 0) {
-      return NextResponse.json({ success: true, data: [], hasMore: false })
+    if (fError) throw fError
+    if (!follows || follows.length === 0) {
+      return NextResponse.json({ success: true, data: [] })
     }
 
-    const portfolioIds = followedIds.map(f => f.portfolio_id)
+    const portfolioIds = follows.map(f => f.portfolio_id)
 
-    // Son 30 günlük aktiviteleri çek
+    // En eski last_seen_at'i bul
+    const hasNullSeen = follows.some(f => !f.last_seen_at)
+    const oldestSeen = hasNullSeen
+      ? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      : follows.reduce((oldest, f) => {
+          if (!oldest || (f.last_seen_at && f.last_seen_at < oldest)) return f.last_seen_at!
+          return oldest
+        }, '' as string)
+
+    // Sadece okunmamış aktiviteleri çek (last_seen_at'ten sonraki)
     const { data: acts, error: actError } = await supabase
       .from('portfolio_activities')
       .select('*')
       .in('portfolio_id', portfolioIds)
-      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .gt('created_at', oldestSeen)
       .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
+      .limit(limit)
 
     if (actError) throw actError
 
@@ -44,7 +53,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: enriched,
-      hasMore: (acts || []).length === limit,
     })
   } catch (error: unknown) {
     console.error('GET notifications error:', error)
