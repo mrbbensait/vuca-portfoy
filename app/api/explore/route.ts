@@ -13,6 +13,9 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit
 
     const supabase = await createClient()
+    
+    // Get current user for follow status
+    const { data: { user } } = await supabase.auth.getUser()
 
     // Base query: public portföyler
     let query = supabase
@@ -20,9 +23,22 @@ export async function GET(request: NextRequest) {
       .select('id, name, slug, description, is_public, created_at, user_id', { count: 'exact' })
       .eq('is_public', true)
 
-    // Arama
+    // Arama - include owner name if search term provided
     if (search.trim()) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`)
+      // First get matching user IDs by display_name
+      const { data: matchingUsers } = await supabase
+        .from('users_public')
+        .select('id')
+        .ilike('display_name', `%${search}%`)
+      
+      const matchingUserIds = matchingUsers?.map(u => u.id) || []
+      
+      // Build search query: portfolio name OR description OR owner name
+      if (matchingUserIds.length > 0) {
+        query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,user_id.in.(${matchingUserIds.join(',')})`)
+      } else {
+        query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`)
+      }
     }
 
     // Sıralama
@@ -79,6 +95,20 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Get follow status for current user
+    let followedPortfolioIds: Set<string> = new Set()
+    if (user && portfolioIds.length > 0) {
+      const { data: follows } = await supabase
+        .from('portfolio_follows')
+        .select('portfolio_id')
+        .eq('follower_id', user.id)
+        .in('portfolio_id', portfolioIds)
+      
+      if (follows) {
+        followedPortfolioIds = new Set(follows.map(f => f.portfolio_id))
+      }
+    }
+
     // Sonuçları zenginleştir
     const enriched = (portfolios || []).map(p => {
       const profile = profileMap[p.user_id]
@@ -87,6 +117,7 @@ export async function GET(request: NextRequest) {
         owner_name: profile?.display_name || 'Anonim',
         owner_avatar: profile?.avatar_url || null,
         holding_count: holdingCounts[p.id] || 0,
+        is_following: followedPortfolioIds.has(p.id),
       }
     })
 

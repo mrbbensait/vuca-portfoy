@@ -14,6 +14,7 @@ interface ExplorePortfolio {
   owner_name: string
   owner_avatar: string | null
   created_at: string
+  is_following: boolean
 }
 
 interface Pagination {
@@ -117,7 +118,7 @@ export default function ExplorePage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Portföy adı veya açıklama ara..."
+                placeholder="Portföy adı, açıklama veya yayınlayan kişi ara..."
                 className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all"
               />
             </div>
