@@ -153,6 +153,9 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
   // Holdings (realize edilmemiş K/Z için)
   const [holdings, setHoldings] = useState<Holding[]>([])
 
+  // USD/TRY kuru (realize edilmemiş K/Z hesabı için)
+  const [usdTryRate, setUsdTryRate] = useState<number | null>(null)
+
   const supabase = createClient()
 
   const fetchTransactions = useCallback(async () => {
@@ -183,6 +186,24 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
     }
     fetchHoldings()
   }, [activePortfolio?.id, supabase])
+
+  // USD/TRY kuru fetch
+  useEffect(() => {
+    const fetchRate = async () => {
+      try {
+        const response = await fetch('/api/price/quote?symbol=USD&asset_type=CASH')
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.data) {
+            setUsdTryRate(result.data.price)
+          }
+        }
+      } catch (error) {
+        console.error('USD/TRY rate error:', error)
+      }
+    }
+    if (activePortfolio) fetchRate()
+  }, [activePortfolio?.id])
 
   // Güncel fiyatlar (realize edilmemiş K/Z hesabı için)
   const { prices } = usePrices(holdings)
@@ -284,8 +305,29 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
   const summary = useMemo(() => {
     const sells = processedTransactions.filter(tx => tx.side === 'SELL')
     const buys = processedTransactions.filter(tx => tx.side === 'BUY')
-    const totalBuy = buys.reduce((sum, tx) => sum + tx.quantity * tx.price, 0)
-    const totalSell = sells.reduce((sum, tx) => sum + tx.quantity * tx.price, 0)
+    
+    // Toplam alım - tüm para birimlerini TRY'ye çevir
+    let totalBuy = 0
+    buys.forEach(tx => {
+      const txTotal = tx.quantity * tx.price
+      if (tx.asset_type === 'TR_STOCK' || tx.asset_type === 'CASH') {
+        totalBuy += txTotal  // Zaten TRY
+      } else if (usdTryRate) {  // US_STOCK veya CRYPTO
+        totalBuy += txTotal * usdTryRate  // USD → TRY çevir
+      }
+    })
+    
+    // Toplam satım - tüm para birimlerini TRY'ye çevir
+    let totalSell = 0
+    sells.forEach(tx => {
+      const txTotal = tx.quantity * tx.price
+      if (tx.asset_type === 'TR_STOCK' || tx.asset_type === 'CASH') {
+        totalSell += txTotal  // Zaten TRY
+      } else if (usdTryRate) {  // US_STOCK veya CRYPTO
+        totalSell += txTotal * usdTryRate  // USD → TRY çevir
+      }
+    })
+    
     let realizedPL = 0
     sells.forEach(tx => {
       const pl = profitLossMap.get(tx.id)
@@ -305,15 +347,24 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
     const matchedHoldings = holdings.filter(h => filteredSymbols.has(h.symbol))
     matchedHoldings.forEach(h => {
       const priceData = prices[h.symbol]
-      if (priceData) {
-        const currentValue = h.quantity * priceData.price
-        const costBasis = h.quantity * h.avg_price
-        unrealizedPL += currentValue - costBasis
+      if (!priceData || !usdTryRate) return
+      
+      let currentValueTry = 0
+      let costTry = 0
+      
+      if (priceData.currency === 'TRY') {
+        currentValueTry = h.quantity * priceData.price
+        costTry = h.quantity * h.avg_price
+      } else if (priceData.currency === 'USD') {
+        currentValueTry = h.quantity * priceData.price * usdTryRate
+        costTry = h.quantity * h.avg_price * usdTryRate
       }
+      
+      unrealizedPL += currentValueTry - costTry
     })
 
     return { totalBuy, totalSell, realizedPL, unrealizedPL, netQuantities, buyCount: buys.length, sellCount: sells.length }
-  }, [processedTransactions, profitLossMap, holdings, prices])
+  }, [processedTransactions, profitLossMap, holdings, prices, usdTryRate])
 
   // Sort handler
   const handleSort = (field: SortField) => {

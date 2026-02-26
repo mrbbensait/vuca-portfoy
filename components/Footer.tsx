@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import FeedbackModal from './FeedbackModal'
+import { APP_VERSION } from '@/lib/version'
 
 export default function Footer() {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
@@ -78,7 +79,12 @@ export default function Footer() {
 
           <div className="pt-6 border-t border-gray-200">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
-              <p>© 2026 VUCA Borsa LTD. Tüm hakları saklıdır.</p>
+              <div className="flex items-center gap-3">
+                <p>© 2026 VUCA Borsa LTD. Tüm hakları saklıdır.</p>
+                <span className="text-xs px-2 py-1 bg-gray-100 rounded-md font-mono">
+                  v{APP_VERSION}
+                </span>
+              </div>
               <p className="text-xs">
                 ⚠️ Bu platform yatırım tavsiyesi vermez. Tüm yatırım kararlarınızın sorumluluğu size aittir.
               </p>
