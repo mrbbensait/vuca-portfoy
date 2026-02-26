@@ -1,4 +1,6 @@
-# 📊 VUCA Portföy Röntgeni - Proje Anlatımı
+# 📊 XPortfoy - Proje Anlatımı
+
+**Dijital Portföy Röntgeni**
 
 > Tüm varlıklarınızı tek platformda yönetin, paylaşın ve takip edin
 
@@ -25,7 +27,7 @@
 
 ### Nedir?
 
-**Portföy Röntgeni**, Türkiye'de ilk defa çoklu piyasa varlıklarınızı tek platformda yönetmenizi, analiz etmenizi ve başkalarıyla paylaşmanızı sağlayan bir finans teknolojisi uygulamasıdır.
+**XPortfoy** (Dijital Portföy Röntgeni), Türkiye'de ilk defa çoklu piyasa varlıklarınızı tek platformda yönetmenizi, analiz etmenizi ve başkalarıyla paylaşmanızı sağlayan bir finans teknolojisi uygulamasıdır.
 
 ### Hangi Problemi Çözüyor?
 
@@ -1113,7 +1115,7 @@ npm start
 
 ### Geliştirici
 
-Proje: VUCA Portföy Röntgeni  
+Proje: XPortfoy (Dijital Portföy Röntgeni)  
 Durum: Aktif Geliştirme  
 Tarih: 2026
 
@@ -1129,7 +1131,7 @@ Tarih: 2026
 
 ## 🏆 Sonuç
 
-**Portföy Röntgeni**, Türkiye'de ilk defa çoklu piyasa varlıklarını tek platformda yönetmenizi, analiz etmenizi ve sosyal olarak paylaşmanızı sağlayan yenilikçi bir fintech uygulamasıdır.
+**XPortfoy** (Dijital Portföy Röntgeni), Türkiye'de ilk defa çoklu piyasa varlıklarını tek platformda yönetmenizi, analiz etmenizi ve sosyal olarak paylaşmanızı sağlayan yenilikçi bir fintech uygulamasıdır.
 
 **Temel Özellikler:**
 - ✅ Çoklu portföy yönetimi

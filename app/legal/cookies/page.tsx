@@ -2,7 +2,7 @@ import { COOKIE_POLICY } from '@/lib/legal/legal-texts'
 import ReactMarkdown from 'react-markdown'
 
 export const metadata = {
-  title: 'Çerez Politikası - Portföy Röntgeni',
+  title: 'Çerez Politikası - XPortfoy',
   description: 'Platform çerez kullanımı ve yönetimi politikası',
 }
 

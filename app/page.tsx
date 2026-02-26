@@ -49,7 +49,7 @@ export default function LandingPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
               <Activity className="w-7 h-7 text-blue-600" />
-              <span className="text-xl font-bold text-gray-900">Portföy Röntgeni</span>
+              <span className="text-xl font-bold text-gray-900">XPortfoy</span>
             </div>
             <div className="flex items-center gap-3">
               {user ? (
@@ -463,7 +463,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeInSection className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-              Neden Portföy Röntgeni?
+              Neden XPortfoy?
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Diğer uygulamalarla karşılaştırın
@@ -560,10 +560,10 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-white/80">
               <div className="flex items-center gap-2">
                 <Activity className="w-5 h-5 text-white" />
-                <span className="text-white font-semibold">Portföy Röntgeni</span>
+                <span className="text-white font-semibold">XPortfoy</span>
               </div>
               <p>
-                &copy; {new Date().getFullYear()} Portföy Röntgeni • <span className="text-white font-semibold">Beta Sürüm</span> • Tüm hakları saklıdır.
+                &copy; {new Date().getFullYear()} XPortfoy • <span className="text-white font-semibold">Beta Sürüm</span> • Tüm hakları saklıdır.
               </p>
             </div>
           </div>

@@ -50,7 +50,7 @@ export default function PublicPortfolioClient({
                 Keşfet
               </Link>
               <span className="text-gray-300">|</span>
-              <span className="text-xl font-bold text-blue-600">Portföy Röntgeni</span>
+              <span className="text-xl font-bold text-blue-600">XPortfoy</span>
             </div>
             <div className="flex items-center gap-3">
               {!isOwnPortfolio && (

@@ -2,7 +2,7 @@ import { KVKK_PRIVACY_POLICY } from '@/lib/legal/legal-texts'
 import ReactMarkdown from 'react-markdown'
 
 export const metadata = {
-  title: 'Gizlilik Politikası - Portföy Röntgeni',
+  title: 'Gizlilik Politikası - XPortfoy',
   description: 'KVKK uyarınca kişisel verilerin korunması ve gizlilik politikası',
 }
 

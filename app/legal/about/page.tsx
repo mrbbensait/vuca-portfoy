@@ -2,8 +2,8 @@ import { ABOUT_US } from '@/lib/legal/legal-texts'
 import ReactMarkdown from 'react-markdown'
 
 export const metadata = {
-  title: 'Hakkımızda - Portföy Röntgeni',
-  description: 'Portföy Röntgeni hakkında bilgi, iletişim ve şirket detayları',
+  title: 'Hakkımızda - XPortfoy',
+  description: 'XPortfoy hakkında bilgi, iletişim ve şirket detayları',
 }
 
 export default function AboutPage() {

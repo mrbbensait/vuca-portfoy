@@ -2,7 +2,7 @@ import { DISCLAIMER } from '@/lib/legal/legal-texts'
 import ReactMarkdown from 'react-markdown'
 
 export const metadata = {
-  title: 'Feragat Beyanı - Portföy Röntgeni',
+  title: 'Feragat Beyanı - XPortfoy',
   description: 'Platform sorumluluk reddi ve feragat beyanı',
 }
 

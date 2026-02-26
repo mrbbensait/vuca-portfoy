@@ -162,7 +162,7 @@ export default function TelegramHelpModal({ onClose }: TelegramHelpModalProps) {
                 ['Bot bulunamadı / Unauthorized', 'BotFather&#39;dan aldığınız token&#39;ı doğru kopyaladığınızdan emin olun.'],
                 ['Kanal bulunamadı (chat not found)', 'Kanal ID&#39;sini @ işareti ile birlikte girin: @kanaladi'],
                 ['Bot mesaj gönderemiyor (Forbidden)', 'Botu kanala admin olarak eklemeyi unutmuş olabilirsiniz (Adım 3).'],
-                ['Hâlâ çalışmıyor', 'Kanalı silip yeniden oluşturmayı deneyin veya destek@portfoyrontgeni.com adresine yazın.'],
+                ['Hâlâ çalışmıyor', 'Kanalı silip yeniden oluşturmayı deneyin veya bilgi@vucaborsa.com adresine yazın.'],
               ].map(([title, desc], i) => (
                 <li key={i} className="text-xs text-gray-600">
                   <span className="font-semibold text-gray-700">❌ {title}:</span> {desc}

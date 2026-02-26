@@ -32,7 +32,7 @@ export default async function LandingPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
               <Activity className="w-7 h-7 text-blue-600" />
-              <span className="text-xl font-bold text-gray-900">Portföy Röntgeni</span>
+              <span className="text-xl font-bold text-gray-900">XPortfoy</span>
             </div>
             <div className="flex items-center gap-3">
               {user ? (
@@ -232,7 +232,7 @@ export default async function LandingPage() {
           <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-8 sm:p-12 text-center mb-20">
             <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
               <CheckCircle2 className="w-4 h-4" />
-              Çözüm: Portföy Röntgeni
+              Çözüm: XPortfoy
             </div>
             <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
               BIST, ABD, altın, gümüş, döviz ve kripto — hepsi tek portföyde
@@ -375,7 +375,7 @@ export default async function LandingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
               <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
-                Neden Portföy Röntgeni?
+                Neden XPortfoy?
               </h2>
               <p className="text-lg text-gray-600 mb-8">
                 Piyasada her varlık türü için ayrı uygulama var. Biz hepsini tek çatı altında topladık.
@@ -460,7 +460,7 @@ export default async function LandingPage() {
           </h2>
           <p className="text-lg sm:text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
             Hisse, altın, gümüş, döviz, kripto — farklı uygulamalar arasında kaybolmayın. 
-            Portföy Röntgeni ile hepsini tek ekrandan yönetin.
+            XPortfoy ile hepsini tek ekrandan yönetin.
           </p>
           <Link
             href={ctaHref}
@@ -478,14 +478,14 @@ export default async function LandingPage() {
           <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
               <Activity className="w-5 h-5 text-blue-400" />
-              <span className="text-white font-semibold">Portföy Röntgeni</span>
+              <span className="text-white font-semibold">XPortfoy</span>
             </div>
             <div className="flex items-center gap-6 text-sm">
               <Link href="/auth/login" className="hover:text-white transition-colors">Giriş Yap</Link>
               <Link href="/auth/register" className="hover:text-white transition-colors">Kayıt Ol</Link>
             </div>
             <p className="text-sm">
-              &copy; {new Date().getFullYear()} Portföy Röntgeni. Tüm hakları saklıdır.
+              &copy; {new Date().getFullYear()} XPortfoy. Tüm hakları saklıdır.
             </p>
           </div>
         </div>

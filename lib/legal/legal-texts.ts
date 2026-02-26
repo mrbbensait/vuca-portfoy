@@ -17,7 +17,7 @@ export const COMPANY_INFO = {
   },
   contact: {
     email: 'bilgi@vucaborsa.com',
-    website: 'https://portfoyrontgeni.com',
+    website: 'https://xportfoy.com',
   },
   lastUpdated: '26 Şubat 2026',
 } as const;
@@ -290,7 +290,7 @@ Portföy Röntgeni platformunu kullanarak aşağıdaki şartları kabul etmiş o
 
 ## 1. Hizmet Tanımı
 
-**Portföy Röntgeni**, ${COMPANY_INFO.name} tarafından sunulan bir **portföy takip ve yönetim aracıdır**. Platform:
+**XPortfoy** (Dijital Portföy Röntgeni), ${COMPANY_INFO.name} tarafından sunulan bir **portföy takip ve yönetim aracıdır**. Platform:
 - Çoklu varlık portföy yönetimi (BIST, ABD, kripto, altın, gümüş, döviz)
 - Performans analizi ve raporlama
 - Sosyal portföy paylaşımı (isteğe bağlı)
@@ -483,7 +483,7 @@ export const DISCLAIMER = `
 
 ## 1. Genel Sorumluluk Reddi
 
-**Portföy Röntgeni** platformu, ${COMPANY_INFO.name} tarafından "**OLDUĞU GİBİ**" sunulmaktadır. Platform kullanımından kaynaklanan hiçbir **doğrudan, dolaylı, arızi, özel veya sonuç olarak ortaya çıkan zarardan** sorumlu değiliz.
+**XPortfoy** (Dijital Portföy Röntgeni) platformu, ${COMPANY_INFO.name} tarafından "**OLDUĞU GİBİ**" sunulmaktadır. Platform kullanımından kaynaklanan hiçbir **doğrudan, dolaylı, arızi, özel veya sonuç olarak ortaya çıkan zarardan** sorumlu değiliz.
 
 ## 2. Yatırım Tavsiyesi Değildir
 
@@ -625,7 +625,9 @@ Feragat beyanı hakkında sorularınız için:
 export const ABOUT_US = `
 # Hakkımızda
 
-## Portföy Röntgeni
+## XPortfoy
+
+**Dijital Portföy Röntgeni**
 
 **Türkiye'nin ilk sosyal portföy yönetim platformu** 🚀
 
@@ -637,7 +639,7 @@ Yatırımcıların tüm varlıklarını (BIST, ABD, kripto, altın, gümüş, d�
 
 Şeffaf, sosyal ve güçlü bir yatırım topluluğu oluşturmak. Bilgiyi demokratikleştirmek ve yatırımcıları bir araya getirmek.
 
-## Neden Portföy Röntgeni?
+## Neden XPortfoy?
 
 ### 🌍 Çoklu Varlık Desteği
 6 farklı piyasayı tek portföyde: BIST hisse, ABD hisse, kripto, altın, gümüş, döviz

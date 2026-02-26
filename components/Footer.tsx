@@ -14,9 +14,9 @@ export default function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
             {/* Platform */}
             <div>
-              <h3 className="font-bold text-gray-900 mb-3">Portföy Röntgeni</h3>
+              <h3 className="font-bold text-gray-900 mb-3">XPortfoy</h3>
               <p className="text-sm text-gray-600 mb-4">
-                Türkiye&apos;nin ilk sosyal portföy yönetim platformu
+                Dijital Portföy Röntgeni
               </p>
               <button
                 onClick={() => setIsFeedbackOpen(true)}

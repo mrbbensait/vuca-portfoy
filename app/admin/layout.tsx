@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 
 export const metadata = {
-  title: 'Admin Panel — Portföy Röntgeni',
+  title: 'Admin Panel — XPortfoy',
   description: 'Sistem yönetim paneli',
 }
 

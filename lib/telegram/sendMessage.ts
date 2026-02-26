@@ -83,7 +83,7 @@ export function buildTradeMessage(params: {
   text += `📅  ${dateStr} · ${timeStr}\n`
   text += `📌  ${cleanSymbol}\n\n`
   text += `━━━━━━━━━━━━━━━━━━━━━\n\n`
-  text += `Portföy Röntgeni, <b>VUCA</b>'nın ücretsiz sunduğu bir uygulamadır. `
+  text += `XPortfoy, <b>VUCA</b>'nın ücretsiz sunduğu bir uygulamadır. `
   text += `Piyasada tüm varlıklarımızı takip edebileceğimiz tek bir platformun olmamasından dolayı geliştirilmiştir.\n\n`
   text += `Herkes kendi portföyünü oluşturabilir, özel ya da halka açık şekilde yayınlayabilir. `
   text += `Halka açık portföyleri incelemek için ücretsiz üye olmanız yeterlidir.\n\n`
@@ -93,7 +93,7 @@ export function buildTradeMessage(params: {
   if (portfolioSlug) {
     buttons.push([{ text: '📊  Portföyü İncele', url: `${appUrl}/p/${portfolioSlug}` }])
   }
-  buttons.push([{ text: '🌐  Portföy Röntgeni', url: appUrl }])
+  buttons.push([{ text: '🌐  XPortfoy', url: appUrl }])
 
   return { text, buttons }
 }

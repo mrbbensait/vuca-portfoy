@@ -35,11 +35,11 @@ export async function POST(request: NextRequest) {
       resolvedToken = decryptToken(resolvedToken)
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portfoyrontgeni.com'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://xportfoy.com'
 
     const testText =
       `✅  <b>Bağlantı Başarılı!</b>\n\n` +
-      `Portföy Röntgeni'ni Telegram kanalınıza başarıyla bağladınız.\n\n` +
+      `XPortfoy'u Telegram kanalınıza başarıyla bağladınız.\n\n` +
       `Artık portföyünüzdeki işlemler ve duyurular bu kanala otomatik olarak iletilecek.\n\n` +
       `<i>Bu bir test mesajıdır.</i>`
 
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     if (!appUrl.includes('localhost')) {
       telegramBody.reply_markup = {
-        inline_keyboard: [[{ text: '🌐  Portföy Röntgeni', url: appUrl }]],
+        inline_keyboard: [[{ text: '🌐  XPortfoy', url: appUrl }]],
       }
     }
 

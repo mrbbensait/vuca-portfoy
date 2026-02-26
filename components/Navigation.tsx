@@ -45,7 +45,7 @@ export default function Navigation() {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <h1 className="text-xl font-bold text-blue-600">
-                Portföy Röntgeni
+                XPortfoy
               </h1>
             </div>
             <div className="hidden sm:ml-8 sm:flex sm:space-x-4">

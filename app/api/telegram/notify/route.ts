@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://portfoyrontgeni.com'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://xportfoy.com'
 
 // POST — Telegram kanalına bildirim gönder (fire-and-forget, internal API)
 export async function POST(request: NextRequest) {
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     const priceFormatted = price ? Number(price).toLocaleString('tr-TR') : ''
 
     // Telegram mesaj metni (MarkdownV2 kullanmıyoruz, parse_mode=HTML)
-    let text = `📊 <b>Yeni İşlem</b> | Portföy Röntgeni\n\n`
+    let text = `📊 <b>Yeni İşlem</b> | XPortfoy\n\n`
     text += `<b>${escapeHtml(actor_name)}</b>, "<b>${escapeHtml(portfolio_name)}</b>" portföyüne `
     text += `bir ${assetLabel} ${sideLabel} işlemi ekledi.\n\n`
     text += `💰 ${quantity} adet <b>${escapeHtml(symbol)}</b>`
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       text += `\n🔗 <a href="${portfolioUrl}">Portföyü İncele</a>\n`
     }
 
-    text += `\n<i>Portföy Röntgeni'nde ücretsiz takip edin →</i>\n`
+    text += `\n<i>XPortfoy'da ücretsiz takip edin →</i>\n`
     text += `<a href="${APP_URL}/explore">Keşfet</a>`
 
     // Telegram Bot API çağrısı

@@ -2,7 +2,7 @@ import { TERMS_OF_SERVICE } from '@/lib/legal/legal-texts'
 import ReactMarkdown from 'react-markdown'
 
 export const metadata = {
-  title: 'Kullanım Şartları - Portföy Röntgeni',
+  title: 'Kullanım Şartları - XPortfoy',
   description: 'Platform kullanım şartları ve koşulları',
 }
 

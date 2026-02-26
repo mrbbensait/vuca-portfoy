@@ -1,0 +1,15 @@
+# XPortfoy - Dijital Portföy Röntgeni
+# https://xportfoy.com
+
+User-agent: *
+Allow: /
+Allow: /explore
+Allow: /p/*
+Allow: /profile/*
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /analysis
+
+Sitemap: https://xportfoy.com/sitemap.xml

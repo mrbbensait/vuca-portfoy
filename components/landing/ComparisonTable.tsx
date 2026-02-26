@@ -27,7 +27,7 @@ export default function ComparisonTable() {
           <tr className="bg-gray-50">
             <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700"></th>
             <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">Diğer Uygulamalar</th>
-            <th className="px-6 py-4 text-center text-sm font-semibold text-blue-700 bg-blue-50">Portföy Röntgeni</th>
+            <th className="px-6 py-4 text-center text-sm font-semibold text-blue-700 bg-blue-50">XPortfoy</th>
           </tr>
         </thead>
         <tbody>

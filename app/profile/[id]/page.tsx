@@ -112,7 +112,7 @@ export default function ProfilePage() {
               </Link>
               <span className="text-gray-300">|</span>
               <Link href="/" className="text-xl font-bold text-blue-600">
-                Portföy Röntgeni
+                XPortfoy
               </Link>
             </div>
             <Link

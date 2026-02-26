@@ -1,4 +1,6 @@
-# Portföy Röntgeni
+# XPortfoy
+
+**Dijital Portföy Röntgeni**
 
 TR hisse, ABD hisse ve kripto varlıklarınızı tek yerden yönetin.
 

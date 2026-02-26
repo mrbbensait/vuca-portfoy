@@ -135,7 +135,7 @@ export default async function SettingsPage() {
 
           {/* Uygulama Bilgileri */}
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Portföy Röntgeni V1</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">XPortfoy V1</h2>
             <div className="space-y-2 text-sm text-gray-700">
               <p>
                 <strong>Özellikler:</strong> TR hisse, ABD hisse ve kripto varlıklarınızı tek yerden yönetin
