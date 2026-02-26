@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react'
 import { usePortfolio } from '@/lib/contexts/PortfolioContext'
 import { createClient } from '@/lib/supabase/client'
+import { Share2 } from 'lucide-react'
 import AddTransactionButton from './AddTransactionButton'
+import PortfolioVisibilityToggle from './PortfolioVisibilityToggle'
 import HoldingsListClient from './HoldingsListClient'
 import type { Holding } from '@/lib/types/database.types'
 
@@ -15,6 +17,7 @@ export default function HoldingsList({ userId }: HoldingsListProps) {
   const { activePortfolio } = usePortfolio()
   const [holdings, setHoldings] = useState<Holding[]>([])
   const [loading, setLoading] = useState(true)
+  const [showVisibilityModal, setShowVisibilityModal] = useState(false)
   
   const supabase = createClient()
 
@@ -46,7 +49,16 @@ export default function HoldingsList({ userId }: HoldingsListProps) {
               ⚡ Akıllı cache sistemi • 15dk&apos;da bir güncellenir
             </p>
           </div>
-          <AddTransactionButton userId={userId} />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowVisibilityModal(true)}
+              className="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              Bu Portföyü Paylaş
+            </button>
+            <AddTransactionButton userId={userId} />
+          </div>
         </div>
       </div>
 
@@ -58,6 +70,11 @@ export default function HoldingsList({ userId }: HoldingsListProps) {
           userId={userId}
           portfolioId={activePortfolio?.id || ''}
         />
+      )}
+
+      {/* Portfolio Visibility Modal */}
+      {showVisibilityModal && (
+        <PortfolioVisibilityToggle onClose={() => setShowVisibilityModal(false)} />
       )}
     </div>
   )

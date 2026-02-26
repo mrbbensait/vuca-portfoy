@@ -9,9 +9,10 @@ import {
   TrendingUp, TrendingDown, Search, X, ChevronUp, ChevronDown,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   Trash2, ArrowUpDown, Filter, ReceiptText,
-  Calendar, AlertTriangle, StickyNote, Package
+  Calendar, AlertTriangle, StickyNote, Package, Share2
 } from 'lucide-react'
 import AddTransactionButton from './AddTransactionButton'
+import PortfolioVisibilityToggle from './PortfolioVisibilityToggle'
 import { formatPrice, formatLargeNumber } from '@/lib/formatPrice'
 import type { Transaction, Holding } from '@/lib/types/database.types'
 import Blur from './PrivacyBlur'
@@ -125,13 +126,14 @@ function renderNoteWithLinks(note: string) {
 
 export default function TransactionsList({ userId }: TransactionsListProps) {
   const { activePortfolio } = usePortfolio()
+  const supabase = createClient()
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [holdings, setHoldings] = useState<Holding[]>([])
   const [loading, setLoading] = useState(true)
-
-  // Filters
-  const [searchQuery, setSearchQuery] = useState('')
+  const [showVisibilityModal, setShowVisibilityModal] = useState(false)
   const [filterType, setFilterType] = useState<string | null>(null)
   const [filterSide, setFilterSide] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Sort — default: en son eklenen en üstte (created_at desc)
   const [sortField, setSortField] = useState<SortField>('created_at')
@@ -150,13 +152,8 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
   // Note tooltip
   const [noteTooltipId, setNoteTooltipId] = useState<string | null>(null)
 
-  // Holdings (realize edilmemiş K/Z için)
-  const [holdings, setHoldings] = useState<Holding[]>([])
-
   // USD/TRY kuru (realize edilmemiş K/Z hesabı için)
   const [usdTryRate, setUsdTryRate] = useState<number | null>(null)
-
-  const supabase = createClient()
 
   const fetchTransactions = useCallback(async () => {
     if (!activePortfolio) { setLoading(false); return }
@@ -436,7 +433,16 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
               {activeFilters > 0 && ` · ${processedTransactions.length} sonuç`}
             </p>
           </div>
-          <AddTransactionButton userId={userId} />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowVisibilityModal(true)}
+              className="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              Bu Portföyü Paylaş
+            </button>
+            <AddTransactionButton userId={userId} />
+          </div>
         </div>
       </div>
 
@@ -929,6 +935,11 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
           </div>
         )
       })()}
+
+      {/* Portfolio Visibility Modal */}
+      {showVisibilityModal && (
+        <PortfolioVisibilityToggle onClose={() => setShowVisibilityModal(false)} />
+      )}
     </div>
   )
 }

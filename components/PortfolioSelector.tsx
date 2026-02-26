@@ -196,7 +196,7 @@ export default function PortfolioSelector() {
                 </div>
               )}
 
-              {/* Görünürlük Ayarları Butonu */}
+              {/* Portföy Paylaş Butonu */}
               <button
                 onClick={() => {
                   setShowVisibilityModal(true)
@@ -209,7 +209,7 @@ export default function PortfolioSelector() {
                 ) : (
                   <Lock className="w-4 h-4 text-gray-400" />
                 )}
-                <span>Görünürlük Ayarları</span>
+                <span>Portföy Paylaş</span>
               </button>
 
               {/* Yeni Portfolio Butonu */}
@@ -234,7 +234,7 @@ export default function PortfolioSelector() {
       {/* Yeni Portfolio Modal */}
       {showCreateModal && (
         <>
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-30" onClick={() => setShowCreateModal(false)} />
+          <div className="fixed inset-0 bg-black bg-opacity-20 z-30" onClick={() => setShowCreateModal(false)} />
           <div className="fixed inset-0 flex items-center justify-center z-40 p-4">
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Yeni Portfolio Oluştur</h3>
