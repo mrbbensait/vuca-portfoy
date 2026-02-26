@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import LegalModal from '@/components/legal/LegalModal'
 
 function RegisterForm() {
   const [email, setEmail] = useState('')
@@ -15,6 +16,8 @@ function RegisterForm() {
   const [invitationCode, setInvitationCode] = useState<string | null>(null)
   const [invitationValid, setInvitationValid] = useState<boolean | null>(null)
   const [validatingInvite, setValidatingInvite] = useState(false)
+  const [legalModalOpen, setLegalModalOpen] = useState(false)
+  const [legalModalType, setLegalModalType] = useState<'terms' | 'privacy'>('terms')
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
@@ -23,14 +26,26 @@ function RegisterForm() {
   useEffect(() => {
     const code = searchParams.get('invite')
     
-    if (!code) {
-      setError('Bu platform sadece davetiye ile üyelik kabul etmektedir. Lütfen geçerli bir davet linki kullanın.')
-      setInvitationValid(false)
-      return
+    if (code) {
+      // URL'de kod varsa localStorage'a kaydet
+      localStorage.setItem('pending_invitation', code)
+      setInvitationCode(code)
+      validateInvitation(code)
+    } else {
+      // URL'de kod yoksa localStorage'dan kontrol et
+      const savedCode = localStorage.getItem('pending_invitation')
+      
+      if (savedCode) {
+        // Daha önce kaydedilmiş kod varsa kullan
+        setInvitationCode(savedCode)
+        validateInvitation(savedCode)
+        setMessage('Daha önce aldığınız davet kodu hatırlandı.')
+      } else {
+        // Hiç kod yoksa hata göster
+        setError('Bu platform sadece davetiye ile üyelik kabul etmektedir. Lütfen geçerli bir davet linki kullanın.')
+        setInvitationValid(false)
+      }
     }
-
-    setInvitationCode(code)
-    validateInvitation(code)
   }, [searchParams])
 
   // Environment variable kontrolü
@@ -125,6 +140,9 @@ function RegisterForm() {
         console.error('Invitation tracking error:', inviteError)
       }
 
+      // Davet kodu kullanıldı, localStorage'dan temizle
+      localStorage.removeItem('pending_invitation')
+      
       if (authData.session) {
         setMessage('Kayıt başarılı! Yönlendiriliyorsunuz...')
         // Session'ın tam oturması ve trigger'ın tamamlanması için daha uzun bekle
@@ -210,10 +228,39 @@ function RegisterForm() {
             />
           </div>
 
+          {/* Implicit Consent */}
+          <div className="pt-3 border-t border-gray-200">
+            <p className="text-xs text-gray-600 leading-relaxed text-center">
+              <strong>&quot;Kayıt Ol&quot;</strong> butonuna basarak <strong>18 yaşından büyük</strong> olduğunuzu,{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setLegalModalType('terms')
+                  setLegalModalOpen(true)
+                }}
+                className="text-blue-600 hover:text-blue-700 underline font-medium"
+              >
+                Kullanım Şartları
+              </button>
+              {' '}ve{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setLegalModalType('privacy')
+                  setLegalModalOpen(true)
+                }}
+                className="text-blue-600 hover:text-blue-700 underline font-medium"
+              >
+                Gizlilik Politikası
+              </button>
+              &apos;nı okuduğunuzu, anladığınızı ve kabul ettiğinizi onaylamış olursunuz.
+            </p>
+          </div>
+
           <button
             type="submit"
             disabled={loading || !invitationValid || validatingInvite}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold"
           >
             {validatingInvite ? 'Davet kodu doğrulanıyor...' : loading ? 'Kayıt yapılıyor...' : 'Kayıt Ol'}
           </button>
@@ -228,6 +275,13 @@ function RegisterForm() {
           </p>
         </div>
       </div>
+
+      {/* Legal Modal */}
+      <LegalModal
+        isOpen={legalModalOpen}
+        onClose={() => setLegalModalOpen(false)}
+        type={legalModalType}
+      />
     </div>
   )
 }

@@ -42,10 +42,11 @@ export async function middleware(request: NextRequest) {
   // API route'ları middleware'den exclude - kendi auth kontrollerini yapıyorlar
   const isApiRoute = request.nextUrl.pathname.startsWith('/api')
   
-  // Sadece landing page ve auth sayfaları herkese açık
+  // Sadece landing page, auth sayfaları ve yasal sayfalar herkese açık
   // /explore, /p/, /profile/ artık giriş yapmış kullanıcılara özel
   const isPublicPath = request.nextUrl.pathname === '/' 
     || request.nextUrl.pathname.startsWith('/auth')
+    || request.nextUrl.pathname.startsWith('/legal')
 
   // Admin sayfaları — auth zorunlu (role kontrolü admin layout'ta yapılır)
   const isAdminPath = request.nextUrl.pathname.startsWith('/admin')

@@ -116,13 +116,10 @@ export default function FeedbackButton() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition-all hover:scale-110 group"
+        className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-all animate-neon-pulse"
         title="Geri Bildirim Gönder (Cmd/Ctrl+K)"
       >
-        <MessageSquare className="w-6 h-6" />
-        <span className="absolute bottom-full right-0 mb-2 px-3 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-          Geri Bildirim (⌘K)
-        </span>
+        Geri Bildirim Gönder
       </button>
     )
   }

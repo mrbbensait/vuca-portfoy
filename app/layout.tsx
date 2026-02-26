@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PrivacyProvider } from "@/lib/contexts/PrivacyContext";
 import Footer from "@/components/Footer";
+import CookieBanner from "@/components/legal/CookieBanner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,6 +35,7 @@ export default function RootLayout({
             {children}
           </div>
           <Footer />
+          <CookieBanner />
         </PrivacyProvider>
       </body>
     </html>
