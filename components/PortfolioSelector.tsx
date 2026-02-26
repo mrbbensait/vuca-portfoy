@@ -234,7 +234,7 @@ export default function PortfolioSelector() {
       {/* Yeni Portfolio Modal */}
       {showCreateModal && (
         <>
-          <div className="fixed inset-0 bg-black bg-opacity-20 z-30" onClick={() => setShowCreateModal(false)} />
+          <div className="fixed inset-0 bg-black/10 backdrop-blur-[2px] z-30" onClick={() => setShowCreateModal(false)} />
           <div className="fixed inset-0 flex items-center justify-center z-40 p-4">
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Yeni Portfolio Oluştur</h3>
