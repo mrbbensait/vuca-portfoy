@@ -27,6 +27,14 @@ export const metadata: Metadata = {
   creator: "VUCA Borsa LTD",
   publisher: "VUCA Borsa LTD",
   applicationName: "XPortfoy",
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32', type: 'image/x-icon' },
+      { url: '/favicon.ico', sizes: '16x16', type: 'image/x-icon' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
   robots: {
     index: true,
     follow: true,
