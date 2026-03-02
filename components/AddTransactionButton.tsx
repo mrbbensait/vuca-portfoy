@@ -7,6 +7,7 @@ import { usePortfolio } from '@/lib/contexts/PortfolioContext'
 import { AssetType, TransactionSide } from '@/lib/types/database.types'
 import { formatPrice } from '@/lib/formatPrice'
 import { normalizeSymbol, validateSymbol, getSymbolHint } from '@/lib/normalizeSymbol'
+import { refreshPortfolioStats } from '@/lib/utils/refreshPortfolioStats'
 
 interface AddTransactionButtonProps {
   userId: string
@@ -188,6 +189,9 @@ export default function AddTransactionButton({ userId }: AddTransactionButtonPro
       })
       setPriceInfo(null)
       setIsOpen(false)
+      
+      // Arka planda stats cache'i yenile
+      refreshPortfolioStats(activePortfolio.id)
       
       // Sayfayı yenile
       window.location.reload()

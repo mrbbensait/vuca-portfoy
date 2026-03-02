@@ -17,6 +17,29 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import ProfitLossSection from '@/components/ProfitLossSection'
 import Blur from './PrivacyBlur'
 
+// InfoTooltip Component
+function InfoTooltip({ text }: { text: string }) {
+  const [show, setShow] = useState(false)
+  return (
+    <div className="relative inline-block">
+      <button
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        className="p-1 rounded-full hover:bg-white/20 transition-colors"
+        aria-label="Bilgi"
+      >
+        <Info className="w-3.5 h-3.5 opacity-70" />
+      </button>
+      {show && (
+        <div className="absolute right-0 top-full mt-1 z-50 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl leading-relaxed">
+          {text}
+          <div className="absolute -top-1 right-3 w-2 h-2 bg-gray-900 rotate-45" />
+        </div>
+      )}
+    </div>
+  )
+}
+
 interface PortfolioAnalysisProps {
   userId: string
 }
@@ -110,31 +133,6 @@ function RiskGauge({ score, label }: { score: number; label: string }) {
       <div className="w-full bg-gray-100 rounded-full h-2">
         <div className={`h-2 rounded-full transition-all duration-500 ${getBgColor()}`} style={{ width: `${Math.min(score, 100)}%` }} />
       </div>
-    </div>
-  )
-}
-
-// Hover info tooltip
-function InfoTooltip({ text }: { text: string }) {
-  const [show, setShow] = useState(false)
-  return (
-    <div className="relative inline-block">
-      <button
-        onMouseEnter={() => setShow(true)}
-        onMouseLeave={() => setShow(false)}
-        onFocus={() => setShow(true)}
-        onBlur={() => setShow(false)}
-        className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-        aria-label="Bilgi"
-      >
-        <Info className="w-3.5 h-3.5 text-gray-400" />
-      </button>
-      {show && (
-        <div className="absolute right-0 top-full mt-1 z-50 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl leading-relaxed">
-          {text}
-          <div className="absolute -top-1 right-3 w-2 h-2 bg-gray-900 rotate-45" />
-        </div>
-      )}
     </div>
   )
 }
@@ -364,7 +362,10 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl shadow-lg p-5 text-white">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-slate-300 uppercase tracking-wider">Toplam Değer (TRY)</span>
+            <div className="flex items-center gap-1">
+              <span className="text-xs font-medium text-slate-300 uppercase tracking-wider">Toplam Değer (TRY)</span>
+              <InfoTooltip text="Portföyünüzdeki tüm varlıkların güncel piyasa değerinin TRY cinsinden toplamı. USD varlıklar güncel kur ile çevrilir." />
+            </div>
             <Wallet className="w-5 h-5 text-slate-400" />
           </div>
           {isCalc ? <div className="h-8 bg-slate-700 rounded animate-pulse w-32" /> : (
@@ -375,7 +376,10 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
 
         <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl shadow-lg p-5 text-white">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-blue-200 uppercase tracking-wider">Toplam Değer (USD)</span>
+            <div className="flex items-center gap-1">
+              <span className="text-xs font-medium text-blue-200 uppercase tracking-wider">Toplam Değer (USD)</span>
+              <InfoTooltip text="Portföyünüzdeki tüm varlıkların güncel piyasa değerinin USD cinsinden toplamı. TRY varlıklar güncel kur ile çevrilir." />
+            </div>
             <DollarSign className="w-5 h-5 text-blue-300" />
           </div>
           {isCalc ? <div className="h-8 bg-blue-500 rounded animate-pulse w-32" /> : (
@@ -386,7 +390,10 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
 
         <div className={`rounded-xl shadow-lg p-5 text-white ${(analysis?.totalPL || 0) >= 0 ? 'bg-gradient-to-br from-emerald-500 to-emerald-600' : 'bg-gradient-to-br from-red-500 to-red-600'}`}>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium opacity-80 uppercase tracking-wider">Toplam Kar/Zarar</span>
+            <div className="flex items-center gap-1">
+              <span className="text-xs font-medium opacity-80 uppercase tracking-wider">Toplam Kar/Zarar</span>
+              <InfoTooltip text="Portföyünüzdeki tüm varlıkların toplam kâr/zarar durumu. Realize edilmiş (satılanlar) + Realize edilmemiş (açık pozisyonlar) toplamıdır." />
+            </div>
             {(analysis?.totalPL || 0) >= 0 ? <TrendingUp className="w-5 h-5 opacity-70" /> : <TrendingDown className="w-5 h-5 opacity-70" />}
           </div>
           {isCalc ? <div className="h-8 bg-white/20 rounded animate-pulse w-32" /> : (
@@ -399,7 +406,10 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
 
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-5 text-white">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-purple-200 uppercase tracking-wider">Toplam Yatırım</span>
+            <div className="flex items-center gap-1">
+              <span className="text-xs font-medium text-purple-200 uppercase tracking-wider">Toplam Yatırım</span>
+              <InfoTooltip text="Şu anda portföyünüzde bulunan tüm varlıkların satın alma maliyeti (maliyet bazı). Bu değer geçmiş alımlarınızın ortalamasıdır." />
+            </div>
             <PiggyBank className="w-5 h-5 text-purple-300" />
           </div>
           {isCalc ? <div className="h-8 bg-purple-400 rounded animate-pulse w-32" /> : (

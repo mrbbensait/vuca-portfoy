@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import PublicPortfolioView from '@/components/PublicPortfolioView'
 import type { PublicHolding, PublicTransaction } from '@/components/PublicPortfolioView'
 import FollowButton from '@/components/FollowButton'
+import PublicProfitLossStats from '@/components/PublicProfitLossStats'
 
 interface PortfolioData {
   id: string
@@ -79,6 +80,10 @@ export default function PublicPortfolioClient({
           isOwner={isOwnPortfolio}
         />
 
+        {/* Kar/Zarar İstatistikleri (cached from analysis page) */}
+        <div className="mt-6">
+          <PublicProfitLossStats portfolioId={portfolio.id} />
+        </div>
       </main>
     </div>
   )

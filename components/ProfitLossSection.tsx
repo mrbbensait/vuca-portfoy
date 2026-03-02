@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { usePortfolio } from '@/lib/contexts/PortfolioContext'
 import { createClient } from '@/lib/supabase/client'
 import { calculateTransactionProfitLoss } from '@/lib/calculations'
@@ -326,10 +326,49 @@ export default function ProfitLossSection({ holdings, prices, usdTryRate, loadin
     const unrealizedPLPct = totalCostBasis > 0 ? (unrealizedPL / totalCostBasis) * 100 : 0
     const totalPLPct = totalCostBasis > 0 ? (totalPL / totalCostBasis) * 100 : 0
 
-    // Buy transactions in range
+    // Buy transactions in range (for filtered stats)
     const buyTxInRange = filteredTx.filter(tx => tx.side === 'BUY')
     const totalInvested = buyTxInRange.reduce((sum, tx) => sum + (tx.quantity * tx.price), 0)
     const totalSold = sellTxInRange.reduce((sum, tx) => sum + (tx.quantity * tx.price), 0)
+
+    // All-time totals for cash flow summary (NOT filtered) - with currency conversion
+    const allBuyTx = transactions.filter(tx => tx.side === 'BUY')
+    const allSellTx = transactions.filter(tx => tx.side === 'SELL')
+    
+    let allTimeInvested = 0
+    let allTimeSold = 0
+    
+    // Convert all buy transactions to TRY
+    allBuyTx.forEach(tx => {
+      const pd = prices[tx.symbol]
+      if (!pd) {
+        // If no price data, assume TRY (fallback)
+        allTimeInvested += tx.quantity * tx.price
+        return
+      }
+      
+      if (pd.currency === 'TRY') {
+        allTimeInvested += tx.quantity * tx.price
+      } else if (pd.currency === 'USD') {
+        allTimeInvested += (tx.quantity * tx.price) * usdTryRate
+      }
+    })
+    
+    // Convert all sell transactions to TRY
+    allSellTx.forEach(tx => {
+      const pd = prices[tx.symbol]
+      if (!pd) {
+        // If no price data, assume TRY (fallback)
+        allTimeSold += tx.quantity * tx.price
+        return
+      }
+      
+      if (pd.currency === 'TRY') {
+        allTimeSold += tx.quantity * tx.price
+      } else if (pd.currency === 'USD') {
+        allTimeSold += (tx.quantity * tx.price) * usdTryRate
+      }
+    })
 
     return {
       realizedPL,
@@ -355,10 +394,83 @@ export default function ProfitLossSection({ holdings, prices, usdTryRate, loadin
       totalSold,
       totalCurrentValue,
       totalCostBasis,
+      allTimeInvested,
+      allTimeSold,
     }
   }, [transactions, holdings, prices, usdTryRate, activeFilter, txLoading, parentLoading])
 
   const isLoading = txLoading || parentLoading
+  const lastSavedRef = React.useRef<string | null>(null)
+
+  // Save stats to cache when computed (for public portfolio pages)
+  useEffect(() => {
+    if (!activePortfolio || !plData || isLoading || activeFilter !== 'all') return
+
+    const cacheKey = `${activePortfolio.id}-${JSON.stringify(plData)}`
+    if (lastSavedRef.current === cacheKey) return
+    lastSavedRef.current = cacheKey
+
+    // Client-side throttling: check last save time in localStorage
+    const lastSaveKey = `stats-save-${activePortfolio.id}`
+    const lastSaveTime = localStorage.getItem(lastSaveKey)
+    
+    if (lastSaveTime) {
+      const ageMinutes = (Date.now() - parseInt(lastSaveTime)) / 1000 / 60
+      if (ageMinutes < 5) {
+        return // Skip if saved less than 5 minutes ago
+      }
+    }
+
+    const saveStats = async () => {
+      try {
+        const response = await fetch('/api/portfolio-stats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            portfolio_id: activePortfolio.id,
+            stats_data: {
+              realizedPL: plData.realizedPL,
+              unrealizedPL: plData.unrealizedPL,
+              totalPL: plData.totalPL,
+              realizedPLPct: plData.realizedPLPct,
+              unrealizedPLPct: plData.unrealizedPLPct,
+              totalPLPct: plData.totalPLPct,
+              realizedGrossProfit: plData.realizedGrossProfit,
+              realizedGrossLoss: plData.realizedGrossLoss,
+              winCount: plData.winCount,
+              lossCount: plData.lossCount,
+              totalTrades: plData.totalTrades,
+              winRate: plData.winRate,
+              profitFactor: plData.profitFactor === Infinity ? 999999 : plData.profitFactor,
+              avgWin: plData.avgWin,
+              avgLoss: plData.avgLoss,
+              expectancy: plData.expectancy,
+              bestTrade: plData.bestTrade,
+              worstTrade: plData.worstTrade,
+              totalFees: plData.totalFees,
+              totalInvested: plData.totalInvested,
+              totalSold: plData.totalSold,
+              totalCurrentValue: plData.totalCurrentValue,
+              totalCostBasis: plData.totalCostBasis,
+              allTimeInvested: plData.allTimeInvested,
+              allTimeSold: plData.allTimeSold,
+            },
+          }),
+        })
+        
+        // Save successful - update timestamp
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && !result.skipped) {
+            localStorage.setItem(lastSaveKey, Date.now().toString())
+          }
+        }
+      } catch (err) {
+        console.error('Failed to save portfolio stats cache:', err)
+      }
+    }
+    saveStats()
+  }, [activePortfolio?.id, plData, isLoading, activeFilter])
 
   if (!activePortfolio) return null
 
@@ -366,49 +478,91 @@ export default function ProfitLossSection({ holdings, prices, usdTryRate, loadin
 
   return (
     <div className="space-y-4">
-      {/* Section Header + Filters */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-          <BarChart3 className="w-4 h-4 text-gray-400" />
-          Kar & Zarar İstatistikleri
-        </h3>
-        <div className="flex items-center gap-1 flex-wrap">
-          {visibleFilters.map(f => (
-            <button
-              key={f.key}
-              onClick={() => setActiveFilter(f.key)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                activeFilter === f.key
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-          {!showAllFilters && TIME_FILTERS.length > 4 && (
-            <button
-              onClick={() => setShowAllFilters(true)}
-              className="px-2 py-1.5 text-xs text-gray-500 hover:text-gray-700 flex items-center gap-0.5"
-            >
-              <ChevronDown className="w-3.5 h-3.5" />
-            </button>
-          )}
+      {/* Nakit Akış Özeti - Üstte, filtreden bağımsız */}
+      {plData && !isLoading && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <DollarSign className="w-4 h-4 text-gray-400" />
+            Nakit Akış Özeti
+          </h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <div className="flex items-center gap-1 mb-1">
+                <p className="text-xs text-gray-500">Toplam Alım</p>
+                <InfoTooltip text="Başlangıçtan bugüne yaptığınız tüm alım işlemlerinin toplam tutarı. Satmış olduklarınız da dahildir." />
+              </div>
+              <p className="text-sm font-bold text-gray-900"><Blur>₺{formatLargeNumber(plData.allTimeInvested)}</Blur></p>
+            </div>
+            <div>
+              <div className="flex items-center gap-1 mb-1">
+                <p className="text-xs text-gray-500">Toplam Satım</p>
+                <InfoTooltip text="Başlangıçtan bugüne yaptığınız tüm satış işlemlerinden elde ettiğiniz toplam nakit tutarı." />
+              </div>
+              <p className="text-sm font-bold text-gray-900"><Blur>₺{formatLargeNumber(plData.allTimeSold)}</Blur></p>
+            </div>
+            <div>
+              <div className="flex items-center gap-1 mb-1">
+                <p className="text-xs text-gray-500">Güncel Değer</p>
+                <InfoTooltip text="Şu anda portföyünüzde bulunan tüm varlıkların güncel piyasa değeri. Satmış olduklarınız dahil değildir." />
+              </div>
+              <p className="text-sm font-bold text-gray-900"><Blur>₺{formatLargeNumber(plData.totalCurrentValue)}</Blur></p>
+            </div>
+            <div>
+              <div className="flex items-center gap-1 mb-1">
+                <p className="text-xs text-gray-500">Maliyet Bazı</p>
+                <InfoTooltip text="Şu anda portföyünüzde bulunan varlıkları satın alma maliyetiniz. Güncel Değer - Maliyet Bazı = Realize Edilmemiş Kar/Zarar" />
+              </div>
+              <p className="text-sm font-bold text-gray-900"><Blur>₺{formatLargeNumber(plData.totalCostBasis)}</Blur></p>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Active filter indicator */}
-      <div className="flex items-center gap-2">
-        <Calendar className="w-3.5 h-3.5 text-gray-400" />
-        <span className="text-xs text-gray-500">
-          {TIME_FILTERS.find(f => f.key === activeFilter)?.label} verilerine göre gösteriliyor
-          {activeFilter !== 'all' && plData && (
-            <span className="ml-1 text-gray-400">
-              · {plData.totalTrades} satış işlemi
-            </span>
-          )}
-        </span>
-      </div>
+      {/* Filtreli İstatistikler Bölümü - Border içinde gruplandırılmış */}
+      <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-sm border-2 border-blue-100 p-5 space-y-4">
+        {/* Section Header + Filters */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-gray-400" />
+            Kar & Zarar İstatistikleri
+          </h3>
+          <div className="flex items-center gap-1 flex-wrap">
+            {visibleFilters.map(f => (
+              <button
+                key={f.key}
+                onClick={() => setActiveFilter(f.key)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  activeFilter === f.key
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+            {!showAllFilters && TIME_FILTERS.length > 4 && (
+              <button
+                onClick={() => setShowAllFilters(true)}
+                className="px-2 py-1.5 text-xs text-gray-500 hover:text-gray-700 flex items-center gap-0.5"
+              >
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Active filter indicator */}
+        <div className="flex items-center gap-2">
+          <Calendar className="w-3.5 h-3.5 text-gray-400" />
+          <span className="text-xs text-gray-500">
+            {TIME_FILTERS.find(f => f.key === activeFilter)?.label} verilerine göre gösteriliyor
+            {activeFilter !== 'all' && plData && (
+              <span className="ml-1 text-gray-400">
+                · {plData.totalTrades} satış işlemi
+              </span>
+            )}
+          </span>
+        </div>
 
       {/* 3 Highlight Cards: Realized, Unrealized, Total */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -591,57 +745,31 @@ export default function ProfitLossSection({ holdings, prices, usdTryRate, loadin
         </div>
       )}
 
-      {/* Transaction Flow Summary */}
-      {plData && !isLoading && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
-            Nakit Akış Özeti
-          </h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Toplam Alım</p>
-              <p className="text-sm font-bold text-gray-900"><Blur>₺{formatLargeNumber(plData.totalInvested)}</Blur></p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Toplam Satım</p>
-              <p className="text-sm font-bold text-gray-900"><Blur>₺{formatLargeNumber(plData.totalSold)}</Blur></p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Güncel Değer</p>
-              <p className="text-sm font-bold text-gray-900"><Blur>₺{formatLargeNumber(plData.totalCurrentValue)}</Blur></p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Maliyet Bazı</p>
-              <p className="text-sm font-bold text-gray-900"><Blur>₺{formatLargeNumber(plData.totalCostBasis)}</Blur></p>
-            </div>
+        {/* Empty state */}
+        {plData && plData.totalTrades === 0 && !isLoading && activeFilter !== 'all' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+            <DollarSign className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <p className="text-sm text-gray-500">Bu dönemde kapanmış işlem bulunmuyor.</p>
+            <p className="text-xs text-gray-400 mt-1">Farklı bir zaman aralığı deneyebilirsiniz.</p>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Empty state */}
-      {plData && plData.totalTrades === 0 && !isLoading && activeFilter !== 'all' && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-          <DollarSign className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-sm text-gray-500">Bu dönemde kapanmış işlem bulunmuyor.</p>
-          <p className="text-xs text-gray-400 mt-1">Farklı bir zaman aralığı deneyebilirsiniz.</p>
-        </div>
-      )}
-
-      {/* Loading state */}
-      {isLoading && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-            <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 animate-pulse">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-gray-100 rounded-lg" />
-                <div className="h-3 bg-gray-100 rounded w-16" />
+        {/* Loading state */}
+        {isLoading && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+              <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 animate-pulse">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 bg-gray-100 rounded-lg" />
+                  <div className="h-3 bg-gray-100 rounded w-16" />
+                </div>
+                <div className="h-5 bg-gray-100 rounded w-20 mb-1" />
+                <div className="h-3 bg-gray-50 rounded w-14" />
               </div>
-              <div className="h-5 bg-gray-100 rounded w-20 mb-1" />
-              <div className="h-3 bg-gray-50 rounded w-14" />
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
