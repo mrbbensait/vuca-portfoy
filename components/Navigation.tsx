@@ -21,8 +21,7 @@ const navigation = [
   { name: 'Ana Panel', href: '/dashboard', icon: Home },
   { name: 'Portföyüm', href: '/portfolio', icon: Briefcase },
   { name: 'Portföy Analizi', href: '/analysis', icon: BarChart3 },
-  { name: 'Keşfet', href: '/explore', icon: Compass },
-  { name: 'Ayarlar', href: '/settings', icon: Settings },
+  { name: 'Portföyleri Keşfet', href: '/explore', icon: Compass },
 ]
 
 export default function Navigation() {
@@ -85,6 +84,19 @@ export default function Navigation() {
 
             {/* Bildirimler */}
             <NotificationBell />
+
+            {/* Ayarlar */}
+            <Link
+              href="/settings"
+              className={`inline-flex items-center px-2.5 py-2 text-sm font-medium rounded-md transition-colors ${
+                pathname === '/settings'
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+              title="Ayarlar"
+            >
+              <Settings className="w-4 h-4" />
+            </Link>
 
             {/* Portfolio Seçici */}
             <PortfolioSelector />
