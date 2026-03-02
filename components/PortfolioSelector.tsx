@@ -196,7 +196,7 @@ export default function PortfolioSelector() {
                 </div>
               )}
 
-              {/* Portföy Paylaş Butonu */}
+              {/* Portföy Görünürlüğü Butonu */}
               <button
                 onClick={() => {
                   setShowVisibilityModal(true)
@@ -209,7 +209,7 @@ export default function PortfolioSelector() {
                 ) : (
                   <Lock className="w-4 h-4 text-gray-400" />
                 )}
-                <span>Portföy Paylaş</span>
+                <span>Portföy Görünürlüğü</span>
               </button>
 
               {/* Yeni Portfolio Butonu */}

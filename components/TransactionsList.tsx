@@ -436,10 +436,15 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowVisibilityModal(true)}
-              className="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+              disabled={activePortfolio?.is_public}
+              className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activePortfolio?.is_public
+                  ? 'bg-green-50 text-green-700 cursor-not-allowed'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
             >
               <Share2 className="w-4 h-4 mr-2" />
-              Bu Portföyü Paylaş
+              {activePortfolio?.is_public ? 'Bu Portföy Paylaşımda' : 'Bu Portföyü Paylaş'}
             </button>
             <AddTransactionButton userId={userId} />
           </div>
