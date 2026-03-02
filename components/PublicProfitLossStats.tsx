@@ -112,18 +112,26 @@ interface HighlightCardProps {
   icon: React.ElementType
   gradient: string
   subtitle?: string
+  tooltip?: string
 }
 
-function HighlightCard({ title, value, percent, icon: Icon, gradient, subtitle }: HighlightCardProps) {
+function HighlightCard({ title, value, percent, icon: Icon, gradient, subtitle, tooltip }: HighlightCardProps) {
   return (
-    <div className={`rounded-xl shadow-lg p-5 text-white ${gradient}`}>
+    <div className={`rounded-xl shadow-lg p-5 text-white relative ${gradient}`}>
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-medium opacity-80 uppercase tracking-wider">{title}</span>
         <Icon className="w-5 h-5 opacity-70" />
       </div>
       <p className="text-2xl font-bold">{value}</p>
       {percent && <p className="text-sm font-semibold mt-1 opacity-90">{percent}</p>}
-      {subtitle && <p className="text-xs opacity-70 mt-1">{subtitle}</p>}
+      <div className="flex items-center justify-between mt-1">
+        {subtitle ? <p className="text-xs opacity-70">{subtitle}</p> : <div />}
+        {tooltip && (
+          <div className="ml-auto">
+            <InfoTooltip text={tooltip} />
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -227,6 +235,7 @@ export default function PublicProfitLossStats({ portfolioId }: PublicProfitLossS
             icon={stats.realizedPL >= 0 ? TrendingUp : TrendingDown}
             gradient={stats.realizedPL >= 0 ? 'bg-gradient-to-br from-emerald-500 to-emerald-600' : 'bg-gradient-to-br from-red-500 to-red-600'}
             subtitle={`${stats.totalTrades} kapanmış işlem`}
+            tooltip="Tamamen kapatılmış (alım-satım tamamlanmış) işlemlerden elde edilen net kâr veya zarar. Bu değer kesinleşmiştir ve gerçekleşmiştir."
           />
           <HighlightCard
             title="Realize Edilmemiş K/Z"
@@ -235,6 +244,7 @@ export default function PublicProfitLossStats({ portfolioId }: PublicProfitLossS
             icon={stats.unrealizedPL >= 0 ? TrendingUp : TrendingDown}
             gradient={stats.unrealizedPL >= 0 ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-orange-500 to-orange-600'}
             subtitle="Açık pozisyonlar"
+            tooltip="Halen elinizde bulunan (satılmamış) varlıkların güncel piyasa fiyatına göre kâğıt üzerindeki kâr/zarar durumu. Satış yapılana kadar bu değer değişmeye devam eder."
           />
           <HighlightCard
             title="Toplam K/Z"
@@ -243,6 +253,7 @@ export default function PublicProfitLossStats({ portfolioId }: PublicProfitLossS
             icon={stats.totalPL >= 0 ? TrendingUp : TrendingDown}
             gradient={stats.totalPL >= 0 ? 'bg-gradient-to-br from-indigo-500 to-indigo-600' : 'bg-gradient-to-br from-rose-500 to-rose-600'}
             subtitle="Realize + Açık pozisyon"
+            tooltip="Realize edilmiş + Realize edilmemiş K/Z toplamı. Portföyünüzün genel performansını gösteren ana metrik. Kapanmış işlemlerden kazancınız ve açık pozisyonlarınızın güncel durumu bu değerde birleşir."
           />
         </div>
 

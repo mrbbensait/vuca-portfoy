@@ -362,38 +362,35 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl shadow-lg p-5 text-white">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1">
-              <span className="text-xs font-medium text-slate-300 uppercase tracking-wider">Toplam Değer (TRY)</span>
-              <InfoTooltip text="Portföyünüzdeki tüm varlıkların güncel piyasa değerinin TRY cinsinden toplamı. USD varlıklar güncel kur ile çevrilir." />
-            </div>
+            <span className="text-xs font-medium text-slate-300 uppercase tracking-wider">Toplam Değer (TRY)</span>
             <Wallet className="w-5 h-5 text-slate-400" />
           </div>
           {isCalc ? <div className="h-8 bg-slate-700 rounded animate-pulse w-32" /> : (
             <p className="text-2xl font-bold"><Blur>₺{formatLargeNumber(analysis?.totalTry || 0)}</Blur></p>
           )}
-          <p className="text-xs text-slate-400 mt-1">{holdings.length} varlık</p>
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-xs text-slate-400">{holdings.length} varlık</p>
+            <InfoTooltip text="Portföyünüzdeki tüm varlıkların güncel piyasa değerinin TRY cinsinden toplamı. USD varlıklar güncel kur ile çevrilir." />
+          </div>
         </div>
 
         <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl shadow-lg p-5 text-white">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1">
-              <span className="text-xs font-medium text-blue-200 uppercase tracking-wider">Toplam Değer (USD)</span>
-              <InfoTooltip text="Portföyünüzdeki tüm varlıkların güncel piyasa değerinin USD cinsinden toplamı. TRY varlıklar güncel kur ile çevrilir." />
-            </div>
+            <span className="text-xs font-medium text-blue-200 uppercase tracking-wider">Toplam Değer (USD)</span>
             <DollarSign className="w-5 h-5 text-blue-300" />
           </div>
           {isCalc ? <div className="h-8 bg-blue-500 rounded animate-pulse w-32" /> : (
             <p className="text-2xl font-bold"><Blur>${formatLargeNumberUSD(analysis?.totalUsd || 0)}</Blur></p>
           )}
-          <p className="text-xs text-blue-200 mt-1">{holdings.length} varlık</p>
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-xs text-blue-200">{holdings.length} varlık</p>
+            <InfoTooltip text="Portföyünüzdeki tüm varlıkların güncel piyasa değerinin USD cinsinden toplamı. TRY varlıklar güncel kur ile çevrilir." />
+          </div>
         </div>
 
         <div className={`rounded-xl shadow-lg p-5 text-white ${(analysis?.totalPL || 0) >= 0 ? 'bg-gradient-to-br from-emerald-500 to-emerald-600' : 'bg-gradient-to-br from-red-500 to-red-600'}`}>
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1">
-              <span className="text-xs font-medium opacity-80 uppercase tracking-wider">Toplam Kar/Zarar</span>
-              <InfoTooltip text="Portföyünüzdeki tüm varlıkların toplam kâr/zarar durumu. Realize edilmiş (satılanlar) + Realize edilmemiş (açık pozisyonlar) toplamıdır." />
-            </div>
+            <span className="text-xs font-medium opacity-80 uppercase tracking-wider">Toplam Kar/Zarar</span>
             {(analysis?.totalPL || 0) >= 0 ? <TrendingUp className="w-5 h-5 opacity-70" /> : <TrendingDown className="w-5 h-5 opacity-70" />}
           </div>
           {isCalc ? <div className="h-8 bg-white/20 rounded animate-pulse w-32" /> : (
@@ -402,14 +399,14 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
               <p className="text-sm font-semibold mt-1 opacity-90">{(analysis?.totalPLPct || 0) >= 0 ? '+' : ''}{(analysis?.totalPLPct || 0).toFixed(2)}%</p>
             </>
           )}
+          <div className="flex items-center justify-end mt-1">
+            <InfoTooltip text="Portföyünüzdeki tüm varlıkların toplam kâr/zarar durumu. Realize edilmiş (satılanlar) + Realize edilmemiş (açık pozisyonlar) toplamıdır." />
+          </div>
         </div>
 
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-5 text-white">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1">
-              <span className="text-xs font-medium text-purple-200 uppercase tracking-wider">Toplam Yatırım</span>
-              <InfoTooltip text="Şu anda portföyünüzde bulunan tüm varlıkların satın alma maliyeti (maliyet bazı). Bu değer geçmiş alımlarınızın ortalamasıdır." />
-            </div>
+            <span className="text-xs font-medium text-purple-200 uppercase tracking-wider">Toplam Yatırım</span>
             <PiggyBank className="w-5 h-5 text-purple-300" />
           </div>
           {isCalc ? <div className="h-8 bg-purple-400 rounded animate-pulse w-32" /> : (
@@ -418,6 +415,9 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
               <p className="text-xs text-purple-200 mt-1"><Blur>${formatLargeNumberUSD(analysis?.totalCostUsd || 0)}</Blur></p>
             </>
           )}
+          <div className="flex items-center justify-end mt-1">
+            <InfoTooltip text="Şu anda portföyünüzde bulunan tüm varlıkların satın alma maliyeti (maliyet bazı). Bu değer geçmiş alımlarınızın ortalamasıdır." />
+          </div>
         </div>
       </div>
 

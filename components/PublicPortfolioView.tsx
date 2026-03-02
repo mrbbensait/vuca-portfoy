@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
@@ -144,8 +144,41 @@ export default function PublicPortfolioView({
     }
   }, [searchParams])
 
-  // Güncel fiyatları çek
-  const { prices, loading: pricesLoading } = usePrices(holdings)
+  // Tüm sembolleri topla (hem holdings hem de transactions'dan)
+  const allSymbolsForPricing = useMemo(() => {
+    const symbolMap = new Map<string, { symbol: string; asset_type: string; quantity: number; avg_price: number }>()
+    
+    // Holdings'den sembolleri ekle
+    holdings.forEach(h => {
+      const key = `${h.symbol}_${h.asset_type}`
+      if (!symbolMap.has(key)) {
+        symbolMap.set(key, {
+          symbol: h.symbol,
+          asset_type: h.asset_type,
+          quantity: h.quantity,
+          avg_price: h.avg_price,
+        })
+      }
+    })
+    
+    // Transactions'dan eksik sembolleri ekle
+    transactions.forEach(tx => {
+      const key = `${tx.symbol}_${tx.asset_type}`
+      if (!symbolMap.has(key)) {
+        symbolMap.set(key, {
+          symbol: tx.symbol,
+          asset_type: tx.asset_type,
+          quantity: 0, // Artık elimizde yok ama fiyatını çekmek için ekliyoruz
+          avg_price: tx.price,
+        })
+      }
+    })
+    
+    return Array.from(symbolMap.values())
+  }, [holdings, transactions])
+
+  // Güncel fiyatları çek (tüm semboller için)
+  const { prices, loading: pricesLoading } = usePrices(allSymbolsForPricing)
 
   const getCurrentPrice = (symbol: string) => prices[symbol]?.price ?? null
   const getPnlPct = (h: PublicHolding) => {
@@ -437,19 +470,22 @@ export default function PublicPortfolioView({
                       { field: 'date' as TxSortField, label: 'Tarih', align: 'left' },
                       { field: 'symbol' as TxSortField, label: 'Varlık', align: 'left' },
                       { field: 'side' as TxSortField, label: 'İşlem', align: 'left' },
+                      { field: null, label: 'Miktar', align: 'right' },
                       { field: 'price' as TxSortField, label: 'Fiyat', align: 'right' },
                       { field: 'pnl_pct' as TxSortField, label: '% K/Z', align: 'right' },
-                    ]).map(col => (
+                    ]).map((col, idx) => (
                       <th
-                        key={col.field}
-                        onClick={() => handleTSort(col.field)}
-                        className={`px-4 py-2.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 select-none ${
+                        key={col.field ?? `col-${idx}`}
+                        onClick={col.field ? () => handleTSort(col.field!) : undefined}
+                        className={`px-4 py-2.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider ${
+                          col.field ? 'cursor-pointer hover:text-gray-700' : ''
+                        } select-none ${
                           col.align === 'right' ? 'text-right' : 'text-left'
                         }`}
                       >
                         <span className={`inline-flex items-center gap-1 ${col.align === 'right' ? 'justify-end' : ''}`}>
                           {col.label}
-                          <TSortIcon field={col.field} />
+                          {col.field && <TSortIcon field={col.field} />}
                         </span>
                       </th>
                     ))}
@@ -508,6 +544,9 @@ export default function PublicPortfolioView({
                               <TrendingDown className="w-3 h-3" /> SATIŞ
                             </span>
                           )}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700 text-right font-mono whitespace-nowrap">
+                          {formatPrice(tx.quantity)}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-800 text-right font-mono whitespace-nowrap">
                           {currency}{formatPrice(tx.price)}
