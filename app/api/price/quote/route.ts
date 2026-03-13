@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { normalizeSymbol } from '@/lib/normalizeSymbol'
 import { AssetType } from '@/lib/types/database.types'
 
@@ -282,9 +283,10 @@ export async function GET(request: Request) {
         
         const source = assetType === 'CRYPTO' ? 'binance/yahoo' : 'yahoo'
         
-        // Upsert: Varsa güncelle, yoksa ekle (migration yoksa skip)
+        // Upsert: Varsa güncelle, yoksa ekle (service_role ile - RLS bypass)
         try {
-          await supabase
+          const adminClient = createAdminClient()
+          await adminClient
             .from('price_cache')
             .upsert({
               symbol,

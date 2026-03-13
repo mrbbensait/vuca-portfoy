@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { usePortfolio } from '@/lib/contexts/PortfolioContext'
-import { Globe, Lock, Link2, Copy, Check, Loader2, X } from 'lucide-react'
+import { Globe, Lock, Link2, Copy, Check, Loader2, X, AlertTriangle } from 'lucide-react'
 import { slugify } from '@/lib/slugify'
 
 interface PortfolioVisibilityToggleProps {
   onClose: () => void
 }
+
+const DEFAULT_PORTFOLIO_NAME = 'Varsayılan Portföy'
 
 export default function PortfolioVisibilityToggle({ onClose }: PortfolioVisibilityToggleProps) {
   const { activePortfolio, refreshPortfolios } = usePortfolio()
@@ -28,7 +30,14 @@ export default function PortfolioVisibilityToggle({ onClose }: PortfolioVisibili
     }
   }, [activePortfolio])
 
+  const isDefaultName = activePortfolio?.name.trim() === DEFAULT_PORTFOLIO_NAME
+
   const handleTogglePublic = (value: boolean) => {
+    if (value && isDefaultName) {
+      setError('Portföyünüzü paylaşmadan önce adını değiştirmeniz gerekiyor. Lütfen portföye anlamlı bir isim verin.')
+      return
+    }
+    setError(null)
     setIsPublic(value)
     // Açık yapılıyorsa ve slug yoksa, otomatik slug öner
     if (value && !slug && activePortfolio) {
@@ -44,6 +53,12 @@ export default function PortfolioVisibilityToggle({ onClose }: PortfolioVisibili
 
   const handleSave = async () => {
     if (!activePortfolio) return
+
+    // Varsayılan isimle paylaşım engeli
+    if (isPublic && isDefaultName) {
+      setError('Portföyünüzü paylaşmadan önce adını değiştirmeniz gerekiyor. Lütfen portföye anlamlı bir isim verin.')
+      return
+    }
 
     // Slug validasyonu (public ise zorunlu)
     if (isPublic && !slug) {
@@ -117,6 +132,16 @@ export default function PortfolioVisibilityToggle({ onClose }: PortfolioVisibili
         </div>
 
         <div className="px-6 py-5 space-y-5">
+          {/* Varsayılan isim uyarısı */}
+          {isDefaultName && (
+            <div className="flex items-start space-x-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+              <p className="text-sm text-amber-800">
+                Portföyünüzün adı hâlâ <strong>&quot;{DEFAULT_PORTFOLIO_NAME}&quot;</strong>. Paylaşmadan önce portföyünüze anlamlı bir isim vermeniz gerekiyor.
+              </p>
+            </div>
+          )}
+
           {/* Public/Private Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center space-x-3">

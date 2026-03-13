@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Users } from 'lucide-react'
 import PublicPortfolioView from '@/components/PublicPortfolioView'
 import type { PublicHolding, PublicTransaction } from '@/components/PublicPortfolioView'
 import FollowButton from '@/components/FollowButton'
@@ -54,7 +54,14 @@ export default function PublicPortfolioClient({
               <span className="text-xl font-bold text-blue-600">XPortfoy</span>
             </div>
             <div className="flex items-center gap-3">
-              {!isOwnPortfolio && (
+              {isOwnPortfolio ? (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg border border-blue-100">
+                  <Users className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm text-gray-600">
+                    <span className="font-semibold text-blue-700">{followerCount}</span> takipçi
+                  </span>
+                </div>
+              ) : (
                 <FollowButton
                   portfolioId={portfolio.id}
                   initialIsFollowing={isFollowing}
@@ -80,9 +87,9 @@ export default function PublicPortfolioClient({
           isOwner={isOwnPortfolio}
         />
 
-        {/* Kar/Zarar İstatistikleri (cached from analysis page) */}
+        {/* Kar/Zarar İstatistikleri (canlı hesaplama) */}
         <div className="mt-6">
-          <PublicProfitLossStats portfolioId={portfolio.id} />
+          <PublicProfitLossStats holdings={holdings} transactions={transactions} />
         </div>
       </main>
     </div>

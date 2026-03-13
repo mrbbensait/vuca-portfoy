@@ -4,7 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react'
 import { usePortfolio } from '@/lib/contexts/PortfolioContext'
 import { createClient } from '@/lib/supabase/client'
 import { calculateTransactionProfitLoss } from '@/lib/calculations'
-import { formatLargeNumber } from '@/lib/formatPrice'
+import { formatLargeNumber, getDisplaySymbol } from '@/lib/formatPrice'
 import type { Transaction } from '@/lib/types/database.types'
 import type { PriceData } from '@/lib/hooks/usePrices'
 import {
@@ -22,6 +22,7 @@ interface ProfitLossSectionProps {
     asset_type: string
     quantity: number
     avg_price: number
+    currency?: string
   }>
   prices: Record<string, PriceData>
   usdTryRate: number
@@ -252,8 +253,8 @@ export default function ProfitLossSection({ holdings, prices, usdTryRate, loadin
     let realizedGrossLoss = 0
     let winCount = 0
     let lossCount = 0
-    let bestTradeData: { symbol: string; pl: number; plPct: number } | null = null
-    let worstTradeData: { symbol: string; pl: number; plPct: number } | null = null
+    let bestTradeData: { symbol: string; asset_type: string; pl: number; plPct: number } | null = null
+    let worstTradeData: { symbol: string; asset_type: string; pl: number; plPct: number } | null = null
     let totalFees = 0
 
     sellTxInRange.forEach(tx => {
@@ -273,15 +274,15 @@ export default function ProfitLossSection({ holdings, prices, usdTryRate, loadin
       }
 
       if (!bestTradeData || pl > bestTradeData.pl) {
-        bestTradeData = { symbol: tx.symbol, pl, plPct }
+        bestTradeData = { symbol: tx.symbol, asset_type: tx.asset_type, pl, plPct }
       }
       if (!worstTradeData || pl < worstTradeData.pl) {
-        worstTradeData = { symbol: tx.symbol, pl, plPct }
+        worstTradeData = { symbol: tx.symbol, asset_type: tx.asset_type, pl, plPct }
       }
     })
 
-    const bestTrade = bestTradeData as { symbol: string; pl: number; plPct: number } | null
-    const worstTrade = worstTradeData as { symbol: string; pl: number; plPct: number } | null
+    const bestTrade = bestTradeData as { symbol: string; asset_type: string; pl: number; plPct: number } | null
+    const worstTrade = worstTradeData as { symbol: string; asset_type: string; pl: number; plPct: number } | null
 
     // Total fees (tüm filtrelenmiş işlemlerden)
     filteredTx.forEach(tx => {
@@ -300,11 +301,18 @@ export default function ProfitLossSection({ holdings, prices, usdTryRate, loadin
       let currentValueTry = 0
       let costTry = 0
 
+      // Güncel değer: pd.currency'ye göre TRY'ye çevir
       if (pd.currency === 'TRY') {
         currentValueTry = h.quantity * pd.price
-        costTry = h.quantity * h.avg_price
       } else if (pd.currency === 'USD') {
         currentValueTry = h.quantity * pd.price * usdTryRate
+      }
+
+      // Maliyet: h.currency'ye göre TRY'ye çevir (TRY kripto için avg_price zaten TRY)
+      const holdingCurrency = h.currency || (h.asset_type === 'TR_STOCK' || h.asset_type === 'CASH' ? 'TRY' : 'USD')
+      if (holdingCurrency === 'TRY') {
+        costTry = h.quantity * h.avg_price
+      } else if (holdingCurrency === 'USD') {
         costTry = h.quantity * h.avg_price * usdTryRate
       }
 
@@ -650,7 +658,7 @@ export default function ProfitLossSection({ holdings, prices, usdTryRate, loadin
           <StatCard
             title="En İyi İşlem"
             value={plData.bestTrade ? `+₺${formatLargeNumber(Math.max(0, plData.bestTrade.pl))}` : 'Yok'}
-            subtitle={plData.bestTrade ? `${plData.bestTrade.symbol} · ${plData.bestTrade.plPct >= 0 ? '+' : ''}${plData.bestTrade.plPct.toFixed(1)}%` : undefined}
+            subtitle={plData.bestTrade ? `${getDisplaySymbol(plData.bestTrade.symbol, plData.bestTrade.asset_type || 'CRYPTO')} · ${plData.bestTrade.plPct >= 0 ? '+' : ''}${plData.bestTrade.plPct.toFixed(1)}%` : undefined}
             icon={Award}
             iconBg="bg-amber-50"
             iconColor="text-amber-600"
@@ -662,7 +670,7 @@ export default function ProfitLossSection({ holdings, prices, usdTryRate, loadin
           <StatCard
             title="En Kötü İşlem"
             value={plData.worstTrade ? `-₺${formatLargeNumber(Math.abs(Math.min(0, plData.worstTrade.pl)))}` : 'Yok'}
-            subtitle={plData.worstTrade ? `${plData.worstTrade.symbol} · ${plData.worstTrade.plPct >= 0 ? '+' : ''}${plData.worstTrade.plPct.toFixed(1)}%` : undefined}
+            subtitle={plData.worstTrade ? `${getDisplaySymbol(plData.worstTrade.symbol, plData.worstTrade.asset_type || 'CRYPTO')} · ${plData.worstTrade.plPct >= 0 ? '+' : ''}${plData.worstTrade.plPct.toFixed(1)}%` : undefined}
             icon={AlertTriangle}
             iconBg="bg-rose-50"
             iconColor="text-rose-600"

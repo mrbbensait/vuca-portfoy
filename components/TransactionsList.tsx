@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import AddTransactionButton from './AddTransactionButton'
 import PortfolioVisibilityToggle from './PortfolioVisibilityToggle'
-import { formatPrice, formatLargeNumber } from '@/lib/formatPrice'
+import { formatPrice, formatLargeNumber, getDisplaySymbol } from '@/lib/formatPrice'
 import type { Transaction, Holding } from '@/lib/types/database.types'
 import Blur from './PrivacyBlur'
 import { calculateTransactionProfitLoss } from '@/lib/calculations'
@@ -307,9 +307,10 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
     let totalBuy = 0
     buys.forEach(tx => {
       const txTotal = tx.quantity * tx.price
-      if (tx.asset_type === 'TR_STOCK' || tx.asset_type === 'CASH') {
+      const txCurrency = tx.currency || (tx.asset_type === 'TR_STOCK' || tx.asset_type === 'CASH' ? 'TRY' : 'USD')
+      if (txCurrency === 'TRY') {
         totalBuy += txTotal  // Zaten TRY
-      } else if (usdTryRate) {  // US_STOCK veya CRYPTO
+      } else if (usdTryRate) {
         totalBuy += txTotal * usdTryRate  // USD → TRY çevir
       }
     })
@@ -318,9 +319,10 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
     let totalSell = 0
     sells.forEach(tx => {
       const txTotal = tx.quantity * tx.price
-      if (tx.asset_type === 'TR_STOCK' || tx.asset_type === 'CASH') {
+      const txCurrency = tx.currency || (tx.asset_type === 'TR_STOCK' || tx.asset_type === 'CASH' ? 'TRY' : 'USD')
+      if (txCurrency === 'TRY') {
         totalSell += txTotal  // Zaten TRY
-      } else if (usdTryRate) {  // US_STOCK veya CRYPTO
+      } else if (usdTryRate) {
         totalSell += txTotal * usdTryRate  // USD → TRY çevir
       }
     })
@@ -349,11 +351,18 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
       let currentValueTry = 0
       let costTry = 0
       
+      // Güncel değer: pd.currency'ye göre TRY'ye çevir
       if (priceData.currency === 'TRY') {
         currentValueTry = h.quantity * priceData.price
-        costTry = h.quantity * h.avg_price
       } else if (priceData.currency === 'USD') {
         currentValueTry = h.quantity * priceData.price * usdTryRate
+      }
+
+      // Maliyet: h.currency'ye göre TRY'ye çevir (TRY kripto için zaten TRY)
+      const holdingCurrency = h.currency || (h.asset_type === 'TR_STOCK' || h.asset_type === 'CASH' ? 'TRY' : 'USD')
+      if (holdingCurrency === 'TRY') {
+        costTry = h.quantity * h.avg_price
+      } else if (holdingCurrency === 'USD') {
         costTry = h.quantity * h.avg_price * usdTryRate
       }
       
@@ -611,7 +620,7 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
               <tbody className="divide-y divide-gray-100">
                 {paginatedTransactions.map((tx) => {
                   const pl = profitLossMap.get(tx.id)
-                  const currency = (tx.asset_type === 'TR_STOCK' || tx.asset_type === 'CASH') ? '₺' : '$'
+                  const currency = (tx.currency === 'TRY' || tx.asset_type === 'TR_STOCK' || tx.asset_type === 'CASH') ? '₺' : '$'
                   const isSell = tx.side === 'SELL'
                   const hasPL = isSell && pl?.profit_loss !== null && pl?.profit_loss !== undefined
 
@@ -633,7 +642,7 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
                           <span className="text-sm font-semibold text-gray-900">
                             {tx.asset_type === 'CASH' && CASH_SYMBOL_NAMES[tx.symbol]
                               ? CASH_SYMBOL_NAMES[tx.symbol]
-                              : tx.symbol}
+                              : getDisplaySymbol(tx.symbol, tx.asset_type)}
                           </span>
                           <span className={`px-1.5 py-0.5 text-[9px] font-semibold rounded border ${ASSET_TYPE_COLORS[tx.asset_type]}`}>
                             {ASSET_TYPE_LABELS[tx.asset_type]}
@@ -887,7 +896,7 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
                 {txToDelete && (
                   <div className="mb-4 p-3 bg-gray-50 rounded-xl border border-gray-200 text-sm">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-gray-900">{txToDelete.symbol}</span>
+                      <span className="font-semibold text-gray-900">{getDisplaySymbol(txToDelete.symbol, txToDelete.asset_type)}</span>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${txToDelete.side === 'BUY' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
                         {txToDelete.side === 'BUY' ? 'ALIŞ' : 'SATIŞ'}
                       </span>

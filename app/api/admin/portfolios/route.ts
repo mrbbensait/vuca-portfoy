@@ -1,4 +1,4 @@
-import { withAdminAuth } from '@/lib/admin/auth'
+import { withAdminAuth, writeAuditLog } from '@/lib/admin/auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextRequest } from 'next/server'
 
@@ -106,5 +106,68 @@ export async function GET(request: NextRequest) {
         topFollowed,
       },
     })
+  })
+}
+
+export async function PATCH(request: NextRequest) {
+  return withAdminAuth(async (admin) => {
+    const body = await request.json()
+    const { portfolioId } = body
+
+    if (!portfolioId) {
+      return Response.json({ error: 'portfolioId gerekli' }, { status: 400 })
+    }
+
+    const adminClient = createAdminClient()
+
+    // Portföyü getir
+    const { data: portfolio, error: fetchError } = await adminClient
+      .from('portfolios')
+      .select('id, name, user_id, is_public')
+      .eq('id', portfolioId)
+      .single()
+
+    if (fetchError || !portfolio) {
+      return Response.json({ error: 'Portföy bulunamadı' }, { status: 404 })
+    }
+
+    if (!portfolio.is_public) {
+      return Response.json({ error: 'Portföy zaten gizli' }, { status: 400 })
+    }
+
+    // Gizliye al
+    const { error: updateError } = await adminClient
+      .from('portfolios')
+      .update({
+        is_public: false,
+        slug: null,
+        auto_hidden_at: new Date().toISOString(),
+        auto_hidden_reason: 'admin_action',
+      })
+      .eq('id', portfolioId)
+
+    if (updateError) {
+      return Response.json({ error: updateError.message }, { status: 500 })
+    }
+
+    // Kullanıcıya bildirim gönder
+    await adminClient.from('user_notifications').insert({
+      user_id: portfolio.user_id,
+      type: 'admin_portfolio_hidden',
+      title: 'Portföyünüz Gizliye Alındı',
+      message: `"${portfolio.name}" adlı portföyünüz admin tarafından gizliye alındı.`,
+      metadata: { portfolio_id: portfolio.id, portfolio_name: portfolio.name },
+    })
+
+    // Audit log
+    await writeAuditLog({
+      adminId: admin.id,
+      action: 'portfolio.force_hide',
+      targetType: 'portfolio',
+      targetId: portfolioId,
+      metadata: { portfolio_name: portfolio.name, user_id: portfolio.user_id },
+    })
+
+    return Response.json({ success: true })
   })
 }

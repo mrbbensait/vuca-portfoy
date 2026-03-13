@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { usePortfolio } from '@/lib/contexts/PortfolioContext'
 import { createClient } from '@/lib/supabase/client'
 import { usePrices } from '@/lib/hooks/usePrices'
-import { formatLargeNumber, formatLargeNumberUSD } from '@/lib/formatPrice'
+import { formatLargeNumber, formatLargeNumberUSD, getDisplaySymbol } from '@/lib/formatPrice'
 import type { Holding } from '@/lib/types/database.types'
 import {
   DollarSign, TrendingUp, TrendingDown,
@@ -201,19 +201,29 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
       const cost = h.quantity * h.avg_price
       let valTry = 0, costTry = 0
 
+      // Güncel değer: pd.currency'ye göre TRY'ye çevir
       if (pd.currency === 'TRY') {
-        valTry = val; costTry = cost
-        totalTry += val; totalUsd += val / usdTryRate.rate
-        totalCostTry += cost; totalCostUsd += cost / usdTryRate.rate
+        valTry = val
       } else if (pd.currency === 'USD') {
-        valTry = val * usdTryRate.rate; costTry = cost * usdTryRate.rate
-        totalTry += valTry; totalUsd += val
-        totalCostTry += costTry; totalCostUsd += cost
+        valTry = val * usdTryRate.rate
       }
+
+      // Maliyet: h.currency'ye göre TRY'ye çevir (TRY kripto için avg_price zaten TRY)
+      const holdingCurrency = h.currency || (h.asset_type === 'TR_STOCK' || h.asset_type === 'CASH' ? 'TRY' : 'USD')
+      if (holdingCurrency === 'TRY') {
+        costTry = cost
+      } else if (holdingCurrency === 'USD') {
+        costTry = cost * usdTryRate.rate
+      }
+
+      totalTry += valTry; totalUsd += valTry / usdTryRate.rate
+      totalCostTry += costTry; totalCostUsd += costTry / usdTryRate.rate
 
       const pl = valTry - costTry
       const plPct = costTry > 0 ? (pl / costTry) * 100 : 0
-      hpList.push({ symbol: h.symbol, asset_type: h.asset_type, quantity: h.quantity, avg_price: h.avg_price, current_price: pd.price, currency: pd.currency, value: valTry, cost: costTry, profitLoss: pl, profitLossPercent: plPct, weight: 0 })
+      // currency alanı: display için holding'in para birimi (TRY kripto → TRY göster)
+      const displayCurrency = holdingCurrency === 'TRY' ? 'TRY' : pd.currency
+      hpList.push({ symbol: h.symbol, asset_type: h.asset_type, quantity: h.quantity, avg_price: h.avg_price, current_price: pd.price, currency: displayCurrency, value: valTry, cost: costTry, profitLoss: pl, profitLossPercent: plPct, weight: 0 })
 
       if (h.asset_type === 'TR_STOCK') { bist += valTry; bistCost += costTry }
       else if (h.asset_type === 'US_STOCK') { nasdaq += valTry; nasdaqCost += costTry }
@@ -431,7 +441,7 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
             </div>
             {analysis.best ? (
               <>
-                <p className="text-sm font-bold text-gray-900">{analysis.best.symbol}</p>
+                <p className="text-sm font-bold text-gray-900">{getDisplaySymbol(analysis.best.symbol, analysis.best.asset_type)}</p>
                 <p className={`text-lg font-bold ${analysis.best.profitLossPercent >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {analysis.best.profitLossPercent >= 0 ? '+' : ''}{analysis.best.profitLossPercent.toFixed(2)}%
                 </p>
@@ -446,7 +456,7 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
             </div>
             {analysis.worst ? (
               <>
-                <p className="text-sm font-bold text-gray-900">{analysis.worst.symbol}</p>
+                <p className="text-sm font-bold text-gray-900">{getDisplaySymbol(analysis.worst.symbol, analysis.worst.asset_type)}</p>
                 <p className={`text-lg font-bold ${analysis.worst.profitLossPercent >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {analysis.worst.profitLossPercent >= 0 ? '+' : ''}{analysis.worst.profitLossPercent.toFixed(2)}%
                 </p>
@@ -579,7 +589,7 @@ export default function PortfolioAnalysis({ userId: _userId }: PortfolioAnalysis
                     <span className="text-xs font-mono text-gray-400 w-4">{i + 1}</span>
                     <div className="flex-1">
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm font-medium text-gray-900">{hp.symbol}</span>
+                        <span className="text-sm font-medium text-gray-900">{getDisplaySymbol(hp.symbol, hp.asset_type)}</span>
                         <span className="text-xs font-mono text-gray-500">%{wt.toFixed(1)}</span>
                       </div>
                       <div className="w-full bg-gray-100 rounded-full h-2">

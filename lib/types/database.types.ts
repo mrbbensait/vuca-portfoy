@@ -42,7 +42,8 @@ export interface Holding {
   symbol: string // "ASELS.IS", "AAPL", "BTCUSDT"
   asset_type: AssetType
   quantity: number
-  avg_price: number // TRY bazında
+  avg_price: number // avg_price para birimi currency alanına göre belirlenir
+  currency: string // 'TRY' veya 'USD' - avg_price'ın para birimi
   note: string | null
   created_at: string
   updated_at: string
@@ -57,6 +58,7 @@ export interface Transaction {
   side: TransactionSide
   quantity: number
   price: number
+  currency: string // 'TRY' veya 'USD' - price'ın para birimi
   fee: number | null
   date: string
   note: string | null

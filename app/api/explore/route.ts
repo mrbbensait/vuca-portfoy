@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     // Base query: public portföyler
     let query = supabase
       .from('portfolios')
-      .select('id, name, slug, description, is_public, created_at, user_id', { count: 'exact' })
+      .select('id, name, slug, description, is_public, created_at, user_id, follower_count', { count: 'exact' })
       .eq('is_public', true)
 
     // Arama - include owner name if search term provided
@@ -48,6 +48,9 @@ export async function GET(request: NextRequest) {
         break
       case 'name':
         query = query.order('name', { ascending: true })
+        break
+      case 'followers':
+        query = query.order('follower_count', { ascending: false })
         break
       default:
         query = query.order('created_at', { ascending: false })

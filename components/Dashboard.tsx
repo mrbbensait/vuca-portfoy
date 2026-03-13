@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { Home, TrendingUp, TrendingDown, Minus, CalendarDays, Clock, Wallet, Plus, FileDown, BarChart3, Loader2, Trophy, ThumbsDown } from 'lucide-react'
 import FollowedPortfolios from '@/components/FollowedPortfolios'
 import { usePortfolioSummary } from '@/lib/hooks/usePortfolioSummary'
-import { formatLargeNumber } from '@/lib/formatPrice'
+import { formatLargeNumber, getDisplaySymbol } from '@/lib/formatPrice'
 import { generateHoldingsPDF, PdfApiResponse } from '@/components/DataExport'
 
 interface DashboardProps {
@@ -283,7 +283,7 @@ export default function Dashboard({ userId, displayName }: DashboardProps) {
                 const barWidth = maxPct > 0 ? Math.min((Math.abs(hp.profitLossPercent) / maxPct) * 100, 100) : 0
                 return (
                   <div key={hp.symbol} className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-gray-900 w-20 truncate">{hp.symbol}</span>
+                    <span className="text-xs font-semibold text-gray-900 w-20 truncate">{getDisplaySymbol(hp.symbol, hp.asset_type)}</span>
                     <div className="flex-1 h-5 bg-gray-50 rounded-full overflow-hidden relative">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-700"
@@ -321,7 +321,7 @@ export default function Dashboard({ userId, displayName }: DashboardProps) {
                 const barWidth = worstPct > 0 ? Math.min((Math.abs(hp.profitLossPercent) / worstPct) * 100, 100) : 0
                 return (
                   <div key={hp.symbol} className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-gray-900 w-20 truncate">{hp.symbol}</span>
+                    <span className="text-xs font-semibold text-gray-900 w-20 truncate">{getDisplaySymbol(hp.symbol, hp.asset_type)}</span>
                     <div className="flex-1 h-5 bg-gray-50 rounded-full overflow-hidden relative">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-red-400 to-red-500 transition-all duration-700"

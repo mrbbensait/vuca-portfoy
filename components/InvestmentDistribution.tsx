@@ -125,19 +125,24 @@ export default function InvestmentDistribution({ userId: _userId }: InvestmentDi
       if (!priceData) return
 
       const currentPrice = priceData.price
-      const currency = priceData.currency
+      const priceCurrency = priceData.currency
       const value = holding.quantity * currentPrice
       const costBasis = holding.quantity * holding.avg_price
 
-      // TRY bazında değer hesapla (hem güncel hem maliyet)
+      // Güncel değeri TRY'ye çevir (piyasa fiyatı para birimine göre)
       let valueInTry = 0
-      let costBasisInTry = 0
-      
-      if (currency === 'TRY') {
+      if (priceCurrency === 'TRY') {
         valueInTry = value
-        costBasisInTry = costBasis
-      } else if (currency === 'USD') {
+      } else if (priceCurrency === 'USD') {
         valueInTry = value * usdTryRate.rate
+      }
+
+      // Maliyeti TRY'ye çevir (holding'in para birimine göre - TRY kripto için zaten TRY)
+      let costBasisInTry = 0
+      const holdingCurrency = holding.currency || (holding.asset_type === 'TR_STOCK' || holding.asset_type === 'CASH' ? 'TRY' : 'USD')
+      if (holdingCurrency === 'TRY') {
+        costBasisInTry = costBasis
+      } else if (holdingCurrency === 'USD') {
         costBasisInTry = costBasis * usdTryRate.rate
       }
 

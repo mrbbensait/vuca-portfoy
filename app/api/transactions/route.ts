@@ -5,11 +5,19 @@ import { buildTradeMessage, sendHybridTelegramNotification } from '@/lib/telegra
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { symbol, asset_type, side, quantity, price, fee, date, note, portfolio_id, user_id } = body
+    const { symbol, asset_type, side, quantity, price, fee, date, note, portfolio_id, user_id, currency: rawCurrency } = body
 
     if (!symbol || !asset_type || !side || !quantity || !price || !portfolio_id || !user_id) {
       return NextResponse.json({ error: 'Gerekli alanlar eksik' }, { status: 400 })
     }
+
+    // Para birimini belirle: gönderilen varsa kullan, yoksa asset_type'a göre default
+    const currency: string = rawCurrency || (asset_type === 'TR_STOCK' || asset_type === 'CASH' ? 'TRY' : 'USD')
+
+    // Görüntüleme için temiz sembol (IOTAUSDT → IOTA, THYAO.IS → THYAO)
+    const displaySymbol = symbol
+      .replace(/\.IS$/i, '')
+      .replace(/(USDT|BUSD|USDC)$/i, '')
 
     const supabase = await createClient()
 
@@ -20,18 +28,19 @@ export async function POST(request: Request) {
         .select('*')
         .eq('portfolio_id', portfolio_id)
         .eq('symbol', symbol)
+        .eq('currency', currency)
         .single()
 
       if (!existingHolding) {
         return NextResponse.json(
-          { error: `${symbol} sembolü portföyünüzde bulunmuyor. Önce satın almanız gerekiyor.` },
+          { error: `${displaySymbol} (${currency}) sembolü portföyünüzde bulunmuyor. Önce satın almanız gerekiyor.` },
           { status: 400 }
         )
       }
       
       if (existingHolding.quantity < parseFloat(quantity)) {
         return NextResponse.json(
-          { error: `Yetersiz miktar! ${symbol} için portföyünüzde ${existingHolding.quantity} adet var, ${quantity} adet satmaya çalışıyorsunuz.` },
+          { error: `Yetersiz miktar! ${displaySymbol} için portföyünüzde ${existingHolding.quantity} adet var, ${quantity} adet satmaya çalışıyorsunuz.` },
           { status: 400 }
         )
       }
@@ -46,6 +55,7 @@ export async function POST(request: Request) {
         side,
         quantity: parseFloat(quantity),
         price: parseFloat(price),
+        currency,
         fee: parseFloat(fee || '0'),
         date: new Date(date).toISOString(),
         note: note || null,
@@ -57,12 +67,13 @@ export async function POST(request: Request) {
 
     if (txError) throw txError
 
-    // ✅ 3. Holding'i güncelle veya oluştur
+    // ✅ 3. Holding'i güncelle veya oluştur (currency'ye göre ayrı holding)
     const { data: existingHolding } = await supabase
       .from('holdings')
       .select('*')
       .eq('portfolio_id', portfolio_id)
       .eq('symbol', symbol)
+      .eq('currency', currency)
       .single()
 
     if (existingHolding) {
@@ -105,6 +116,7 @@ export async function POST(request: Request) {
           asset_type,
           quantity: parseFloat(quantity),
           avg_price: parseFloat(price),
+          currency,
           portfolio_id,
           user_id,
         })
@@ -187,12 +199,14 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'İşlem bulunamadı' }, { status: 404 })
     }
 
-    // 2. Holding etkisini geri al
+    // 2. Holding etkisini geri al (currency'ye göre doğru holding'i bul)
+    const txCurrency = tx.currency || (tx.asset_type === 'TR_STOCK' || tx.asset_type === 'CASH' ? 'TRY' : 'USD')
     const { data: holding } = await supabase
       .from('holdings')
       .select('*')
       .eq('portfolio_id', tx.portfolio_id)
       .eq('symbol', tx.symbol)
+      .eq('currency', txCurrency)
       .single()
 
     if (tx.side === 'BUY') {
@@ -226,6 +240,7 @@ export async function DELETE(request: Request) {
           asset_type: tx.asset_type,
           quantity: tx.quantity,
           avg_price: tx.price,
+          currency: tx.currency || (tx.asset_type === 'TR_STOCK' || tx.asset_type === 'CASH' ? 'TRY' : 'USD'),
           portfolio_id: tx.portfolio_id,
           user_id: tx.user_id,
         })

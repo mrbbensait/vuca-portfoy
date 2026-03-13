@@ -37,14 +37,14 @@ export async function GET(
     // Holdings
     const { data: holdings } = await supabase
       .from('holdings')
-      .select('id, symbol, asset_type, quantity, avg_price, created_at')
+      .select('id, symbol, asset_type, quantity, avg_price, currency, created_at')
       .eq('portfolio_id', id)
       .order('created_at', { ascending: true })
 
     // Transactions (son 50)
     const { data: transactions } = await supabase
       .from('transactions')
-      .select('id, symbol, asset_type, side, quantity, price, fee, date, created_at')
+      .select('id, symbol, asset_type, side, quantity, price, currency, fee, date, created_at')
       .eq('portfolio_id', id)
       .order('date', { ascending: false })
       .limit(50)

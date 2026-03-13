@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Search, SlidersHorizontal, Clock, SortAsc, Loader2, Compass } from 'lucide-react'
+import { Search, SlidersHorizontal, Clock, SortAsc, Loader2, Compass, Users } from 'lucide-react'
 import PublicPortfolioCard from '@/components/PublicPortfolioCard'
 import Link from 'next/link'
 
@@ -11,6 +11,7 @@ interface ExplorePortfolio {
   slug: string | null
   description: string | null
   holding_count: number
+  follower_count: number
   owner_name: string
   owner_avatar: string | null
   created_at: string
@@ -24,11 +25,12 @@ interface Pagination {
   totalPages: number
 }
 
-type SortOption = 'newest' | 'name'
+type SortOption = 'newest' | 'name' | 'followers'
 
 const SORT_OPTIONS: { value: SortOption; label: string; icon: React.ElementType }[] = [
   { value: 'newest', label: 'En Yeni', icon: Clock },
   { value: 'name', label: 'İsim (A-Z)', icon: SortAsc },
+  { value: 'followers', label: 'En Çok Takipçi', icon: Users },
 ]
 
 export default function ExplorePage() {

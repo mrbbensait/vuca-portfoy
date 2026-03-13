@@ -18,7 +18,7 @@ export default async function PublicPortfolioPage({ params }: PageProps) {
   // Slug ile portföyü bul
   const { data: portfolio, error } = await supabase
     .from('portfolios')
-    .select('id, name, slug, description, is_public, created_at, user_id')
+    .select('id, name, slug, description, is_public, created_at, user_id, follower_count')
     .eq('slug', slug)
     .eq('is_public', true)
     .single()
@@ -37,24 +37,17 @@ export default async function PublicPortfolioPage({ params }: PageProps) {
   // Holdings
   const { data: holdings } = await supabase
     .from('holdings')
-    .select('id, symbol, asset_type, quantity, avg_price, created_at')
+    .select('id, symbol, asset_type, quantity, avg_price, currency, created_at')
     .eq('portfolio_id', portfolio.id)
     .order('created_at', { ascending: true })
 
-  // Transactions (son 50)
+  // Transactions (tümü - P&L hesabı için gerekli)
   const { data: transactions } = await supabase
     .from('transactions')
-    .select('id, symbol, asset_type, side, quantity, price, fee, date, note, created_at')
+    .select('id, symbol, asset_type, side, quantity, price, currency, fee, date, note, created_at')
     .eq('portfolio_id', portfolio.id)
     .order('date', { ascending: false })
     .order('created_at', { ascending: false })
-    .limit(50)
-
-  // Takipçi sayısı
-  const { count: followerCount } = await supabase
-    .from('portfolio_follows')
-    .select('*', { count: 'exact', head: true })
-    .eq('portfolio_id', portfolio.id)
 
   // Mevcut kullanıcı takip ediyor mu?
   const { data: { user } } = await supabase.auth.getUser()
@@ -88,7 +81,7 @@ export default async function PublicPortfolioPage({ params }: PageProps) {
       portfolio={portfolioData}
       holdings={holdings || []}
       transactions={transactions || []}
-      followerCount={followerCount || 0}
+      followerCount={portfolio.follower_count || 0}
       isFollowing={isFollowing}
       isOwnPortfolio={isOwnPortfolio}
     />

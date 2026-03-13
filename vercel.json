@@ -8,5 +8,11 @@
     "deploymentEnabled": {
       "main": true
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/auto-hide-portfolios",
+      "schedule": "0 1 * * *"
+    }
+  ]
 }

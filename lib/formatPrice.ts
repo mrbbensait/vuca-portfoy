@@ -77,3 +77,17 @@ export function formatLargeNumberUSD(num: number): string {
 export function formatPercent(value: number): string {
   return value.toFixed(2)
 }
+
+/**
+ * Sembol temizleyici - teknik isimleri kullanıcı dostu gösterime çevirir
+ * BTCUSDT → BTC, DOTUSDT → DOT, THYAO.IS → THYAO
+ */
+export function getDisplaySymbol(symbol: string, assetType: string): string {
+  if (assetType === 'TR_STOCK') {
+    return symbol.replace(/\.IS$/i, '')
+  }
+  if (assetType === 'CRYPTO') {
+    return symbol.replace(/(USDT|BUSD|USDC|USDE)$/i, '')
+  }
+  return symbol
+}

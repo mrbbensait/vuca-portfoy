@@ -14,6 +14,7 @@ import {
   ArrowLeftRight,
   ArrowUpDown,
   Trophy,
+  EyeOff,
 } from 'lucide-react'
 
 interface PortfolioRow {
@@ -50,6 +51,7 @@ export default function AdminPortfoliosPage() {
   const [filter, setFilter] = useState('all')
   const [sortBy, setSortBy] = useState('created_at')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [hidingId, setHidingId] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -69,6 +71,26 @@ export default function AdminPortfoliosPage() {
   }, [page, filter, sortBy, sortDir])
 
   useEffect(() => { fetchData() }, [fetchData])
+
+  async function handleHide(portfolioId: string) {
+    if (!confirm('Bu portföyü gizliye almak istediğinizden emin misiniz? Kullanıcıya bildirim gönderilecek.')) return
+    setHidingId(portfolioId)
+    try {
+      const res = await fetch('/api/admin/portfolios', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ portfolioId }),
+      })
+      if (res.ok) {
+        await fetchData()
+      } else {
+        const err = await res.json()
+        alert(err.error || 'Bir hata oluştu')
+      }
+    } finally {
+      setHidingId(null)
+    }
+  }
 
   function handleSort(field: string) {
     if (sortBy === field) {
@@ -174,12 +196,13 @@ export default function AdminPortfoliosPage() {
                     Tarih <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </th>
+                <th className="text-center px-4 py-3 font-medium text-gray-600">İşlem</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12">
+                  <td colSpan={8} className="text-center py-12">
                     <Loader2 className="w-6 h-6 animate-spin text-gray-400 mx-auto" />
                   </td>
                 </tr>
@@ -217,18 +240,35 @@ export default function AdminPortfoliosPage() {
                         day: 'numeric', month: 'short', year: 'numeric',
                       })}
                     </td>
+                    <td className="px-4 py-3 text-center">
+                      {p.is_public && (
+                        <button
+                          onClick={() => handleHide(p.id)}
+                          disabled={hidingId === p.id}
+                          title="Portföyü gizliye al"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {hidingId === p.id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <EyeOff className="w-3 h-3" />
+                          )}
+                          Gizle
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-gray-400">Portföy bulunamadı</td>
+                  <td colSpan={8} className="text-center py-12 text-gray-400">Portföy bulunamadı</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
 
-        {data && data.totalPages > 1 && (
+      {data && data.totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
             <p className="text-xs text-gray-500">
               {(page - 1) * 20 + 1}–{Math.min(page * 20, data.total)} / {data.total}

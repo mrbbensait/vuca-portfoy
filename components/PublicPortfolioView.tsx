@@ -9,7 +9,7 @@ import {
   ArrowUpDown, ChevronUp, ChevronDown, ReceiptText, Eye, Loader2, StickyNote, Megaphone
 } from 'lucide-react'
 import Link from 'next/link'
-import { formatPrice } from '@/lib/formatPrice'
+import { formatPrice, getDisplaySymbol } from '@/lib/formatPrice'
 import { usePrices } from '@/lib/hooks/usePrices'
 import AnnouncementsList from './AnnouncementsList'
 
@@ -20,6 +20,7 @@ export interface PublicHolding {
   asset_type: string
   quantity: number
   avg_price: number
+  currency: string
   created_at: string
 }
 
@@ -28,6 +29,7 @@ export interface PublicTransaction {
   symbol: string
   asset_type: string
   side: string
+  currency: string
   quantity: number
   price: number
   fee: number | null
@@ -216,6 +218,8 @@ export default function PublicPortfolioView({
     if (cp === null || tx.price === 0) return null
     return ((cp - tx.price) / tx.price) * 100
   }
+
+  const DISPLAY_LIMIT = 50
 
   // Transactions sıralama
   const sortedTransactions = [...transactions].sort((a, b) => {
@@ -409,13 +413,13 @@ export default function PublicPortfolioView({
                       </tr>
                       {/* Grup içi varlıklar */}
                       {group.items.map(h => {
-                        const currency = (h.asset_type === 'TR_STOCK' || h.asset_type === 'CASH') ? '₺' : '$'
+                        const currency = (h.currency === 'TRY' || h.asset_type === 'TR_STOCK' || h.asset_type === 'CASH') ? '₺' : '$'
                         const currentPrice = getCurrentPrice(h.symbol)
                         const pnlPct = getPnlPct(h)
                         return (
                           <tr key={h.id} className="hover:bg-gray-50 transition-colors border-t border-gray-100">
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <span className="text-sm font-semibold text-gray-900">{h.symbol}</span>
+                              <span className="text-sm font-semibold text-gray-900">{getDisplaySymbol(h.symbol, h.asset_type)}</span>
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-800 text-right font-mono whitespace-nowrap">
                               {currency}{formatPrice(h.avg_price)}
@@ -492,8 +496,8 @@ export default function PublicPortfolioView({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {sortedTransactions.map(tx => {
-                    const currency = (tx.asset_type === 'TR_STOCK' || tx.asset_type === 'CASH') ? '₺' : '$'
+                  {sortedTransactions.slice(0, DISPLAY_LIMIT).map(tx => {
+                    const currency = (tx.currency === 'TRY' || tx.asset_type === 'TR_STOCK' || tx.asset_type === 'CASH') ? '₺' : '$'
                     const txPnlPct = getTxPnlPct(tx)
                     return (
                       <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
@@ -502,7 +506,7 @@ export default function PublicPortfolioView({
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-gray-900">{tx.symbol}</span>
+                            <span className="text-sm font-semibold text-gray-900">{getDisplaySymbol(tx.symbol, tx.asset_type)}</span>
                             <span className={`px-1.5 py-0.5 text-[9px] font-semibold rounded border ${ASSET_TYPE_COLORS[tx.asset_type]}`}>
                               {ASSET_TYPE_LABELS[tx.asset_type]}
                             </span>
@@ -568,9 +572,9 @@ export default function PublicPortfolioView({
                 </tbody>
               </table>
             )}
-            {transactions.length >= 50 && (
+            {transactions.length > DISPLAY_LIMIT && (
               <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 text-center">
-                <p className="text-xs text-gray-400">Son 50 işlem gösteriliyor</p>
+                <p className="text-xs text-gray-400">Son {DISPLAY_LIMIT} işlem gösteriliyor (toplam {transactions.length})</p>
               </div>
             )}
           </div>

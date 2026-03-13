@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { Holding } from '@/lib/types/database.types'
 import { Trash2, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react'
-import { useHoldingPrice } from './PriceProvider'
-import { formatPrice, formatLargeNumber } from '@/lib/formatPrice'
+import { useHoldingPrice, usePriceContext } from './PriceProvider'
+import { formatPrice, formatLargeNumber, getDisplaySymbol } from '@/lib/formatPrice'
 import Blur from './PrivacyBlur'
 
 const ASSET_TYPE_LABELS: Record<string, string> = {
@@ -48,9 +48,20 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
 
   // ⚡ Merkezi fiyat sistemi - tüm varlıklar tek seferde çekilir
   const { price: priceData, loading: loadingPrice } = useHoldingPrice(holding.symbol)
-  const currentPrice = priceData?.price || null
-  const currency = priceData?.currency || 'USD'
-  const currencySymbol = currency === 'TRY' ? '₺' : '$'
+  const { usdTryRate } = usePriceContext()
+
+  // Holding'in para birimi (DB'den gelen, default: asset_type'a göre)
+  const holdingCurrency = holding.currency || (holding.asset_type === 'TR_STOCK' || holding.asset_type === 'CASH' ? 'TRY' : 'USD')
+  const currencySymbol = holdingCurrency === 'TRY' ? '₺' : '$'
+
+  // Güncel fiyatı holding para birimine çevir
+  // Örn: XRP holding.currency='TRY', priceData.currency='USD' → currentPrice USD*usdTryRate
+  let currentPrice: number | null = priceData?.price || null
+  if (currentPrice !== null && priceData?.currency === 'USD' && holdingCurrency === 'TRY' && usdTryRate) {
+    currentPrice = currentPrice * usdTryRate
+  } else if (currentPrice !== null && priceData?.currency === 'TRY' && holdingCurrency === 'USD' && usdTryRate) {
+    currentPrice = currentPrice / usdTryRate
+  }
 
   const handleDelete = async () => {
     setDeleting(true)
@@ -104,11 +115,18 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
             <h3 className="text-sm font-bold text-gray-900">
               {holding.asset_type === 'CASH' && CASH_SYMBOL_NAMES[holding.symbol]
                 ? CASH_SYMBOL_NAMES[holding.symbol]
-                : holding.symbol}
+                : getDisplaySymbol(holding.symbol, holding.asset_type)}
             </h3>
-            <span className={`px-1.5 py-0.5 text-[10px] font-semibold rounded w-fit ${badgeColorClass}`}>
-              {ASSET_TYPE_LABELS[holding.asset_type]}
-            </span>
+            <div className="flex items-center gap-1 flex-wrap">
+              <span className={`px-1.5 py-0.5 text-[10px] font-semibold rounded ${badgeColorClass}`}>
+                {ASSET_TYPE_LABELS[holding.asset_type]}
+              </span>
+              {holding.asset_type !== 'CASH' && (
+                <span className="px-1 py-0.5 text-[9px] font-bold rounded bg-gray-100 text-gray-500">
+                  {holdingCurrency}
+                </span>
+              )}
+            </div>
           </div>
         </div>
         
@@ -201,11 +219,16 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
               <h3 className="text-base font-bold text-gray-900">
                 {holding.asset_type === 'CASH' && CASH_SYMBOL_NAMES[holding.symbol]
                   ? CASH_SYMBOL_NAMES[holding.symbol]
-                  : holding.symbol}
+                  : getDisplaySymbol(holding.symbol, holding.asset_type)}
               </h3>
               <span className={`px-2 py-0.5 text-xs font-semibold rounded ${badgeColorClass}`}>
                 {ASSET_TYPE_LABELS[holding.asset_type]}
               </span>
+              {holding.asset_type !== 'CASH' && (
+                <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-gray-100 text-gray-500">
+                  {holdingCurrency}
+                </span>
+              )}
             </div>
             <div className="flex gap-1.5">
               <button
@@ -294,11 +317,18 @@ export default function HoldingItem({ holding }: HoldingItemProps) {
               <h3 className="text-base font-bold text-gray-900">
                 {holding.asset_type === 'CASH' && CASH_SYMBOL_NAMES[holding.symbol]
                   ? CASH_SYMBOL_NAMES[holding.symbol]
-                  : holding.symbol}
+                  : getDisplaySymbol(holding.symbol, holding.asset_type)}
               </h3>
-              <span className={`px-2 py-0.5 text-xs font-semibold rounded w-fit ${badgeColorClass}`}>
-                {ASSET_TYPE_LABELS[holding.asset_type]}
-              </span>
+              <div className="flex items-center gap-1">
+                <span className={`px-2 py-0.5 text-xs font-semibold rounded w-fit ${badgeColorClass}`}>
+                  {ASSET_TYPE_LABELS[holding.asset_type]}
+                </span>
+                {holding.asset_type !== 'CASH' && (
+                  <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-gray-100 text-gray-500">
+                    {holdingCurrency}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex gap-1">
               <button

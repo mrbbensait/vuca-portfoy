@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, ReactNode } from 'react'
+import { createContext, useContext, ReactNode, useEffect, useState } from 'react'
 import { usePrices, Holding, PriceData, UsePricesReturn } from '@/lib/hooks/usePrices'
 
 /**
@@ -16,10 +16,12 @@ import { usePrices, Holding, PriceData, UsePricesReturn } from '@/lib/hooks/useP
  *    </PriceProvider>
  * 
  * 2. Alt bileşenlerde kullan:
- *    const { prices, loading } = usePriceContext()
+ *    const { prices, loading, usdTryRate } = usePriceContext()
  */
 
-type PriceContextType = UsePricesReturn
+type PriceContextType = UsePricesReturn & {
+  usdTryRate: number | null
+}
 
 const PriceContext = createContext<PriceContextType | undefined>(undefined)
 
@@ -30,9 +32,25 @@ interface PriceProviderProps {
 
 export function PriceProvider({ holdings, children }: PriceProviderProps) {
   const priceData = usePrices(holdings)
+  const [usdTryRate, setUsdTryRate] = useState<number | null>(null)
+
+  useEffect(() => {
+    const fetchRate = async () => {
+      try {
+        const response = await fetch('/api/price/quote?symbol=USD&asset_type=CASH')
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.data) {
+            setUsdTryRate(result.data.price)
+          }
+        }
+      } catch {}
+    }
+    fetchRate()
+  }, [])
 
   return (
-    <PriceContext.Provider value={priceData}>
+    <PriceContext.Provider value={{ ...priceData, usdTryRate }}>
       {children}
     </PriceContext.Provider>
   )

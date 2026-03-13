@@ -71,15 +71,23 @@ export function usePortfolioSummary() {
       const cost = h.quantity * h.avg_price
       let costTry = 0, valTry = 0
 
+      // Güncel değer: pd.currency'ye göre TRY'ye çevir
       if (pd.currency === 'TRY') {
-        valTry = val; costTry = cost
-        totalTry += val; totalUsd += val / usdTryRate
-        totalCostTry += cost; totalCostUsd += cost / usdTryRate
+        valTry = val
       } else if (pd.currency === 'USD') {
-        valTry = val * usdTryRate; costTry = cost * usdTryRate
-        totalTry += valTry; totalUsd += val
-        totalCostTry += costTry; totalCostUsd += cost
+        valTry = val * usdTryRate
       }
+
+      // Maliyet: h.currency'ye göre TRY'ye çevir (TRY kripto için avg_price zaten TRY)
+      const holdingCurrency = h.currency || (h.asset_type === 'TR_STOCK' || h.asset_type === 'CASH' ? 'TRY' : 'USD')
+      if (holdingCurrency === 'TRY') {
+        costTry = cost
+      } else if (holdingCurrency === 'USD') {
+        costTry = cost * usdTryRate
+      }
+
+      totalTry += valTry; totalUsd += valTry / usdTryRate
+      totalCostTry += costTry; totalCostUsd += costTry / usdTryRate
 
       const plPct = costTry > 0 ? ((valTry - costTry) / costTry) * 100 : 0
       hpList.push({ symbol: h.symbol, asset_type: h.asset_type, profitLossPercent: plPct })

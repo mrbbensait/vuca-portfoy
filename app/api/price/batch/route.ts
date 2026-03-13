@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -295,7 +296,7 @@ export async function POST(request: Request) {
           const expiresAt = new Date()
           expiresAt.setMinutes(expiresAt.getMinutes() + 15)
           
-          // Cache'e kaydet
+          // Cache'e kaydet (service_role ile - RLS bypass)
           try {
             // Source'u asset type'a göre belirle
             let source = 'yahoo'
@@ -305,7 +306,8 @@ export async function POST(request: Request) {
               source = holding.symbol === 'TRY' ? 'static' : 'yahoo'
             }
             
-            const { error: cacheError } = await supabase
+            const adminClient = createAdminClient()
+            const { error: cacheError } = await adminClient
               .from('price_cache')
               .upsert({
                 symbol: holding.symbol,

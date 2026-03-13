@@ -26,6 +26,10 @@ export default function FollowButton({
         const res = await fetch(`/api/portfolios/${portfolioId}/follow`, {
           method: 'DELETE',
         })
+        if (res.status === 401) {
+          window.location.href = `/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`
+          return
+        }
         if (res.ok) {
           setIsFollowing(false)
           setFollowerCount(prev => Math.max(0, prev - 1))
@@ -35,6 +39,10 @@ export default function FollowButton({
         const res = await fetch(`/api/portfolios/${portfolioId}/follow`, {
           method: 'POST',
         })
+        if (res.status === 401) {
+          window.location.href = `/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`
+          return
+        }
         if (res.ok) {
           setIsFollowing(true)
           setFollowerCount(prev => prev + 1)

@@ -5,6 +5,7 @@ import TransactionsList from '@/components/TransactionsList'
 import NotesList from '@/components/NotesList'
 import PortfolioAnnouncements from '@/components/PortfolioAnnouncements'
 import TelegramConnectBanner from '@/components/TelegramConnectBanner'
+import UserNotificationsBanner from '@/components/UserNotificationsBanner'
 import { PortfolioProvider } from '@/lib/contexts/PortfolioContext'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -27,6 +28,8 @@ export default async function PortfolioPage() {
               Varlıklarınızı yönetin, işlem geçmişinizi görüntüleyin ve notlarınızı ekleyin.
             </p>
           </div>
+
+          <UserNotificationsBanner />
 
           <div className="space-y-6">
             {/* Varlıklar */}
