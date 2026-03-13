@@ -308,44 +308,6 @@ export default function PublicProfitLossStats({ holdings, transactions }: Public
 
   return (
     <div className="space-y-4">
-      {/* Nakit Akış Özeti */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-          <DollarSign className="w-4 h-4 text-gray-400" />
-          Nakit Akış Özeti
-        </h4>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
-            <div className="flex items-center gap-1 mb-1">
-              <p className="text-xs text-gray-500">Toplam Alım</p>
-              <InfoTooltip text="Başlangıçtan bugüne yaptığınız tüm alım işlemlerinin toplam tutarı. Satmış olduklarınız da dahildir." />
-            </div>
-            <p className="text-sm font-bold text-gray-900">₺{formatLargeNumber(plData.allTimeInvested)}</p>
-          </div>
-          <div>
-            <div className="flex items-center gap-1 mb-1">
-              <p className="text-xs text-gray-500">Toplam Satım</p>
-              <InfoTooltip text="Başlangıçtan bugüne yaptığınız tüm satış işlemlerinden elde ettiğiniz toplam nakit tutarı." />
-            </div>
-            <p className="text-sm font-bold text-gray-900">₺{formatLargeNumber(plData.allTimeSold)}</p>
-          </div>
-          <div>
-            <div className="flex items-center gap-1 mb-1">
-              <p className="text-xs text-gray-500">Güncel Değer</p>
-              <InfoTooltip text="Şu anda portföyde bulunan tüm varlıkların güncel piyasa değeri." />
-            </div>
-            <p className="text-sm font-bold text-gray-900">₺{formatLargeNumber(plData.totalCurrentValue)}</p>
-          </div>
-          <div>
-            <div className="flex items-center gap-1 mb-1">
-              <p className="text-xs text-gray-500">Maliyet Bazı</p>
-              <InfoTooltip text="Portföydeki varlıkların satın alma maliyeti. Güncel Değer - Maliyet Bazı = Realize Edilmemiş K/Z" />
-            </div>
-            <p className="text-sm font-bold text-gray-900">₺{formatLargeNumber(plData.totalCostBasis)}</p>
-          </div>
-        </div>
-      </div>
-
       {/* Kar & Zarar İstatistikleri */}
       <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-sm border-2 border-blue-100 p-5 space-y-4">
         <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
